@@ -26,7 +26,7 @@ public:
     Move getBestMove(Board& board);
     
 private:
-    // Min-Max principal
+    // Min-Max con poda alpha-beta
     int minimax(Board& board, int depth, bool isMaximizing, int alpha, int beta);
     
     // Generación de movimientos candidatos
@@ -37,16 +37,27 @@ private:
     // Heurística: evaluar qué tan buena es una posición
     int evaluatePosition(Board& board);
     int evaluatePlayer(Board& board, int player);
-    int evaluatePlayerAdvanced(Board& board, int player);  // Nueva heurística inteligente
     
-    // Funciones auxiliares para heurística
-    int countPatterns(Board& board, int player, int patternLength, bool needsFreeEnds = false);
-    int countSimplePatterns(Board& board, int player, int length);  
-    int countThreatPatterns(Board& board, int player, int length);  // Cuenta amenazas
-    int countFreeThrees(Board& board, int player);                 // Cuenta 3-libres
-    bool hasPattern(Board& board, int x, int y, int player, int length);
-    bool has4InLineWithFreeEnd(Board& board, int x, int y, int player);  
-    bool isNearOtherPieces(const Board& board, int x, int y, int radius = 2);
+    // Detección de patrones básicos (NUEVO)
+    int countPatterns(Board& board, int player, int targetLength);
+    int countLineLength(Board& board, int startX, int startY, int dx, int dy, int player);
+    
+    // Detección inmediata de victoria/derrota (NUEVO)
+    Move findImmediateWin(Board& board, int player);
+    Move findCriticalBlock(Board& board, int player, int targetPattern);
+    
+    // Evaluación posicional
+    int evaluatePositionalValue(Board& board, int player);
+    int countAdjacentEmpty(const Board& board, int x, int y);
+    
+    // Funciones legacy (mantener por compatibilidad)
+    int countSimplePatterns(Board& board, int player, int length);
+    
+    // Función de depuración
+    void debugPatterns(Board& board, int player);
+    
+    // Función auxiliar para simulación completa
+    bool simulateCompleteMove(Board& board, int x, int y, int player, int& capturesGained);
 };
 
 #endif

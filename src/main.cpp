@@ -7,13 +7,12 @@
 
 int main() {
     Board board;
-    AI ai(2, 3);  // AI es player 2, profundidad 3 (más rápido)
+    AI ai(2, 4);  // AI es player 2, profundidad 4 para empezar
     int currentPlayer = 1;  // Empezar con humano
     
     Display::printWelcome();
     
     while (true) {
-        // Display::clearScreen();  // Comentado temporalmente para debug
         Display::printBoard(board);
         Display::printGameInfo(board);
         
@@ -41,19 +40,15 @@ int main() {
             
             // Verificar victoria después del movimiento
             if (board.checkWin(currentPlayer)) {
-                // Display::clearScreen();
                 Display::printBoard(board);
                 Display::printGameInfo(board);
                 Display::printWinner(currentPlayer);
-                return 0;  // Salir del programa
+                return 0;
             }
             
             currentPlayer = 2;  // Cambiar al AI
         } else {
-            // Turno del AI inteligente
-            // Display::clearScreen();  // Comentado para debug
-            Display::printBoard(board);
-            Display::printGameInfo(board);
+            // Turno del AI
             std::cout << "🤖 AI is thinking...\n";
             
             auto start = std::chrono::high_resolution_clock::now();
@@ -70,11 +65,10 @@ int main() {
                 std::cout << "AI plays: " << char('A' + bestMove.y) << (bestMove.x + 1) 
                           << " (Score: " << bestMove.score << ", Time: " << seconds << "s)\n";
                 
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));  // Mostrar la jugada
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 
                 // Verificar victoria del AI
                 if (board.checkWin(currentPlayer)) {
-                    // Display::clearScreen();
                     Display::printBoard(board);
                     Display::printGameInfo(board);
                     Display::printWinner(currentPlayer);
