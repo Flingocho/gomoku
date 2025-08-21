@@ -1,7 +1,7 @@
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror
 
-SRCS = src/main.cpp src/display.cpp src/board.cpp src/ai.cpp
+SRCS = src/main.cpp src/display.cpp src/board.cpp src/ai.cpp src/game_node.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 EXEC = gomoku

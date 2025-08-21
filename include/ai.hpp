@@ -1,63 +1,70 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ai.hpp                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
+/*   Updated: 2025/08/21 16:37:21 by jainavas         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef AI_HPP
 #define AI_HPP
 
 #include "board.hpp"
-#include <vector>
-#include <utility>
-#include <set>
-
-struct Move {
-    int x, y;
-    int score;
-    
-    Move(int x = -1, int y = -1, int score = 0) : x(x), y(y), score(score) {}
-};
+#include "game_node.hpp"
+#include <memory>
 
 class AI {
 private:
-    int aiPlayer;     // 1 o 2
-    int humanPlayer;  // El oponente
-    int maxDepth;     // Profundidad de búsqueda
+    int aiPlayer;        // 1 o 2
+    int humanPlayer;     // El oponente
+    int maxDepth;        // Profundidad de búsqueda
     
+    // Para debugging y estadísticas
+    mutable int nodesExplored;
+    mutable int evaluationsPerformed;
+    mutable double lastSearchTime;
+
 public:
     AI(int player, int depth = 6);
     
-    // Método principal: encontrar el mejor movimiento
+    // === MÉTODO PRINCIPAL ===
+    
+    // Encuentra el mejor movimiento usando el árbol de juego
     Move getBestMove(Board& board);
     
+    // === CONFIGURACIÓN ===
+    
+    void setDepth(int depth) { maxDepth = depth; }
+    int getDepth() const { return maxDepth; }
+    
+    // === ESTADÍSTICAS ===
+    
+    int getNodesExplored() const { return nodesExplored; }
+    int getEvaluationsPerformed() const { return evaluationsPerformed; }
+    double getLastSearchTime() const { return lastSearchTime; }
+    
+    // === DEBUG ===
+    
+    void printSearchStats() const;
+    
+    // Analiza una posición específica y muestra información detallada
+    void analyzePosition(const Board& board, int analysisDepth = 4);
+
 private:
-    // Min-Max con poda alpha-beta
-    int minimax(Board& board, int depth, bool isMaximizing, int alpha, int beta);
+    // === MÉTODOS AUXILIARES ===
     
-    // Generación de movimientos candidatos
-    std::vector<Move> generateMoves(Board& board);
-    void addInfluenceZones(std::set<std::pair<int, int>>& moves, const Board& board);
-    void addTacticalMoves(std::set<std::pair<int, int>>& moves, Board& board, int player);
+    // Detecta movimientos que ganan inmediatamente
+    Move findImmediateWin(const Board& board, int player);
     
-    // Heurística: evaluar qué tan buena es una posición
-    int evaluatePosition(Board& board);
-    int evaluatePlayer(Board& board, int player);
+    // Detecta movimientos que bloquean una derrota inmediata  
+    Move findCriticalBlock(const Board& board, int player);
     
-    // Detección de patrones básicos (NUEVO)
-    int countPatterns(Board& board, int player, int targetLength);
-    int countLineLength(Board& board, int startX, int startY, int dx, int dy, int player);
-    
-    // Detección inmediata de victoria/derrota (NUEVO)
-    Move findImmediateWin(Board& board, int player);
-    Move findCriticalBlock(Board& board, int player, int targetPattern);
-    
-    // Evaluación posicional
-    int evaluatePositionalValue(Board& board, int player);
-    int countAdjacentEmpty(const Board& board, int x, int y);
-    
-    // Funciones legacy (mantener por compatibilidad)
-    int countSimplePatterns(Board& board, int player, int length);
-    
-    // Función de depuración
-    void debugPatterns(Board& board, int player);
-    
-    // Función auxiliar para simulación completa
-    bool simulateCompleteMove(Board& board, int x, int y, int player, int& capturesGained);
+    // Resetea estadísticas para una nueva búsqueda
+    void resetStats();
 };
 
 #endif
