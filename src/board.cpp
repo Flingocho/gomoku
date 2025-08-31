@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:06 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/21 16:36:08 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/08/21 18:30:19 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,9 +171,6 @@ std::vector<std::pair<int, int>> Board::getCapturesInDirection(int x, int y, int
     std::vector<std::pair<int, int>> captures;
     int opponent = (player == 1) ? 2 : 1;
     
-    std::cout << "DEBUG: Direction (" << dx << "," << dy << ") - Forward: " << countDirection(x, y, dx, dy, player) 
-              << ", Backward: " << countDirection(x, y, -dx, -dy, player) << std::endl;
-    
     // Buscar patrón hacia adelante: [PIEZA_ACTUAL][ENEMIGO][ENEMIGO][MI_PIEZA]
     int pos1x = x + dx, pos1y = y + dy;
     int pos2x = x + 2*dx, pos2y = y + 2*dy;
@@ -183,9 +180,7 @@ std::vector<std::pair<int, int>> Board::getCapturesInDirection(int x, int y, int
         int piece1 = board[pos1x][pos1y];
         int piece2 = board[pos2x][pos2y];
         int piece3 = board[pos3x][pos3y];
-        
-        std::cout << "DEBUG: Forward pattern: " << player << "-" << piece1 << "-" << piece2 << "-" << piece3 << std::endl;
-        
+                
         if (piece1 == opponent && piece2 == opponent && piece3 == player) {
             captures.push_back({pos1x, pos1y});
             captures.push_back({pos2x, pos2y});
@@ -202,7 +197,6 @@ std::vector<std::pair<int, int>> Board::getCapturesInDirection(int x, int y, int
         int piece2 = board[pos2x][pos2y];
         int piece3 = board[pos3x][pos3y];
         
-        std::cout << "DEBUG: Backward pattern: " << piece3 << "-" << piece2 << "-" << piece1 << "-" << player << std::endl;
         
         if (piece1 == opponent && piece2 == opponent && piece3 == player) {
             captures.push_back({pos1x, pos1y});
@@ -281,14 +275,12 @@ bool Board::isDoubleFree(int x, int y, int player) const {
         
         if (isFreeThree(x, y, dx, dy, player)) {
             freeThreeCount++;
-            std::cout << "DEBUG: Found free-three in direction (" << dx << "," << dy << ")" << std::endl;
         }
     }
     
     // Remover pieza temporal
     const_cast<Board*>(this)->board[x][y] = 0;
     
-    std::cout << "DEBUG: Total free-threes created: " << freeThreeCount << std::endl;
     return freeThreeCount >= 2;
 }
 
@@ -297,10 +289,7 @@ bool Board::isFreeThree(int x, int y, int dx, int dy, int player) const {
     int countForward = countDirection(x, y, dx, dy, player);
     int countBackward = countDirection(x, y, -dx, -dy, player);
     int totalInLine = 1 + countForward + countBackward;
-    
-    std::cout << "DEBUG: Direction (" << dx << "," << dy << ") - Forward: " << countForward 
-              << ", Backward: " << countBackward << ", Total: " << totalInLine << std::endl;
-    
+        
     // Para ser free-three, necesitamos exactamente 3 en línea
     if (totalInLine != 3) return false;
     
@@ -312,10 +301,7 @@ bool Board::isFreeThree(int x, int y, int dx, int dy, int player) const {
     
     bool frontFree = isValid(frontX, frontY) && board[frontX][frontY] == 0;
     bool backFree = isValid(backX, backY) && board[backX][backY] == 0;
-    
-    std::cout << "DEBUG: Front (" << frontX << "," << frontY << ") free: " << frontFree 
-              << ", Back (" << backX << "," << backY << ") free: " << backFree << std::endl;
-    
+        
     // Free-three más permisivo: al menos UN extremo libre
     // (puedes cambiar a "frontFree && backFree" para más estricto)
     return frontFree || backFree;

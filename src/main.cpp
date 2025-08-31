@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:17 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/21 16:36:22 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/08/21 18:51:46 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 int main() {
     Board board;
-    AI ai(2, 4);  // AI es player 2, profundidad 4 para empezar
+    AI ai(2, 6);  // AI es player 2, profundidad 4 para empezar
     int currentPlayer = 1;  // Empezar con humano
     
     Display::printWelcome();
