@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/03 20:36:16 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/08 20:17:39 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,11 @@ int AI::evaluatePosition(const Board &board) const
     // 2. Evaluar patrones para ambos jugadores
     int aiScore = evaluatePlayerPatterns(board, aiPlayer);
     int humanScore = evaluatePlayerPatterns(board, humanPlayer);
-    
+    std::cout << "Ai score only patterns: " << aiScore << " humanScore only patterns: " << humanScore << "\n";
+	aiScore += evaluateCaptureAdvantage(board, aiPlayer);
+    humanScore += evaluateCaptureAdvantage(board, humanPlayer);
+    std::cout << "Ai score: " << aiScore << " humanScore: " << humanScore << "\n";
+
     return aiScore - humanScore;
 }
 
@@ -37,23 +41,66 @@ int AI::evaluatePlayerPatterns(const Board& board, int player) const
         for (int j = 0; j < board.getSize(); j++) {
             if (board.getPiece(i, j) == player) {
                 
-                // Evaluar en las 4 direcciones, pero solo desde el inicio de cada línea
                 for (int d = 0; d < 4; d++) {
                     int dx = directions[d][0];
                     int dy = directions[d][1];
                     
                     if (isLineStart(board, i, j, dx, dy, player)) {
-                        score += checkPatternInDirection(board, i, j, dx, dy, player);
+                        int patternScore = checkPatternInDirection(board, i, j, dx, dy, player);
+                        
+                        // NUEVO: Si es THREE_OPEN, verificar que sea legal
+                        if (patternScore == THREE_OPEN) {
+                            if (isLegalThreePattern(board, i, j, dx, dy, player)) {
+                                score += patternScore;
+                            }
+                            // Si no es legal, no sumar puntos por este patrón
+                        } else {
+                            score += patternScore;
+                        }
                     }
                 }
             }
         }
     }
     
-    // TODO: Agregar evaluación de capturas
-    // score += evaluateCaptureOpportunities(board, player);
-    
     return score;
+}
+
+bool AI::isLegalThreePattern(const Board& board, int x, int y, int dx, int dy, int player) const {
+    // Encontrar los extremos del patrón de 3
+    int startX = x, startY = y;
+    int endX = x, endY = y;
+    
+    // Buscar el inicio real del patrón
+    while (board.isValid(startX - dx, startY - dy) && board.getPiece(startX - dx, startY - dy) == player) {
+        startX -= dx;
+        startY -= dy;
+    }
+    
+    // Buscar el final real del patrón  
+    while (board.isValid(endX + dx, endY + dy) && board.getPiece(endX + dx, endY + dy) == player) {
+        endX += dx;
+        endY += dy;
+    }
+    
+    // Posiciones donde se podría completar el three
+    int beforeX = startX - dx, beforeY = startY - dy;
+    int afterX = endX + dx, afterY = endY + dy;
+    
+    bool canPlayBefore = board.isValid(beforeX, beforeY) && board.isEmpty(beforeX, beforeY);
+    bool canPlayAfter = board.isValid(afterX, afterY) && board.isEmpty(afterX, afterY);
+    
+    // Verificar si colocar en cualquier extremo crearía double-three
+    if (canPlayBefore && board.isDoubleFree(beforeX, beforeY, player)) {
+        canPlayBefore = false; // Esta jugada sería ilegal
+    }
+    
+    if (canPlayAfter && board.isDoubleFree(afterX, afterY, player)) {
+        canPlayAfter = false; // Esta jugada sería ilegal
+    }
+    
+    // El patrón solo es valioso si al menos un extremo es jugable legalmente
+    return canPlayBefore || canPlayAfter;
 }
 
 // Verificar si esta posición es el inicio de una línea (evita doble conteo)
@@ -148,7 +195,60 @@ int AI::findFreeEnds(const Board& board, int x, int y, int dx, int dy, int playe
     return freeEnds;
 }
 
-bool canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) {
+int AI::evaluateCaptureAdvantage(const Board& board, int player) const {
+    int score = 0;
+    int myCaptures = board.getCaptures(player);
+    
+    // Según cercanía a las 10 capturas (5 pares)
+    if (myCaptures >= 8) {        // 1 par para ganar - MUY GRAVE pero defendible
+        score += 20000;           // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+    }
+    else if (myCaptures >= 6) {   // 2 pares para ganar - Grave
+        score += 8000;            // Un poco menos que FOUR_SIMPLE
+    }
+    else if (myCaptures >= 4) {   // 3 pares para ganar - Preocupante
+        score += 3000;            // Más que IMMEDIATE_CAPTURE
+    }
+    else {
+        score += myCaptures * 200; // Progreso gradual
+    }
+    
+    // Amenazas de captura inmediatas
+    score += countCaptureOpportunities(board, player) * IMMEDIATE_CAPTURE;
+    
+    return score;
+}
+
+int AI::countCaptureOpportunities(const Board& board, int player) const {
+    int opportunities = 0;
+    int opponent = (player == 1) ? 2 : 1;
+    
+    // 8 direcciones
+    int directions[8][2] = {
+        {-1, -1}, {-1, 0}, {-1, 1},
+        {0, -1},           {0, 1},
+        {1, -1},  {1, 0},  {1, 1}
+    };
+    
+    // Recorrer todas las posiciones vacías
+    for (int i = 0; i < board.getSize(); i++) {
+        for (int j = 0; j < board.getSize(); j++) {
+            if (board.isEmpty(i, j)) {
+                // Verificar las 8 direcciones
+                for (int d = 0; d < 8; d++) {
+                    if (canCaptureInDirection(board, i, j, directions[d][0], directions[d][1], player, opponent)) {
+                        opportunities++;
+                        break; // Una oportunidad por posición es suficiente
+                    }
+                }
+            }
+        }
+    }
+    
+    return opportunities;
+}
+
+bool AI::canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const {
     // Patrón: al colocar en (x,y) se debe formar XOOX
     
     // Verificar hacia adelante: (x,y) + OO + X

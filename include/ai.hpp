@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/03 20:18:59 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/08 20:17:05 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include "board.hpp"
 #include <vector>
 #include <utility>
+#include <string>
+#include <iostream>
 #include <cstdint>
 
 // Estructura básica para movimientos
@@ -65,6 +67,10 @@ private:
     int checkPatternInDirection(const Board& board, int x, int y, int dx, int dy, int player) const;
     int countConsecutive(const Board& board, int x, int y, int dx, int dy, int player) const;
     int findFreeEnds(const Board& board, int x, int y, int dx, int dy, int player) const;
+	bool canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const;
+    int evaluateCaptureAdvantage(const Board& board, int player) const;
+	int countCaptureOpportunities(const Board& board, int player) const;
+	bool isLegalThreePattern(const Board& board, int x, int y, int dx, int dy, int player) const;
 
 public:
     AI(int aiplayer, int humanplayer, int depth) {aiPlayer = aiplayer, humanPlayer = humanplayer, maxDepth = depth;}

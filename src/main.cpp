@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:17 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/03 20:25:04 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/08 20:19:45 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ int main() {
     while (true) {
         Display::printBoard(board);
         Display::printGameInfo(board);
-        
+        if (board.getTurns() > 2 && currentPlayer == 2)
+			ai.evaluatePosition(board);
         // Turno del jugador actual
         std::cout << "Player " << currentPlayer << "'s turn\n";
         auto move = Display::getUserMove();
@@ -59,8 +60,6 @@ int main() {
         // Cambiar al siguiente jugador
 		board.newturn();
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
-		if (board.getTurns() > 6 && currentPlayer == 1)
-			std::cout << "El score de la ia es " << ai.evaluatePosition(board);
     }
     
     return 0;
