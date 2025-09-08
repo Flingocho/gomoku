@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:06 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/21 18:30:19 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/03 20:23:13 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,13 @@
 #include <set>
 
 Board::Board() {
-    // Inicializar tablero vacío
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
             board[i][j] = 0;
         }
     }
     captures[0] = captures[1] = 0;
+	turns = 0;
 }
 
 bool Board::isValid(int x, int y) const {

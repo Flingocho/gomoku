@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:04 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/21 16:35:14 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/03 18:03:35 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,60 @@
 
 #include "board.hpp"
 #include <vector>
+
+// Estructura Move - ya definida en ai.hpp pero necesitamos aquí también
+struct Move {
+    int x, y;
+    int score;
+    
+    Move(int x = -1, int y = -1, int score = 0) : x(x), y(y), score(score) {}
+    
+    bool isValid() const { return x >= 0 && y >= 0; }
+};
+
+// Clase GameNode simplificada - esqueleto para nuevo algoritmo
+class GameNode {
+public:
+    // Estructura para estadísticas
+    struct TreeStats {
+        int totalNodes;
+        int totalEvaluations;  
+        int maxDepthReached;
+    };
+
+private:
+    Board board;
+    int currentPlayer;
+    int score;
+
+public:
+    // Constructor
+    GameNode(const Board& board, int player);
+    
+    // Destructor
+    ~GameNode();
+    
+    // Función principal que debe implementarse
+    Move getBestMove(int maxDepth);
+    
+    // Función para obtener estadísticas
+    TreeStats getTreeStats() const;
+    
+    // TODO: Agregar nuevas funciones del algoritmo aquí
+};
+
+#endif
+
+#ifndef GAME_NODE_HPP
+#define GAME_NODE_HPP
+
+#include "board.hpp"
+#include "time_manager.hpp"
+#include <vector>
 #include <memory>
 #include <limits>
+
+class TimeManager; // Forward declaration
 
 struct Move {
     int x, y;
@@ -88,6 +140,7 @@ public:
     void setEvaluation(int value);
     
     // === MINIMAX ===
+	int minimaxWithTime(int maxDepth, bool isMaximizingPlayer, int alpha, int beta, TimeManager& timer);
     
     // Ejecuta minimax desde este nodo
     int minimax(int maxDepth, bool isMaximizingPlayer, int alpha = std::numeric_limits<int>::min(), 

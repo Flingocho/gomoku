@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:33 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/31 20:10:19 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/03 20:11:54 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,14 @@
 
 #include <vector>
 #include <utility>
+#include <cstdint>
 
 class Board {
 private:
     static const int SIZE = 19;
     int board[SIZE][SIZE];
     int captures[2];  // [humano, AI]
+	int turns;
 
 public:
     Board();
@@ -39,9 +41,13 @@ public:
     std::vector<std::pair<int, int>> checkCapturesForOpponent(int x, int y, int opponent);
     bool isDoubleFree(int x, int y, int player) const;
     
+	// Setters
+	void newturn() { turns++; }
+
     // Getters
     int getCaptures(int player) const { return captures[player-1]; }
     static int getSize() { return SIZE; }
+	int getTurns() { return turns; }
     
     // Para debugging
     void printRaw() const;
