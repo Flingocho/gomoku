@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/08 20:17:39 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/08 20:58:19 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,6 +199,8 @@ int AI::evaluateCaptureAdvantage(const Board& board, int player) const {
     int score = 0;
     int myCaptures = board.getCaptures(player);
     
+    std::cout << "DEBUG: evaluateCaptureAdvantage for player " << player << " with " << myCaptures << " captures\n";
+    
     // Según cercanía a las 10 capturas (5 pares)
     if (myCaptures >= 8) {        // 1 par para ganar - MUY GRAVE pero defendible
         score += 20000;           // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
@@ -213,15 +215,28 @@ int AI::evaluateCaptureAdvantage(const Board& board, int player) const {
         score += myCaptures * 200; // Progreso gradual
     }
     
+    std::cout << "DEBUG: Base capture score: " << score << "\n";
+    
     // Amenazas de captura inmediatas
-    score += countCaptureOpportunities(board, player) * IMMEDIATE_CAPTURE;
+    int myOpportunities = countCaptureOpportunities(board, player);
+    int opponentOpportunities = countCaptureOpportunities(board, (player == 1) ? 2 : 1);
+    
+    std::cout << "DEBUG: My opportunities: " << myOpportunities << ", Opponent opportunities: " << opponentOpportunities << "\n";
+    
+    score += myOpportunities * IMMEDIATE_CAPTURE;
+    score -= opponentOpportunities * CAPTURE_THREAT;
+    
+    std::cout << "DEBUG: Final capture advantage score: " << score << "\n";
     
     return score;
 }
 
 int AI::countCaptureOpportunities(const Board& board, int player) const {
     int opportunities = 0;
+    int threats = 0;
     int opponent = (player == 1) ? 2 : 1;
+    
+    std::cout << "DEBUG: Counting capture opportunities for player " << player << " (opponent " << opponent << ")\n";
     
     // 8 direcciones
     int directions[8][2] = {
@@ -234,44 +249,127 @@ int AI::countCaptureOpportunities(const Board& board, int player) const {
     for (int i = 0; i < board.getSize(); i++) {
         for (int j = 0; j < board.getSize(); j++) {
             if (board.isEmpty(i, j)) {
-                // Verificar las 8 direcciones
+                bool foundOpportunity = false;
+                bool foundThreat = false;
+                
+                // Verificar las 8 direcciones para capturas inmediatas (donde player puede capturar)
                 for (int d = 0; d < 8; d++) {
                     if (canCaptureInDirection(board, i, j, directions[d][0], directions[d][1], player, opponent)) {
-                        opportunities++;
+                        std::cout << "DEBUG: Found capture opportunity at (" << i << "," << j << ") direction " << d << "\n";
+                        foundOpportunity = true;
                         break; // Una oportunidad por posición es suficiente
                     }
                 }
+                
+                // Si no hay oportunidad inmediata, verificar amenazas (donde colocar ayuda al oponente)
+                if (!foundOpportunity) {
+                    for (int d = 0; d < 8; d++) {
+                        if (isCaptureThreatenDirection(board, i, j, directions[d][0], directions[d][1], player, opponent)) {
+                            std::cout << "DEBUG: Found capture threat at (" << i << "," << j << ") direction " << d << "\n";
+                            foundThreat = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (foundOpportunity) opportunities++;
+                if (foundThreat) threats++;
             }
         }
     }
     
-    return opportunities;
+    std::cout << "DEBUG: Total capture opportunities: " << opportunities << ", threats: " << threats << "\n";
+    // Devolver oportunidades menos amenazas (las amenazas son negativas para el jugador)
+    return opportunities - threats;
 }
 
 bool AI::canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const {
-    // Patrón: al colocar en (x,y) se debe formar XOOX
+    // Patrón: al colocar en (x,y) se debe formar [MI_PIEZA][ENEMIGO][ENEMIGO][MI_PIEZA]
+    // Esto coincide exactamente con getCapturesInDirection del Board
     
     // Verificar hacia adelante: (x,y) + OO + X
-    int x1 = x + dx, y1 = y + dy;         // Primera O
-    int x2 = x + 2*dx, y2 = y + 2*dy;     // Segunda O  
-    int x3 = x + 3*dx, y3 = y + 3*dy;     // X que cierra
+    int pos1x = x + dx, pos1y = y + dy;         // Primera O
+    int pos2x = x + 2*dx, pos2y = y + 2*dy;     // Segunda O  
+    int pos3x = x + 3*dx, pos3y = y + 3*dy;     // X que cierra
     
     bool forwardCapture = 
-        board.isValid(x1, y1) && board.isValid(x2, y2) && board.isValid(x3, y3) &&
-        board.getPiece(x1, y1) == opponent &&
-        board.getPiece(x2, y2) == opponent &&
-        board.getPiece(x3, y3) == player;
+        board.isValid(pos1x, pos1y) && board.isValid(pos2x, pos2y) && board.isValid(pos3x, pos3y) &&
+        board.getPiece(pos1x, pos1y) == opponent &&
+        board.getPiece(pos2x, pos2y) == opponent &&
+        board.getPiece(pos3x, pos3y) == player;
     
     // Verificar hacia atrás: X + OO + (x,y)
-    int xb1 = x - dx, yb1 = y - dy;       // Primera O
-    int xb2 = x - 2*dx, yb2 = y - 2*dy;   // Segunda O
-    int xb3 = x - 3*dx, yb3 = y - 3*dy;   // X que cierra
+    pos1x = x - dx; pos1y = y - dy;       // Primera O
+    pos2x = x - 2*dx; pos2y = y - 2*dy;   // Segunda O
+    pos3x = x - 3*dx; pos3y = y - 3*dy;   // X que cierra
     
     bool backwardCapture = 
-        board.isValid(xb1, yb1) && board.isValid(xb2, yb2) && board.isValid(xb3, yb3) &&
-        board.getPiece(xb1, yb1) == opponent &&
-        board.getPiece(xb2, yb2) == opponent &&
-        board.getPiece(xb3, yb3) == player;
+        board.isValid(pos1x, pos1y) && board.isValid(pos2x, pos2y) && board.isValid(pos3x, pos3y) &&
+        board.getPiece(pos1x, pos1y) == opponent &&
+        board.getPiece(pos2x, pos2y) == opponent &&
+        board.getPiece(pos3x, pos3y) == player;
+    
+    if (forwardCapture || backwardCapture) {
+        std::cout << "DEBUG: Capture pattern found at (" << x << "," << y << ") dir(" << dx << "," << dy << ")\n";
+        if (forwardCapture) {
+            std::cout << "  Forward: X(" << x << "," << y << ") O(" << pos1x << "," << pos1y 
+                      << ") O(" << pos2x << "," << pos2y << ") X(" << pos3x << "," << pos3y << ")\n";
+        }
+        if (backwardCapture) {
+            int bpos1x = x - dx, bpos1y = y - dy;
+            int bpos2x = x - 2*dx, bpos2y = y - 2*dy;
+            int bpos3x = x - 3*dx, bpos3y = y - 3*dy;
+            std::cout << "  Backward: X(" << bpos3x << "," << bpos3y << ") O(" << bpos2x << "," << bpos2y 
+                      << ") O(" << bpos1x << "," << bpos1y << ") X(" << x << "," << y << ")\n";
+        }
+    }
     
     return forwardCapture || backwardCapture;
+}
+
+bool AI::isCaptureThreatenDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const {
+    // Detectar patrones de amenaza de captura donde si el jugador coloca una pieza,
+    // permite al oponente hacer una captura
+    
+    // Verificar si colocar 'player' en (x,y) crearía un patrón que el oponente puede capturar
+    
+    // Patrón 1: [opponent][player][(x,y)][opponent] 
+    // Si player coloca en (x,y), crea [opponent][player][player][opponent] = captura para opponent
+    int prev2X = x - 2*dx, prev2Y = y - 2*dy;     // opponent
+    int prevX = x - dx, prevY = y - dy;           // player
+    int nextX = x + dx, nextY = y + dy;           // opponent
+    
+    bool threat1 = 
+        board.isValid(prev2X, prev2Y) && board.isValid(prevX, prevY) && board.isValid(nextX, nextY) &&
+        board.getPiece(prev2X, prev2Y) == opponent &&
+        board.getPiece(prevX, prevY) == player &&
+        board.getPiece(nextX, nextY) == opponent;
+    
+    // Patrón 2: [opponent][(x,y)][player][opponent]
+    // Si player coloca en (x,y), crea [opponent][player][player][opponent] = captura para opponent  
+    int prev1X = x - dx, prev1Y = y - dy;         // opponent
+    int next1X = x + dx, next1Y = y + dy;         // player
+    int next2X = x + 2*dx, next2Y = y + 2*dy;     // opponent
+    
+    bool threat2 = 
+        board.isValid(prev1X, prev1Y) && board.isValid(next1X, next1Y) && board.isValid(next2X, next2Y) &&
+        board.getPiece(prev1X, prev1Y) == opponent &&
+        board.getPiece(next1X, next1Y) == player &&
+        board.getPiece(next2X, next2Y) == opponent;
+    
+    if (threat1 || threat2) {
+        std::cout << "DEBUG: Capture threat pattern found at (" << x << "," << y << ") dir(" << dx << "," << dy << ")\n";
+        if (threat1) {
+            std::cout << "  Threat1: " << opponent << "(" << prev2X << "," << prev2Y 
+                      << ") " << player << "(" << prevX << "," << prevY 
+                      << ") _(" << x << "," << y << ") " << opponent << "(" << nextX << "," << nextY << ") -> OXXO\n";
+        }
+        if (threat2) {
+            std::cout << "  Threat2: " << opponent << "(" << prev1X << "," << prev1Y 
+                      << ") _(" << x << "," << y << ") " << player << "(" << next1X << "," << next1Y 
+                      << ") " << opponent << "(" << next2X << "," << next2Y << ") -> OXXO\n";
+        }
+    }
+    
+    return threat1 || threat2;
 }
