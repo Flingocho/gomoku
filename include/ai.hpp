@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/08 20:47:09 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/09 17:27:00 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ private:
     int evaluateCaptureAdvantage(const Board& board, int player) const;
 	int countCaptureOpportunities(const Board& board, int player) const;
 	bool isLegalThreePattern(const Board& board, int x, int y, int dx, int dy, int player) const;
+	int countGaps(const Board& board, int x, int y, int dx, int dy, int player) const;
 
 public:
     AI(int aiplayer, int humanplayer, int depth) {aiPlayer = aiplayer, humanPlayer = humanplayer, maxDepth = depth;}

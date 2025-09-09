@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/08 20:58:19 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/09 17:59:29 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,28 +117,38 @@ bool AI::isLineStart(const Board& board, int x, int y, int dx, int dy, int playe
 int AI::checkPatternInDirection(const Board& board, int x, int y, int dx, int dy, int player) const
 {
     int consecutive = countConsecutive(board, x, y, dx, dy, player);
+    int withgaps = countGaps(board, x, y, dx, dy, player);
     int freeEnds = findFreeEnds(board, x, y, dx, dy, player);
     
-    // Clasificar el patrón según tu escala híbrida
-    if (consecutive >= 5) {
-        return STRAIGHTVICTORY;  // Ya ganó (aunque esto debería detectarse antes)
-    }
+    // 1. Patrones consecutivos
+    if (consecutive >= 5) return STRAIGHTVICTORY;
     
     if (consecutive == 4) {
-        if (freeEnds == 2) return FOUR_OPEN;    // _XXXX_ (imparable)
-        if (freeEnds == 1) return FOUR_SIMPLE;  // XXXX_ (forzado)
+        if (freeEnds == 2) return FOUR_OPEN;
+        if (freeEnds == 1) return FOUR_SIMPLE;
     }
     
+    // 2. CORREGIDO: Patrones críticos con gaps
+    if (withgaps == 4 && consecutive < 4) {  // Como OO_OO
+        return FOUR_SIMPLE;  // Una jugada para ganar
+    }
+    
+    if (withgaps == 3 && consecutive < 3) {  // Como OO_O o O_OO
+        if (freeEnds == 2) return THREE_OPEN;   // _OO_O_
+        if (freeEnds == 1) return THREE_SIMPLE; // XOO_O_
+    }
+    
+    // 3. Resto de patrones consecutivos
     if (consecutive == 3) {
-        if (freeEnds == 2) return THREE_OPEN;   // _XXX_ (amenaza fuerte)
-        if (freeEnds == 1) return THREE_OPEN / 3; // XXX_ (amenaza menor)
+        if (freeEnds == 2) return THREE_OPEN;
+        if (freeEnds == 1) return THREE_SIMPLE;
     }
     
     if (consecutive == 2) {
-        if (freeEnds == 2) return TWO_OPEN;     // _XX_ (desarrollo)
+        if (freeEnds == 2) return TWO_OPEN;
     }
     
-    return 0;  // Patrón no relevante
+    return 0;
 }
 
 // Contar piezas consecutivas en ambas direcciones
@@ -199,34 +209,34 @@ int AI::evaluateCaptureAdvantage(const Board& board, int player) const {
     int score = 0;
     int myCaptures = board.getCaptures(player);
     
-    std::cout << "DEBUG: evaluateCaptureAdvantage for player " << player << " with " << myCaptures << " captures\n";
-    
-    // Según cercanía a las 10 capturas (5 pares)
-    if (myCaptures >= 8) {        // 1 par para ganar - MUY GRAVE pero defendible
-        score += 20000;           // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
-    }
-    else if (myCaptures >= 6) {   // 2 pares para ganar - Grave
-        score += 8000;            // Un poco menos que FOUR_SIMPLE
-    }
-    else if (myCaptures >= 4) {   // 3 pares para ganar - Preocupante
-        score += 3000;            // Más que IMMEDIATE_CAPTURE
-    }
-    else {
-        score += myCaptures * 200; // Progreso gradual
-    }
-    
-    std::cout << "DEBUG: Base capture score: " << score << "\n";
-    
     // Amenazas de captura inmediatas
     int myOpportunities = countCaptureOpportunities(board, player);
     int opponentOpportunities = countCaptureOpportunities(board, (player == 1) ? 2 : 1);
     
-    std::cout << "DEBUG: My opportunities: " << myOpportunities << ", Opponent opportunities: " << opponentOpportunities << "\n";
+    // Solo aplicar bonificación por capturas existentes si hay actividad de captura relevante
+    bool captureRelevant = (myOpportunities != 0) || (opponentOpportunities != 0);
+    
+    if (captureRelevant) {
+        // Según cercanía a las 10 capturas (5 pares) - solo cuando hay actividad de captura
+        if (myCaptures >= 8) {        // 1 par para ganar - MUY GRAVE pero defendible
+            score += 20000;           // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+        }
+        else if (myCaptures >= 6) {   // 2 pares para ganar - Grave
+            score += 8000;            // Un poco menos que FOUR_SIMPLE
+        }
+        else if (myCaptures >= 4) {   // 3 pares para ganar - Preocupante
+            score += 3000;            // Más que IMMEDIATE_CAPTURE
+        }
+        else {
+            score += myCaptures * 200; // Progreso gradual
+        }
+    } else {
+        // Sin actividad de captura, solo un pequeño bonus por progreso
+        score += myCaptures * 50; // Mucho menor bonus cuando no hay actividad de captura
+    }
     
     score += myOpportunities * IMMEDIATE_CAPTURE;
     score -= opponentOpportunities * CAPTURE_THREAT;
-    
-    std::cout << "DEBUG: Final capture advantage score: " << score << "\n";
     
     return score;
 }
@@ -372,4 +382,42 @@ bool AI::isCaptureThreatenDirection(const Board& board, int x, int y, int dx, in
     }
     
     return threat1 || threat2;
+}
+
+int AI::countGaps(const Board& board, int x, int y, int dx, int dy, int player) const {
+    int count = 0;
+    
+    // Contar hacia adelante (incluyendo la pieza inicial)
+    int nx = x, ny = y;
+    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
+        count++;
+        nx += dx; ny += dy;
+    }
+    
+    // Si hay UN gap seguido de más piezas nuestras, contarlas
+    if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0) {
+        nx += dx; ny += dy; // Saltar el gap
+        while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
+            count++;
+            nx += dx; ny += dy;
+        }
+    }
+    
+    // Contar hacia atrás (sin la pieza inicial)
+    nx = x - dx; ny = y - dy;
+    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
+        count++;
+        nx -= dx; ny -= dy;
+    }
+    
+    // Gap hacia atrás también
+    if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0) {
+        nx -= dx; ny -= dy;
+        while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
+            count++;
+            nx -= dx; ny -= dy;
+        }
+    }
+    
+    return count; // Sin restar nada
 }
