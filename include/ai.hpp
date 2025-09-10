@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/09 17:27:00 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/10 19:03:12 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,24 +14,13 @@
 #define AI_HPP
 
 #include "board.hpp"
+#include "game_node.hpp"
 #include <vector>
+#include <set>
 #include <utility>
 #include <string>
 #include <iostream>
 #include <cstdint>
-
-// Estructura básica para movimientos
-struct Move {
-    int x;
-    int y;
-    int score;
-    
-    Move(int row = -1, int col = -1, int s = 0) : x(row), y(col), score(s) {}
-    
-    bool isValid() const {
-        return x >= 0 && y >= 0;
-    }
-};
 
 // Condiciones de fin de juego
 #define STRAIGHTVICTORY 100000      // Victoria inmediata: ±100000
@@ -69,23 +58,20 @@ private:
     int findFreeEnds(const Board& board, int x, int y, int dx, int dy, int player) const;
 	bool canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const;
 	bool isCaptureThreatenDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const;
-    int evaluateCaptureAdvantage(const Board& board, int player) const;
-	int countCaptureOpportunities(const Board& board, int player) const;
+    int evaluateCapturesInDirection(const Board& board, int x, int y, int dx, int dy, int player) const;
 	bool isLegalThreePattern(const Board& board, int x, int y, int dx, int dy, int player) const;
 	int countGaps(const Board& board, int x, int y, int dx, int dy, int player) const;
+	std::pair<int, int> getCaptureKey(const Board& board, int x, int y, int dx, int dy, int player) const;
+	std::pair<int, int> getThreatKey(const Board& board, int x, int y, int dx, int dy, int player) const;
 
 public:
     AI(int aiplayer, int humanplayer, int depth) {aiPlayer = aiplayer, humanPlayer = humanplayer, maxDepth = depth;}
     
     // Función principal - obtener mejor movimiento
-    Move getBestMove(Board& board);
+    Move getBestMoveWithTree(Board& board);
     
     // Función de evaluación principal (pública si se necesita para depuración)
     int evaluatePosition(const Board& board) const;
-    
-    // Funciones de búsqueda (a implementar)
-    int minimax(Board& board, int depth, bool isMaximizing, int alpha, int beta);
-    std::vector<Move> generateMoves(const Board& board) const;
 };
 
 #endif

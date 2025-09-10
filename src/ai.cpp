@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/09 17:59:29 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/10 19:05:15 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,25 +14,23 @@
 
 int AI::evaluatePosition(const Board &board) const
 {
-    // 1. Verificar condiciones de victoria inmediata
-    if (board.checkWin(aiPlayer)) return STRAIGHTVICTORY;
-    if (board.checkWin(humanPlayer)) return -STRAIGHTVICTORY;
-    
-    // 2. Evaluar patrones para ambos jugadores
-    int aiScore = evaluatePlayerPatterns(board, aiPlayer);
-    int humanScore = evaluatePlayerPatterns(board, humanPlayer);
-    std::cout << "Ai score only patterns: " << aiScore << " humanScore only patterns: " << humanScore << "\n";
-	aiScore += evaluateCaptureAdvantage(board, aiPlayer);
-    humanScore += evaluateCaptureAdvantage(board, humanPlayer);
-    std::cout << "Ai score: " << aiScore << " humanScore: " << humanScore << "\n";
+	// 1. Verificar condiciones de victoria inmediata
+	if (board.checkWin(aiPlayer))
+		return STRAIGHTVICTORY;
+	if (board.checkWin(humanPlayer))
+		return -STRAIGHTVICTORY;
 
-    return aiScore - humanScore;
+	// 2. Evaluar patrones para ambos jugadores
+	int aiScore = evaluatePlayerPatterns(board, aiPlayer);
+	int humanScore = evaluatePlayerPatterns(board, humanPlayer);
+
+	return aiScore - humanScore;
 }
 
-// Evaluar todos los patrones de un jugador
-int AI::evaluatePlayerPatterns(const Board& board, int player) const
-{
+int AI::evaluatePlayerPatterns(const Board &board, int player) const {
     int score = 0;
+    std::set<std::pair<int, int>> capturesAlreadyFound; // Capturas únicas encontradas
+    std::set<std::pair<int, int>> threatsAlreadyFound;  // Amenazas únicas encontradas
     
     // Direcciones: horizontal, vertical, diagonal \, diagonal /
     int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
@@ -41,6 +39,12 @@ int AI::evaluatePlayerPatterns(const Board& board, int player) const
         for (int j = 0; j < board.getSize(); j++) {
             if (board.getPiece(i, j) == player) {
                 
+                // Bonificación posicional
+                if (abs(i - 9) <= 3 && abs(j - 9) <= 3) {
+                    score += CENTRAL_POSITION;
+                }
+                
+                // Evaluar patrones
                 for (int d = 0; d < 4; d++) {
                     int dx = directions[d][0];
                     int dy = directions[d][1];
@@ -48,17 +52,35 @@ int AI::evaluatePlayerPatterns(const Board& board, int player) const
                     if (isLineStart(board, i, j, dx, dy, player)) {
                         int patternScore = checkPatternInDirection(board, i, j, dx, dy, player);
                         
-                        // NUEVO: Si es THREE_OPEN, verificar que sea legal
                         if (patternScore == THREE_OPEN) {
                             if (isLegalThreePattern(board, i, j, dx, dy, player)) {
                                 score += patternScore;
                             }
-                            // Si no es legal, no sumar puntos por este patrón
                         } else {
                             score += patternScore;
                         }
                     }
                 }
+                
+                // Evaluar capturas únicas
+                for (int d = 0; d < 4; d++) {
+                    int dx = directions[d][0];
+                    int dy = directions[d][1];
+                    
+                    // Verificar captura ofensiva
+                    std::pair<int, int> captureKey = getCaptureKey(board, i, j, dx, dy, player);
+                    if (captureKey.first != -1 && capturesAlreadyFound.find(captureKey) == capturesAlreadyFound.end()) {
+                        capturesAlreadyFound.insert(captureKey);
+                        score += evaluateCapturesInDirection(board, i, j, dx, dy, player);
+                    }
+                    
+                    // Verificar amenaza defensiva (similar lógica)
+                    std::pair<int, int> threatKey = getThreatKey(board, i, j, dx, dy, player);
+                    if (threatKey.first != -1 && threatsAlreadyFound.find(threatKey) == threatsAlreadyFound.end()) {
+                        threatsAlreadyFound.insert(threatKey);
+                        score -= CAPTURE_THREAT; // Penalizar amenaza
+                    }
+                }
             }
         }
     }
@@ -66,358 +88,422 @@ int AI::evaluatePlayerPatterns(const Board& board, int player) const
     return score;
 }
 
-bool AI::isLegalThreePattern(const Board& board, int x, int y, int dx, int dy, int player) const {
-    // Encontrar los extremos del patrón de 3
-    int startX = x, startY = y;
-    int endX = x, endY = y;
+std::pair<int, int> AI::getThreatKey(const Board& board, int x, int y, int dx, int dy, int player) const {
+    int opponent = (player == 1) ? 2 : 1;
     
-    // Buscar el inicio real del patrón
-    while (board.isValid(startX - dx, startY - dy) && board.getPiece(startX - dx, startY - dy) == player) {
-        startX -= dx;
-        startY -= dy;
+    // Patrón amenaza: O + X(x,y) + _ + O
+    int emptyX = x + dx, emptyY = y + dy;
+    int opp1X = x - dx, opp1Y = y - dy;
+    int opp2X = x + 2*dx, opp2Y = y + 2*dy;
+    
+    if (board.isValid(opp1X, opp1Y) && board.isValid(emptyX, emptyY) && board.isValid(opp2X, opp2Y) &&
+        board.getPiece(opp1X, opp1Y) == opponent &&
+        board.isEmpty(emptyX, emptyY) &&
+        board.getPiece(opp2X, opp2Y) == opponent) {
+        
+        return {emptyX, emptyY}; // Posición peligrosa
     }
     
-    // Buscar el final real del patrón  
-    while (board.isValid(endX + dx, endY + dy) && board.getPiece(endX + dx, endY + dy) == player) {
-        endX += dx;
-        endY += dy;
+    // Patrón amenaza: O + _ + X(x,y) + O
+    emptyX = x - dx; emptyY = y - dy;
+    opp1X = x - 2*dx; opp1Y = y - 2*dy;
+    opp2X = x + dx; opp2Y = y + dy;
+    
+    if (board.isValid(opp1X, opp1Y) && board.isValid(emptyX, emptyY) && board.isValid(opp2X, opp2Y) &&
+        board.getPiece(opp1X, opp1Y) == opponent &&
+        board.isEmpty(emptyX, emptyY) &&
+        board.getPiece(opp2X, opp2Y) == opponent) {
+        
+        return {emptyX, emptyY};
     }
     
-    // Posiciones donde se podría completar el three
-    int beforeX = startX - dx, beforeY = startY - dy;
-    int afterX = endX + dx, afterY = endY + dy;
+    return {-1, -1}; // No hay amenaza
+}
+
+std::pair<int, int> AI::getCaptureKey(const Board& board, int x, int y, int dx, int dy, int player) const {
+    int opponent = (player == 1) ? 2 : 1;
     
-    bool canPlayBefore = board.isValid(beforeX, beforeY) && board.isEmpty(beforeX, beforeY);
-    bool canPlayAfter = board.isValid(afterX, afterY) && board.isEmpty(afterX, afterY);
+    // Verificar patrón hacia adelante: X(x,y) + O + O + _
+    int opp1X = x + dx, opp1Y = y + dy;
+    int opp2X = x + 2*dx, opp2Y = y + 2*dy;
+    int emptyX = x + 3*dx, emptyY = y + 3*dy;
     
-    // Verificar si colocar en cualquier extremo crearía double-three
-    if (canPlayBefore && board.isDoubleFree(beforeX, beforeY, player)) {
-        canPlayBefore = false; // Esta jugada sería ilegal
+    if (board.isValid(opp1X, opp1Y) && board.isValid(opp2X, opp2Y) && board.isValid(emptyX, emptyY) &&
+        board.getPiece(opp1X, opp1Y) == opponent &&
+        board.getPiece(opp2X, opp2Y) == opponent &&
+        board.isEmpty(emptyX, emptyY)) {
+        
+        // Devolver posición donde se puede capturar (única para esta captura)
+        return {emptyX, emptyY};
     }
     
-    if (canPlayAfter && board.isDoubleFree(afterX, afterY, player)) {
-        canPlayAfter = false; // Esta jugada sería ilegal
+    // Verificar patrón hacia atrás: _ + O + O + X(x,y)
+    emptyX = x - 3*dx; emptyY = y - 3*dy;
+    opp1X = x - 2*dx; opp1Y = y - 2*dy;
+    opp2X = x - dx; opp2Y = y - dy;
+    
+    if (board.isValid(emptyX, emptyY) && board.isValid(opp1X, opp1Y) && board.isValid(opp2X, opp2Y) &&
+        board.isEmpty(emptyX, emptyY) &&
+        board.getPiece(opp1X, opp1Y) == opponent &&
+        board.getPiece(opp2X, opp2Y) == opponent) {
+        
+        return {emptyX, emptyY};
     }
     
-    // El patrón solo es valioso si al menos un extremo es jugable legalmente
-    return canPlayBefore || canPlayAfter;
+    return {-1, -1}; // No hay captura
+}
+
+bool AI::isLegalThreePattern(const Board &board, int x, int y, int dx, int dy, int player) const
+{
+	// Encontrar los extremos del patrón de 3
+	int startX = x, startY = y;
+	int endX = x, endY = y;
+
+	// Buscar el inicio real del patrón
+	while (board.isValid(startX - dx, startY - dy) && board.getPiece(startX - dx, startY - dy) == player)
+	{
+		startX -= dx;
+		startY -= dy;
+	}
+
+	// Buscar el final real del patrón
+	while (board.isValid(endX + dx, endY + dy) && board.getPiece(endX + dx, endY + dy) == player)
+	{
+		endX += dx;
+		endY += dy;
+	}
+
+	// Posiciones donde se podría completar el three
+	int beforeX = startX - dx, beforeY = startY - dy;
+	int afterX = endX + dx, afterY = endY + dy;
+
+	bool canPlayBefore = board.isValid(beforeX, beforeY) && board.isEmpty(beforeX, beforeY);
+	bool canPlayAfter = board.isValid(afterX, afterY) && board.isEmpty(afterX, afterY);
+
+	// Verificar si colocar en cualquier extremo crearía double-three
+	if (canPlayBefore && board.isDoubleFree(beforeX, beforeY, player))
+	{
+		canPlayBefore = false; // Esta jugada sería ilegal
+	}
+
+	if (canPlayAfter && board.isDoubleFree(afterX, afterY, player))
+	{
+		canPlayAfter = false; // Esta jugada sería ilegal
+	}
+
+	// El patrón solo es valioso si al menos un extremo es jugable legalmente
+	return canPlayBefore || canPlayAfter;
 }
 
 // Verificar si esta posición es el inicio de una línea (evita doble conteo)
-bool AI::isLineStart(const Board& board, int x, int y, int dx, int dy, int player) const
+bool AI::isLineStart(const Board &board, int x, int y, int dx, int dy, int player) const
 {
-    int prevX = x - dx;
-    int prevY = y - dy;
-    
-    // Es el inicio si la posición anterior no es válida o no es del mismo jugador
-    return !board.isValid(prevX, prevY) || board.getPiece(prevX, prevY) != player;
+	int prevX = x - dx;
+	int prevY = y - dy;
+
+	// Es el inicio si la posición anterior no es válida o no es del mismo jugador
+	return !board.isValid(prevX, prevY) || board.getPiece(prevX, prevY) != player;
 }
 
 // Detectar patrón en una dirección específica
-int AI::checkPatternInDirection(const Board& board, int x, int y, int dx, int dy, int player) const
+int AI::checkPatternInDirection(const Board &board, int x, int y, int dx, int dy, int player) const
 {
-    int consecutive = countConsecutive(board, x, y, dx, dy, player);
-    int withgaps = countGaps(board, x, y, dx, dy, player);
-    int freeEnds = findFreeEnds(board, x, y, dx, dy, player);
-    
-    // 1. Patrones consecutivos
-    if (consecutive >= 5) return STRAIGHTVICTORY;
-    
-    if (consecutive == 4) {
-        if (freeEnds == 2) return FOUR_OPEN;
-        if (freeEnds == 1) return FOUR_SIMPLE;
-    }
-    
-    // 2. CORREGIDO: Patrones críticos con gaps
-    if (withgaps == 4 && consecutive < 4) {  // Como OO_OO
-        return FOUR_SIMPLE;  // Una jugada para ganar
-    }
-    
-    if (withgaps == 3 && consecutive < 3) {  // Como OO_O o O_OO
-        if (freeEnds == 2) return THREE_OPEN;   // _OO_O_
-        if (freeEnds == 1) return THREE_SIMPLE; // XOO_O_
-    }
-    
-    // 3. Resto de patrones consecutivos
-    if (consecutive == 3) {
-        if (freeEnds == 2) return THREE_OPEN;
-        if (freeEnds == 1) return THREE_SIMPLE;
-    }
-    
-    if (consecutive == 2) {
-        if (freeEnds == 2) return TWO_OPEN;
-    }
-    
-    return 0;
+	int consecutive = countConsecutive(board, x, y, dx, dy, player);
+	int withgaps = countGaps(board, x, y, dx, dy, player);
+	int freeEnds = findFreeEnds(board, x, y, dx, dy, player);
+
+	// 1. Patrones consecutivos
+	if (consecutive >= 5)
+		return STRAIGHTVICTORY;
+
+	if (consecutive == 4)
+	{
+		if (freeEnds == 2)
+			return FOUR_OPEN;
+		if (freeEnds == 1)
+			return FOUR_SIMPLE;
+	}
+
+	// 2. CORREGIDO: Patrones críticos con gaps
+	if (withgaps == 4 && consecutive < 4)
+	{						// Como OO_OO
+		return FOUR_SIMPLE; // Una jugada para ganar
+	}
+
+	if (withgaps == 3 && consecutive < 3)
+	{ // Como OO_O o O_OO
+		if (freeEnds == 2)
+			return THREE_OPEN; // _OO_O_
+		if (freeEnds == 1)
+			return THREE_SIMPLE; // XOO_O_
+	}
+
+	// 3. Resto de patrones consecutivos
+	if (consecutive == 3)
+	{
+		if (freeEnds == 2)
+			return THREE_OPEN;
+		if (freeEnds == 1)
+			return THREE_SIMPLE;
+	}
+
+	if (consecutive == 2)
+	{
+		if (freeEnds == 2)
+			return TWO_OPEN;
+	}
+
+	return 0;
 }
 
 // Contar piezas consecutivas en ambas direcciones
-int AI::countConsecutive(const Board& board, int x, int y, int dx, int dy, int player) const
+int AI::countConsecutive(const Board &board, int x, int y, int dx, int dy, int player) const
 {
-    int count = 0;
-    
-    // Contar hacia una dirección (incluyendo la pieza inicial)
-    int nx = x, ny = y;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        count++;
-        nx += dx;
-        ny += dy;
-    }
-    
-    // Contar hacia la dirección opuesta (sin contar la pieza inicial otra vez)
-    nx = x - dx;
-    ny = y - dy;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        count++;
-        nx -= dx;
-        ny -= dy;
-    }
-    
-    return count;
+	int count = 0;
+
+	// Contar hacia una dirección (incluyendo la pieza inicial)
+	int nx = x, ny = y;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		count++;
+		nx += dx;
+		ny += dy;
+	}
+
+	// Contar hacia la dirección opuesta (sin contar la pieza inicial otra vez)
+	nx = x - dx;
+	ny = y - dy;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		count++;
+		nx -= dx;
+		ny -= dy;
+	}
+
+	return count;
 }
 
 // Encontrar cuántos extremos están libres
-int AI::findFreeEnds(const Board& board, int x, int y, int dx, int dy, int player) const
+int AI::findFreeEnds(const Board &board, int x, int y, int dx, int dy, int player) const
 {
-    int freeEnds = 0;
-    
-    // Buscar extremo hacia adelante
-    int nx = x, ny = y;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        nx += dx; 
-        ny += dy;
-    }
-    if (board.isValid(nx, ny) && board.isEmpty(nx, ny)) {
-        freeEnds++;
-    }
-    
-    // Buscar extremo hacia atrás  
-    nx = x; 
-    ny = y;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        nx -= dx; 
-        ny -= dy;
-    }
-    if (board.isValid(nx, ny) && board.isEmpty(nx, ny)) {
-        freeEnds++;
-    }
-    
-    return freeEnds;
+	int freeEnds = 0;
+
+	// Buscar extremo hacia adelante
+	int nx = x, ny = y;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		nx += dx;
+		ny += dy;
+	}
+	if (board.isValid(nx, ny) && board.isEmpty(nx, ny))
+	{
+		freeEnds++;
+	}
+
+	// Buscar extremo hacia atrás
+	nx = x;
+	ny = y;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		nx -= dx;
+		ny -= dy;
+	}
+	if (board.isValid(nx, ny) && board.isEmpty(nx, ny))
+	{
+		freeEnds++;
+	}
+
+	return freeEnds;
 }
 
-int AI::evaluateCaptureAdvantage(const Board& board, int player) const {
-    int score = 0;
-    int myCaptures = board.getCaptures(player);
-    
-    // Amenazas de captura inmediatas
-    int myOpportunities = countCaptureOpportunities(board, player);
-    int opponentOpportunities = countCaptureOpportunities(board, (player == 1) ? 2 : 1);
-    
-    // Solo aplicar bonificación por capturas existentes si hay actividad de captura relevante
-    bool captureRelevant = (myOpportunities != 0) || (opponentOpportunities != 0);
-    
-    if (captureRelevant) {
-        // Según cercanía a las 10 capturas (5 pares) - solo cuando hay actividad de captura
-        if (myCaptures >= 8) {        // 1 par para ganar - MUY GRAVE pero defendible
-            score += 20000;           // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
-        }
-        else if (myCaptures >= 6) {   // 2 pares para ganar - Grave
-            score += 8000;            // Un poco menos que FOUR_SIMPLE
-        }
-        else if (myCaptures >= 4) {   // 3 pares para ganar - Preocupante
-            score += 3000;            // Más que IMMEDIATE_CAPTURE
-        }
-        else {
-            score += myCaptures * 200; // Progreso gradual
-        }
-    } else {
-        // Sin actividad de captura, solo un pequeño bonus por progreso
-        score += myCaptures * 50; // Mucho menor bonus cuando no hay actividad de captura
-    }
-    
-    score += myOpportunities * IMMEDIATE_CAPTURE;
-    score -= opponentOpportunities * CAPTURE_THREAT;
-    
-    return score;
+int AI::evaluateCapturesInDirection(const Board &board, int x, int y, int dx, int dy, int player) const
+{
+	int score = 0;
+	int myCaptures = board.getCaptures(player);
+	int OppCaptures = board.getCaptures((player == 1) ? 2 : 1);
+
+	// Amenazas de captura inmediatas
+	int myOpportunities = canCaptureInDirection(board, x, y, dx, dy, player, (player == 1) ? 2 : 1);
+	int opponentOpportunities = isCaptureThreatenDirection(board, x, y, dx, dy, player, (player == 1) ? 2 : 1);
+
+	// Solo aplicar bonificación por capturas existentes si hay actividad de captura relevante
+	bool captureRelevant = (myOpportunities != 0) || (opponentOpportunities != 0);
+
+	if (captureRelevant)
+	{
+		// Según cercanía a las 10 capturas (5 pares) - solo cuando hay actividad de captura
+		if (myCaptures >= 8 && myOpportunities > 0)
+		{					// 1 par para ganar - MUY GRAVE pero defendible
+			score += 20000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+		}
+		else if (myCaptures >= 6 && myOpportunities > 0)
+		{				   // 2 pares para ganar - Grave
+			score += 8000; // Un poco menos que FOUR_SIMPLE
+		}
+		else if (myCaptures >= 4 && myOpportunities > 0)
+		{				   // 3 pares para ganar - Preocupante
+			score += 3000; // Más que IMMEDIATE_CAPTURE
+		}
+		else
+		{
+			score += myCaptures * 200; // Progreso gradual
+		}
+
+		score += myOpportunities * IMMEDIATE_CAPTURE;
+
+		if (OppCaptures >= 8 && opponentOpportunities > 0)
+		{					// 1 par para ganar - MUY GRAVE pero defendible
+			score -= 20000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+		}
+		else if (OppCaptures >= 6 && opponentOpportunities > 0)
+		{				   // 2 pares para ganar - Grave
+			score -= 8000; // Un poco menos que FOUR_SIMPLE
+		}
+		else if (OppCaptures >= 4 && opponentOpportunities > 0)
+		{				   // 3 pares para ganar - Preocupante
+			score -= 3000; // Más que IMMEDIATE_CAPTURE
+		}
+		else
+		{
+			score -= OppCaptures * 200; // Progreso gradual
+		}
+
+		score -= opponentOpportunities * CAPTURE_THREAT;
+		
+	}
+
+	return score;
 }
 
-int AI::countCaptureOpportunities(const Board& board, int player) const {
-    int opportunities = 0;
-    int threats = 0;
-    int opponent = (player == 1) ? 2 : 1;
-    
-    std::cout << "DEBUG: Counting capture opportunities for player " << player << " (opponent " << opponent << ")\n";
-    
-    // 8 direcciones
-    int directions[8][2] = {
-        {-1, -1}, {-1, 0}, {-1, 1},
-        {0, -1},           {0, 1},
-        {1, -1},  {1, 0},  {1, 1}
-    };
-    
-    // Recorrer todas las posiciones vacías
-    for (int i = 0; i < board.getSize(); i++) {
-        for (int j = 0; j < board.getSize(); j++) {
-            if (board.isEmpty(i, j)) {
-                bool foundOpportunity = false;
-                bool foundThreat = false;
-                
-                // Verificar las 8 direcciones para capturas inmediatas (donde player puede capturar)
-                for (int d = 0; d < 8; d++) {
-                    if (canCaptureInDirection(board, i, j, directions[d][0], directions[d][1], player, opponent)) {
-                        std::cout << "DEBUG: Found capture opportunity at (" << i << "," << j << ") direction " << d << "\n";
-                        foundOpportunity = true;
-                        break; // Una oportunidad por posición es suficiente
-                    }
-                }
-                
-                // Si no hay oportunidad inmediata, verificar amenazas (donde colocar ayuda al oponente)
-                if (!foundOpportunity) {
-                    for (int d = 0; d < 8; d++) {
-                        if (isCaptureThreatenDirection(board, i, j, directions[d][0], directions[d][1], player, opponent)) {
-                            std::cout << "DEBUG: Found capture threat at (" << i << "," << j << ") direction " << d << "\n";
-                            foundThreat = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (foundOpportunity) opportunities++;
-                if (foundThreat) threats++;
-            }
-        }
-    }
-    
-    std::cout << "DEBUG: Total capture opportunities: " << opportunities << ", threats: " << threats << "\n";
-    // Devolver oportunidades menos amenazas (las amenazas son negativas para el jugador)
-    return opportunities - threats;
+bool AI::canCaptureInDirection(const Board &board, int x, int y, int dx, int dy, int player, int opponent) const
+{
+	// Empezamos desde una pieza nuestra X en (x,y)
+	// Buscamos patrones: X(x,y) + 00 + _ para capturar hacia adelante
+	if (player < -1)
+		return 0;
+	// Patrón hacia adelante: X(x,y) + O + O + _
+	int opp1X = x + dx, opp1Y = y + dy;			  // Primera O
+	int opp2X = x + 2 * dx, opp2Y = y + 2 * dy;	  // Segunda O
+	int emptyX = x + 3 * dx, emptyY = y + 3 * dy; // Donde podemos jugar
+
+	bool forwardPattern =
+		board.isValid(opp1X, opp1Y) && board.isValid(opp2X, opp2Y) && board.isValid(emptyX, emptyY) &&
+		board.getPiece(opp1X, opp1Y) == opponent &&
+		board.getPiece(opp2X, opp2Y) == opponent &&
+		board.isEmpty(emptyX, emptyY);
+
+	// Patrón hacia atrás: _ + O + O + X(x,y)
+	emptyX = x - 3 * dx;
+	emptyY = y - 3 * dy; // Donde podemos jugar
+	opp1X = x - 2 * dx;
+	opp1Y = y - 2 * dy; // Primera O
+	opp2X = x - dx;
+	opp2Y = y - dy; // Segunda O
+
+	bool backwardPattern =
+		board.isValid(emptyX, emptyY) && board.isValid(opp1X, opp1Y) && board.isValid(opp2X, opp2Y) &&
+		board.isEmpty(emptyX, emptyY) &&
+		board.getPiece(opp1X, opp1Y) == opponent &&
+		board.getPiece(opp2X, opp2Y) == opponent;
+
+	return forwardPattern || backwardPattern;
 }
 
-bool AI::canCaptureInDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const {
-    // Patrón: al colocar en (x,y) se debe formar [MI_PIEZA][ENEMIGO][ENEMIGO][MI_PIEZA]
-    // Esto coincide exactamente con getCapturesInDirection del Board
-    
-    // Verificar hacia adelante: (x,y) + OO + X
-    int pos1x = x + dx, pos1y = y + dy;         // Primera O
-    int pos2x = x + 2*dx, pos2y = y + 2*dy;     // Segunda O  
-    int pos3x = x + 3*dx, pos3y = y + 3*dy;     // X que cierra
-    
-    bool forwardCapture = 
-        board.isValid(pos1x, pos1y) && board.isValid(pos2x, pos2y) && board.isValid(pos3x, pos3y) &&
-        board.getPiece(pos1x, pos1y) == opponent &&
-        board.getPiece(pos2x, pos2y) == opponent &&
-        board.getPiece(pos3x, pos3y) == player;
-    
-    // Verificar hacia atrás: X + OO + (x,y)
-    pos1x = x - dx; pos1y = y - dy;       // Primera O
-    pos2x = x - 2*dx; pos2y = y - 2*dy;   // Segunda O
-    pos3x = x - 3*dx; pos3y = y - 3*dy;   // X que cierra
-    
-    bool backwardCapture = 
-        board.isValid(pos1x, pos1y) && board.isValid(pos2x, pos2y) && board.isValid(pos3x, pos3y) &&
-        board.getPiece(pos1x, pos1y) == opponent &&
-        board.getPiece(pos2x, pos2y) == opponent &&
-        board.getPiece(pos3x, pos3y) == player;
-    
-    if (forwardCapture || backwardCapture) {
-        std::cout << "DEBUG: Capture pattern found at (" << x << "," << y << ") dir(" << dx << "," << dy << ")\n";
-        if (forwardCapture) {
-            std::cout << "  Forward: X(" << x << "," << y << ") O(" << pos1x << "," << pos1y 
-                      << ") O(" << pos2x << "," << pos2y << ") X(" << pos3x << "," << pos3y << ")\n";
-        }
-        if (backwardCapture) {
-            int bpos1x = x - dx, bpos1y = y - dy;
-            int bpos2x = x - 2*dx, bpos2y = y - 2*dy;
-            int bpos3x = x - 3*dx, bpos3y = y - 3*dy;
-            std::cout << "  Backward: X(" << bpos3x << "," << bpos3y << ") O(" << bpos2x << "," << bpos2y 
-                      << ") O(" << bpos1x << "," << bpos1y << ") X(" << x << "," << y << ")\n";
-        }
-    }
-    
-    return forwardCapture || backwardCapture;
+bool AI::isCaptureThreatenDirection(const Board &board, int x, int y, int dx, int dy, int player, int opponent) const
+{
+	// Empezamos desde una pieza nuestra X en (x,y)
+	// Buscamos patrones donde estamos vulnerables a captura: O-X(x,y)-_-O o O-_-X(x,y)-O
+	if (player < -1)
+		return 0;
+	// Patrón 1: O + X(x,y) + _ + O
+	// Si colocamos otra pieza nuestra en _, nos capturan
+	int emptyX = x + dx, emptyY = y + dy;		// Donde podríamos jugar (peligroso)
+	int opp1X = x - dx, opp1Y = y - dy;			// Opponent antes
+	int opp2X = x + 2 * dx, opp2Y = y + 2 * dy; // Opponent después
+
+	bool threat1 =
+		board.isValid(opp1X, opp1Y) && board.isValid(emptyX, emptyY) && board.isValid(opp2X, opp2Y) &&
+		board.getPiece(opp1X, opp1Y) == opponent &&
+		board.isEmpty(emptyX, emptyY) &&
+		board.getPiece(opp2X, opp2Y) == opponent;
+
+	// Patrón 2: O + _ + X(x,y) + O
+	// Si colocamos otra pieza nuestra en _, nos capturan
+	emptyX = x - dx;
+	emptyY = y - dy; // Donde podríamos jugar (peligroso)
+	opp1X = x - 2 * dx;
+	opp1Y = y - 2 * dy; // Opponent antes
+	opp2X = x + dx;
+	opp2Y = y + dy; // Opponent después
+
+	bool threat2 =
+		board.isValid(opp1X, opp1Y) && board.isValid(emptyX, emptyY) && board.isValid(opp2X, opp2Y) &&
+		board.getPiece(opp1X, opp1Y) == opponent &&
+		board.isEmpty(emptyX, emptyY) &&
+		board.getPiece(opp2X, opp2Y) == opponent;
+
+	return threat1 || threat2;
 }
 
-bool AI::isCaptureThreatenDirection(const Board& board, int x, int y, int dx, int dy, int player, int opponent) const {
-    // Detectar patrones de amenaza de captura donde si el jugador coloca una pieza,
-    // permite al oponente hacer una captura
-    
-    // Verificar si colocar 'player' en (x,y) crearía un patrón que el oponente puede capturar
-    
-    // Patrón 1: [opponent][player][(x,y)][opponent] 
-    // Si player coloca en (x,y), crea [opponent][player][player][opponent] = captura para opponent
-    int prev2X = x - 2*dx, prev2Y = y - 2*dy;     // opponent
-    int prevX = x - dx, prevY = y - dy;           // player
-    int nextX = x + dx, nextY = y + dy;           // opponent
-    
-    bool threat1 = 
-        board.isValid(prev2X, prev2Y) && board.isValid(prevX, prevY) && board.isValid(nextX, nextY) &&
-        board.getPiece(prev2X, prev2Y) == opponent &&
-        board.getPiece(prevX, prevY) == player &&
-        board.getPiece(nextX, nextY) == opponent;
-    
-    // Patrón 2: [opponent][(x,y)][player][opponent]
-    // Si player coloca en (x,y), crea [opponent][player][player][opponent] = captura para opponent  
-    int prev1X = x - dx, prev1Y = y - dy;         // opponent
-    int next1X = x + dx, next1Y = y + dy;         // player
-    int next2X = x + 2*dx, next2Y = y + 2*dy;     // opponent
-    
-    bool threat2 = 
-        board.isValid(prev1X, prev1Y) && board.isValid(next1X, next1Y) && board.isValid(next2X, next2Y) &&
-        board.getPiece(prev1X, prev1Y) == opponent &&
-        board.getPiece(next1X, next1Y) == player &&
-        board.getPiece(next2X, next2Y) == opponent;
-    
-    if (threat1 || threat2) {
-        std::cout << "DEBUG: Capture threat pattern found at (" << x << "," << y << ") dir(" << dx << "," << dy << ")\n";
-        if (threat1) {
-            std::cout << "  Threat1: " << opponent << "(" << prev2X << "," << prev2Y 
-                      << ") " << player << "(" << prevX << "," << prevY 
-                      << ") _(" << x << "," << y << ") " << opponent << "(" << nextX << "," << nextY << ") -> OXXO\n";
-        }
-        if (threat2) {
-            std::cout << "  Threat2: " << opponent << "(" << prev1X << "," << prev1Y 
-                      << ") _(" << x << "," << y << ") " << player << "(" << next1X << "," << next1Y 
-                      << ") " << opponent << "(" << next2X << "," << next2Y << ") -> OXXO\n";
-        }
-    }
-    
-    return threat1 || threat2;
+int AI::countGaps(const Board &board, int x, int y, int dx, int dy, int player) const
+{
+	int count = 0;
+
+	// Contar hacia adelante (incluyendo la pieza inicial)
+	int nx = x, ny = y;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		count++;
+		nx += dx;
+		ny += dy;
+	}
+
+	// Si hay UN gap seguido de más piezas nuestras, contarlas
+	if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0)
+	{
+		nx += dx;
+		ny += dy; // Saltar el gap
+		while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+		{
+			count++;
+			nx += dx;
+			ny += dy;
+		}
+	}
+
+	// Contar hacia atrás (sin la pieza inicial)
+	nx = x - dx;
+	ny = y - dy;
+	while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+	{
+		count++;
+		nx -= dx;
+		ny -= dy;
+	}
+
+	// Gap hacia atrás también
+	if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0)
+	{
+		nx -= dx;
+		ny -= dy;
+		while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player)
+		{
+			count++;
+			nx -= dx;
+			ny -= dy;
+		}
+	}
+
+	return count; // Sin restar nada
 }
 
-int AI::countGaps(const Board& board, int x, int y, int dx, int dy, int player) const {
-    int count = 0;
-    
-    // Contar hacia adelante (incluyendo la pieza inicial)
-    int nx = x, ny = y;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        count++;
-        nx += dx; ny += dy;
-    }
-    
-    // Si hay UN gap seguido de más piezas nuestras, contarlas
-    if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0) {
-        nx += dx; ny += dy; // Saltar el gap
-        while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-            count++;
-            nx += dx; ny += dy;
-        }
-    }
-    
-    // Contar hacia atrás (sin la pieza inicial)
-    nx = x - dx; ny = y - dy;
-    while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-        count++;
-        nx -= dx; ny -= dy;
-    }
-    
-    // Gap hacia atrás también
-    if (board.isValid(nx, ny) && board.getPiece(nx, ny) == 0) {
-        nx -= dx; ny -= dy;
-        while (board.isValid(nx, ny) && board.getPiece(nx, ny) == player) {
-            count++;
-            nx -= dx; ny -= dy;
-        }
-    }
-    
-    return count; // Sin restar nada
+Move AI::getBestMoveWithTree(Board &board)
+{
+	// Crear nodo raíz del árbol
+	GameNode root(board, aiPlayer, this);
+
+	// Buscar mejor movimiento con profundidad configurable
+	Move bestMove = root.getBestMove(maxDepth);
+
+	return bestMove;
 }
