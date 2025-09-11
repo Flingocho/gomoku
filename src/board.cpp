@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:06 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/03 20:23:13 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 18:10:50 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,26 +285,81 @@ bool Board::isDoubleFree(int x, int y, int player) const {
 }
 
 bool Board::isFreeThree(int x, int y, int dx, int dy, int player) const {
-    // Contar piezas consecutivas en ambas direcciones
+    // Patrón 1: Tres piezas consecutivas (original)
     int countForward = countDirection(x, y, dx, dy, player);
     int countBackward = countDirection(x, y, -dx, -dy, player);
     int totalInLine = 1 + countForward + countBackward;
         
-    // Para ser free-three, necesitamos exactamente 3 en línea
-    if (totalInLine != 3) return false;
-    
-    // Verificar extremos libres
-    int frontX = x + (countForward + 1) * dx;
-    int frontY = y + (countForward + 1) * dy;
-    int backX = x - (countBackward + 1) * dx;
-    int backY = y - (countBackward + 1) * dy;
-    
-    bool frontFree = isValid(frontX, frontY) && board[frontX][frontY] == 0;
-    bool backFree = isValid(backX, backY) && board[backX][backY] == 0;
+    if (totalInLine == 3) {
+        // Verificar extremos libres para el patrón consecutivo
+        int frontX = x + (countForward + 1) * dx;
+        int frontY = y + (countForward + 1) * dy;
+        int backX = x - (countBackward + 1) * dx;
+        int backY = y - (countBackward + 1) * dy;
         
-    // Free-three más permisivo: al menos UN extremo libre
-    // (puedes cambiar a "frontFree && backFree" para más estricto)
-    return frontFree || backFree;
+        bool frontFree = isValid(frontX, frontY) && board[frontX][frontY] == 0;
+        bool backFree = isValid(backX, backY) && board[backX][backY] == 0;
+            
+        if (frontFree || backFree) return true;
+    }
+    
+    // Patrón 2: -O-OO- (gap + piece + gap + two pieces + gap)
+    // Verificar si la pieza actual está en la posición del gap
+    if (checkBrokenPattern1(x, y, dx, dy, player)) return true;
+    
+    // Patrón 3: -OO-O- (gap + two pieces + gap + piece + gap)  
+    // Verificar si la pieza actual está en la posición del gap
+    if (checkBrokenPattern2(x, y, dx, dy, player)) return true;
+    
+    return false;
+}
+
+bool Board::checkBrokenPattern1(int x, int y, int dx, int dy, int player) const {
+    // Patrón: -O-OO- 
+    // La pieza actual (x,y) está en el gap entre O y OO
+    // Verificar: [libre][pieza][actual][pieza][pieza][libre]
+    
+    int pos1x = x - dx, pos1y = y - dy;        // Pieza antes del gap
+    int pos2x = x + dx, pos2y = y + dy;        // Primera pieza después del gap  
+    int pos3x = x + 2*dx, pos3y = y + 2*dy;    // Segunda pieza después del gap
+    int pos0x = x - 2*dx, pos0y = y - 2*dy;    // Posición libre antes
+    int pos4x = x + 3*dx, pos4y = y + 3*dy;    // Posición libre después
+    
+    if (isValid(pos0x, pos0y) && isValid(pos1x, pos1y) && 
+        isValid(pos2x, pos2y) && isValid(pos3x, pos3y) && isValid(pos4x, pos4y)) {
+        
+        return board[pos0x][pos0y] == 0 &&     // Libre antes
+               board[pos1x][pos1y] == player && // Pieza del jugador
+               board[pos2x][pos2y] == player && // Pieza del jugador
+               board[pos3x][pos3y] == player && // Pieza del jugador  
+               board[pos4x][pos4y] == 0;       // Libre después
+    }
+    
+    return false;
+}
+
+bool Board::checkBrokenPattern2(int x, int y, int dx, int dy, int player) const {
+    // Patrón: -OO-O-
+    // La pieza actual (x,y) está en el gap entre OO y O
+    // Verificar: [libre][pieza][pieza][actual][pieza][libre]
+    
+    int pos1x = x - 2*dx, pos1y = y - 2*dy;    // Primera pieza antes del gap
+    int pos2x = x - dx, pos2y = y - dy;        // Segunda pieza antes del gap
+    int pos3x = x + dx, pos3y = y + dy;        // Pieza después del gap
+    int pos0x = x - 3*dx, pos0y = y - 3*dy;    // Posición libre antes
+    int pos4x = x + 2*dx, pos4y = y + 2*dy;    // Posición libre después
+    
+    if (isValid(pos0x, pos0y) && isValid(pos1x, pos1y) && isValid(pos2x, pos2y) &&
+        isValid(pos3x, pos3y) && isValid(pos4x, pos4y)) {
+        
+        return board[pos0x][pos0y] == 0 &&     // Libre antes
+               board[pos1x][pos1y] == player && // Pieza del jugador
+               board[pos2x][pos2y] == player && // Pieza del jugador
+               board[pos3x][pos3y] == player && // Pieza del jugador
+               board[pos4x][pos4y] == 0;       // Libre después
+    }
+    
+    return false;
 }
 
 // ================== MÉTODOS PARA SIMULACIÓN DEL AI ==================

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:04 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/09 19:00:08 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 18:38:49 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,11 @@ public:
     // Getters
     const Board& getBoard() const { return boardState; }
     int getPlayer() const { return currentPlayer; }
+    const Move& getLastMove() const { return lastMove; }
+    
+    // Métodos para mantenimiento del árbol
+    GameNode* findChild(const Move& move);
+    size_t getChildrenCount() const { return children.size(); }
 };
 
 #endif

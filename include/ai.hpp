@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/10 19:03:12 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 19:16:30 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,8 @@ private:
     int aiPlayer;
     int humanPlayer;
     int maxDepth;
-    
+    GameNode* root;
+
     // Funciones de evaluación de patrones
     int evaluatePlayerPatterns(const Board& board, int player) const;
     bool isLineStart(const Board& board, int x, int y, int dx, int dy, int player) const;
@@ -65,11 +66,20 @@ private:
 	std::pair<int, int> getThreatKey(const Board& board, int x, int y, int dx, int dy, int player) const;
 
 public:
-    AI(int aiplayer, int humanplayer, int depth) {aiPlayer = aiplayer, humanPlayer = humanplayer, maxDepth = depth;}
+    AI(int aiplayer, int humanplayer, int depth) {aiPlayer = aiplayer, humanPlayer = humanplayer, maxDepth = depth, root = nullptr;}
+    ~AI() { if (root) delete root; }
     
     // Función principal - obtener mejor movimiento
     Move getBestMoveWithTree(Board& board);
+
+    GameNode* getRoot() {return root;}
+    void setRoot(GameNode *nroot) {root = nroot;}
     
+    // Métodos para mantenimiento del árbol
+    void updateTree(const Board& board);
+    void moveToChild(const Move& move);
+    void updatePlayerTurn(const Move& playerMove);
+	
     // Función de evaluación principal (pública si se necesita para depuración)
     int evaluatePosition(const Board& board) const;
 };

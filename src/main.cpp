@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:17 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/10 19:18:53 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 18:48:46 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@ int main() {
     Board board;
     
     int currentPlayer = 1;  // Empezar con jugador 1 (humano)
+    
+    // Inicializar el árbol del AI al comienzo del juego
+    ai.setRoot(new GameNode(board, currentPlayer, &ai));
     
     Display::printWelcome();
     
@@ -49,6 +52,9 @@ int main() {
                 std::cout << "Try again...\n";
                 continue;
             }
+            
+            // Informar al AI sobre el movimiento del jugador humano
+            ai.updatePlayerTurn(Move(move.first, move.second));
         } else {
             // Turno de la IA
             std::cout << "AI thinking..." << std::endl;

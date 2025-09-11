@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:33 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/03 20:11:54 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 18:10:50 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ private:
     std::vector<std::pair<int, int>> getCapturesInDirection(int x, int y, int dx, int dy, int player);  
     std::vector<std::pair<int, int>> getCapturesForOpponentInDirection(int x, int y, int dx, int dy, int opponent);
     bool isFreeThree(int x, int y, int dx, int dy, int player) const;
+    bool checkBrokenPattern1(int x, int y, int dx, int dy, int player) const;
+    bool checkBrokenPattern2(int x, int y, int dx, int dy, int player) const;
 };
 
 #endif

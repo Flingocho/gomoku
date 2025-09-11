@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 18:23:40 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/09 19:02:38 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 19:15:59 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,10 +156,24 @@ Move GameNode::getBestMove(int searchDepth) {
         int score = child->minimax(1, searchDepth); // Empezar en profundidad 1
         
         if (score > bestScore) {
+			std::cout << "La bestScore anterior:" << bestScore << " en " << bestMove.x << "-" << bestMove.y << " ha sido superada por " << score << " en " << child->lastMove.x << "-" << child->lastMove.y << "\n"; 
             bestScore = score;
             bestMove = child->lastMove;
         }
     }
     
     return bestMove;
+}
+
+GameNode* GameNode::findChild(const Move& move) {
+    generateChildren(); // Asegurar que los hijos estén generados
+    
+    for (auto& child : children) {
+        const Move& childMove = child->getLastMove();
+        if (childMove.x == move.x && childMove.y == move.y) {
+            return child.get();
+        }
+    }
+    
+    return nullptr; // No se encontró el hijo
 }

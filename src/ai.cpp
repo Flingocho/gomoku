@@ -6,11 +6,12 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/10 19:05:15 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 18:50:16 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/ai.hpp"
+#include <iostream>
 
 int AI::evaluatePosition(const Board &board) const
 {
@@ -499,11 +500,90 @@ int AI::countGaps(const Board &board, int x, int y, int dx, int dy, int player) 
 
 Move AI::getBestMoveWithTree(Board &board)
 {
-	// Crear nodo raíz del árbol
-	GameNode root(board, aiPlayer, this);
+	// Si no tenemos raíz, crear una nueva
+	if (root == nullptr) {
+		root = new GameNode(board, aiPlayer, this);
+	} else {
+		// Actualizar el árbol existente con el estado actual del tablero
+		updateTree(board);
+	}
 
 	// Buscar mejor movimiento con profundidad configurable
-	Move bestMove = root.getBestMove(maxDepth);
+	Move bestMove = root->getBestMove(maxDepth);
+	
+	// Después de elegir el movimiento, actualizar la raíz al nodo correspondiente
+	if (bestMove.isValid()) {
+		moveToChild(bestMove);
+	}
 
 	return bestMove;
+}
+
+void AI::updateTree(const Board& board) {
+	// Verificar si el estado del tablero coincide con la raíz actual
+	// Si no, necesitamos actualizar o recrear el árbol
+	
+	// Por simplicidad, si hay diferencias significativas, recrear el árbol
+	// En una implementación más sofisticada, podríamos intentar navegar por el árbol existente
+	
+	bool needsRecreation = false;
+	
+	// Comparar estados básicos
+	if (root) {
+		const Board& rootBoard = root->getBoard();
+		
+		// Verificar si los tableros son diferentes
+		for (int i = 0; i < Board::getSize() && !needsRecreation; i++) {
+			for (int j = 0; j < Board::getSize() && !needsRecreation; j++) {
+				if (rootBoard.getPiece(i, j) != board.getPiece(i, j)) {
+					needsRecreation = true;
+				}
+			}
+		}
+	}
+	
+	if (needsRecreation) {
+		delete root;
+		root = new GameNode(board, aiPlayer, this);
+	}
+}
+
+void AI::moveToChild(const Move& move) {
+	if (!root) return;
+	
+	// Buscar el hijo que corresponde al movimiento
+	GameNode* childNode = root->findChild(move);
+	
+	if (childNode) {
+		// Encontramos el hijo correspondiente al movimiento
+		// Necesitamos hacer que este hijo sea la nueva raíz
+		// Para esto, crearemos una nueva raíz con el estado del hijo
+		Board newBoard = childNode->getBoard();
+		int nextPlayer = (aiPlayer == 1) ? 2 : 1; // Después del movimiento de AI, es turno del humano
+		
+		delete root;
+		root = new GameNode(newBoard, nextPlayer, this);
+	} else {
+		// Si no encontramos el hijo, crear una nueva raíz manualmente
+		Board newBoard = root->getBoard();
+		if (newBoard.placePiece(move.x, move.y, aiPlayer)) {
+			delete root;
+			root = new GameNode(newBoard, humanPlayer, this);
+		}
+	}
+}
+
+void AI::updatePlayerTurn(const Move& playerMove) {
+	if (!root) {
+		// Si no hay root, no podemos actualizar. Esto no debería pasar normalmente.
+		std::cerr << "Warning: updatePlayerTurn called but no root exists!" << std::endl;
+		return;
+	}
+	
+	// El jugador humano hizo un movimiento, actualizamos nuestro árbol
+	Board newBoard = root->getBoard();
+	if (newBoard.placePiece(playerMove.x, playerMove.y, humanPlayer)) {
+		delete root;
+		root = new GameNode(newBoard, aiPlayer, this); // Ahora es turno de AI
+	}
 }
