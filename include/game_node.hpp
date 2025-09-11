@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:04 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 18:38:49 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 20:37:27 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ public:
     // Constructores
     GameNode(const Board& board, const Move& move, const AI* ai, int player);
 	GameNode(const Board& board, int player, const AI* ai);
+	GameNode(GameNode& copy);
     // Métodos principales
     void generateChildren();
     int minimax(int currentDepth, int maxDepth);

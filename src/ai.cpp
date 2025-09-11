@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/03 19:23:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 18:50:16 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 21:17:30 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,6 @@
 
 int AI::evaluatePosition(const Board &board) const
 {
-	// 1. Verificar condiciones de victoria inmediata
-	if (board.checkWin(aiPlayer))
-		return STRAIGHTVICTORY;
-	if (board.checkWin(humanPlayer))
-		return -STRAIGHTVICTORY;
-
-	// 2. Evaluar patrones para ambos jugadores
 	int aiScore = evaluatePlayerPatterns(board, aiPlayer);
 	int humanScore = evaluatePlayerPatterns(board, humanPlayer);
 
@@ -335,7 +328,7 @@ int AI::evaluateCapturesInDirection(const Board &board, int x, int y, int dx, in
 		// Según cercanía a las 10 capturas (5 pares) - solo cuando hay actividad de captura
 		if (myCaptures >= 8 && myOpportunities > 0)
 		{					// 1 par para ganar - MUY GRAVE pero defendible
-			score += 20000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+			score += 25000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
 		}
 		else if (myCaptures >= 6 && myOpportunities > 0)
 		{				   // 2 pares para ganar - Grave
@@ -354,7 +347,7 @@ int AI::evaluateCapturesInDirection(const Board &board, int x, int y, int dx, in
 
 		if (OppCaptures >= 8 && opponentOpportunities > 0)
 		{					// 1 par para ganar - MUY GRAVE pero defendible
-			score -= 20000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
+			score -= 25000; // Entre DOUBLE_THREE_OPEN (25k) y FOUR_SIMPLE (10k)
 		}
 		else if (OppCaptures >= 6 && opponentOpportunities > 0)
 		{				   // 2 pares para ganar - Grave

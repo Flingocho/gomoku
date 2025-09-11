@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 18:23:40 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 19:15:59 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 20:56:04 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,16 +27,18 @@ GameNode::GameNode(const Board& board, int player, const AI* ai)
           heuristicScore(0), isEvaluated(false), parent(nullptr), aiReference(ai) {
 }
 
+GameNode::GameNode(GameNode& copy)
+	: boardState(copy.boardState), lastMove(copy.lastMove), currentPlayer(copy.currentPlayer),
+	  alpha(copy.alpha), beta(copy.beta), heuristicScore(copy.heuristicScore), isEvaluated(copy.isEvaluated),
+	  parent(copy.parent), aiReference(copy.aiReference) {
+}
+
 bool GameNode::isTerminal() const {
     // Terminal si alguien ganó o profundidad máxima
     return boardState.checkWin(1) || boardState.checkWin(2);
 }
 
 int GameNode::evaluatePosition() const {
-    // Necesitaremos acceso a la clase AI para la evaluación
-    // Por ahora placeholder
-    if (boardState.checkWin(2)) return 100000;  // AI gana
-    if (boardState.checkWin(1)) return -100000; // Humano gana
     return aiReference->evaluatePosition(boardState); // Temporal
 }
 
@@ -100,37 +102,78 @@ int GameNode::minimax(int currentDepth, int maxDepth) {
         return evaluatePosition();
     }
     
-    // Generar hijos solo cuando los necesitamos
-    generateChildren();
+    // Generar solo movimientos candidatos, NO nodos completos
+    std::vector<Move> moves = generateCandidateMoves();
     
     if (isMaximizingPlayer()) {
         // AI jugando - maximizar
         int maxScore = std::numeric_limits<int>::min();
         
-        for (auto& child : children) {
-            int score = child->minimax(currentDepth + 1, maxDepth);
-            maxScore = std::max(maxScore, score);
+        for (const Move& move : moves) {
+            // Verificar que el movimiento es válido
+            if (!boardState.isEmpty(move.x, move.y) || 
+                boardState.isDoubleFree(move.x, move.y, currentPlayer)) {
+                continue;
+            }
             
-            // Poda Alpha-Beta
-            alpha = std::max(alpha, score);
-            if (beta <= alpha) {
-                break; // Poda beta
+            // Simular movimiento SIN crear nodo permanente
+            Board tempBoard = boardState;
+            if (tempBoard.placePiece(move.x, move.y, currentPlayer)) {
+                
+                // Crear nodo temporal solo para la recursión
+                int nextPlayer = (currentPlayer == 1) ? 2 : 1;
+                GameNode tempChild(tempBoard, move, aiReference, nextPlayer);
+                
+                // Heredar valores alpha-beta actuales
+                tempChild.alpha = alpha;
+                tempChild.beta = beta;
+                
+                // Evaluar recursivamente
+                int score = tempChild.minimax(currentDepth + 1, maxDepth);
+                maxScore = std::max(maxScore, score);
+                
+                // Poda Alpha-Beta
+                alpha = std::max(alpha, score);
+                if (beta <= alpha) {
+                    break; // PODA: corta ramas sin crear más nodos
+                }
             }
         }
         
         return maxScore;
+        
     } else {
         // Humano jugando - minimizar
         int minScore = std::numeric_limits<int>::max();
         
-        for (auto& child : children) {
-            int score = child->minimax(currentDepth + 1, maxDepth);
-            minScore = std::min(minScore, score);
+        for (const Move& move : moves) {
+            // Verificar que el movimiento es válido
+            if (!boardState.isEmpty(move.x, move.y) || 
+                boardState.isDoubleFree(move.x, move.y, currentPlayer)) {
+                continue;
+            }
             
-            // Poda Alpha-Beta
-            beta = std::min(beta, score);
-            if (beta <= alpha) {
-                break; // Poda alfa
+            // Simular movimiento SIN crear nodo permanente
+            Board tempBoard = boardState;
+            if (tempBoard.placePiece(move.x, move.y, currentPlayer)) {
+                
+                // Crear nodo temporal solo para la recursión
+                int nextPlayer = (currentPlayer == 1) ? 2 : 1;
+                GameNode tempChild(tempBoard, move, aiReference, nextPlayer);
+                
+                // Heredar valores alpha-beta actuales
+                tempChild.alpha = alpha;
+                tempChild.beta = beta;
+                
+                // Evaluar recursivamente
+                int score = tempChild.minimax(currentDepth + 1, maxDepth);
+                minScore = std::min(minScore, score);
+                
+                // Poda Alpha-Beta
+                beta = std::min(beta, score);
+                if (beta <= alpha) {
+                    break; // PODA: corta ramas sin crear más nodos
+                }
             }
         }
         
