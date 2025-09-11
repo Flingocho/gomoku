@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 18:23:40 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 20:56:04 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 21:57:46 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,8 @@ std::vector<Move> GameNode::generateCandidateMoves() const {
 
 bool GameNode::isNearPieces(int x, int y) const {
     // Verificar radio de 2 casillas
-    for (int dx = -2; dx <= 2; dx++) {
-        for (int dy = -2; dy <= 2; dy++) {
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
             int nx = x + dx, ny = y + dy;
             if (boardState.isValid(nx, ny) && boardState.getPiece(nx, ny) != 0) {
                 return true;
@@ -209,7 +209,10 @@ Move GameNode::getBestMove(int searchDepth) {
 }
 
 GameNode* GameNode::findChild(const Move& move) {
-    generateChildren(); // Asegurar que los hijos estén generados
+    // No generar hijos si no es necesario
+    if (children.empty()) {
+        generateChildren();
+    }
     
     for (auto& child : children) {
         const Move& childMove = child->getLastMove();
@@ -218,5 +221,5 @@ GameNode* GameNode::findChild(const Move& move) {
         }
     }
     
-    return nullptr; // No se encontró el hijo
+    return nullptr;
 }

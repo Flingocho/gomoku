@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:17 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 18:48:46 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:06:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <chrono>
 
 int main() {
-    AI ai(2, 1, 3); // AI=player2, Human=player1, depth=3 (empezar bajo para probar)
+    AI ai(2, 1, 5); // AI=player2, Human=player1, depth=3 (empezar bajo para probar)
     Board board;
     
     int currentPlayer = 1;  // Empezar con jugador 1 (humano)
@@ -91,6 +91,7 @@ int main() {
         
         // Cambiar al siguiente jugador
         board.newturn();
+		board.incPieces();
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
     }
     

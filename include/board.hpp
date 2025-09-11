@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:33 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 18:10:50 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:07:06 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ private:
     int board[SIZE][SIZE];
     int captures[2];  // [humano, AI]
 	int turns;
+	int pieces;
 
 public:
     Board();
@@ -43,11 +44,14 @@ public:
     
 	// Setters
 	void newturn() { turns++; }
+	void incPieces() { pieces++; }
+	void decPieces() { pieces--; }
 
     // Getters
     int getCaptures(int player) const { return captures[player-1]; }
     static int getSize() { return SIZE; }
-	int getTurns() { return turns; }
+	int getTurns() const { return turns; }
+	int getPieces() const { return pieces; }
     
     // Para debugging
     void printRaw() const;

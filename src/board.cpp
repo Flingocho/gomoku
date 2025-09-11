@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:36:06 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 18:10:50 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/11 22:07:41 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ bool Board::placePiece(int x, int y, int player) {
         for (auto& pos : captured) {
             // std::cout << "DEBUG: Capturing piece at (" << pos.first << "," << pos.second << ")" << std::endl;
             board[pos.first][pos.second] = 0;
+			this->decPieces();
         }
         captures[player - 1] += captured.size();
     }
