@@ -5,47 +5,45 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/21 16:36:17 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/11 22:06:24 by jainavas         ###   ########.fr       */
+/*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
+/*   Updated: 2025/09/14 21:27:48 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/ai.hpp"
+#include "../include/game_engine.hpp"
 #include "../include/display.hpp"
 #include <iostream>
-#include <chrono>
 
 int main() {
-    AI ai(2, 1, 5); // AI=player2, Human=player1, depth=3 (empezar bajo para probar)
-    Board board;
-    
-    int currentPlayer = 1;  // Empezar con jugador 1 (humano)
-    
-    // Inicializar el árbol del AI al comienzo del juego
-    ai.setRoot(new GameNode(board, currentPlayer, &ai));
+    GameEngine game;
+    game.newGame();
     
     Display::printWelcome();
     
-    while (true) {
-        Display::printBoard(board);
-        Display::printGameInfo(board);
+    while (!game.isGameOver()) {
+        const GameState& state = game.getState();
         
-        if (currentPlayer == 1) {
+        // Mostrar tablero actual
+        Display::printBoard(state);
+        Display::printGameInfo(state, game.getLastAIThinkingTime());
+        
+        if (state.currentPlayer == GameState::PLAYER1) {
             // Turno del humano
-            std::cout << "Your turn (Player " << currentPlayer << ")\n";
-            auto move = Display::getUserMove();
+            std::cout << "Your turn (Player 1)\n";
+            auto userInput = Display::getUserMove();
             
-            if (move.first == -1) {  // Quit
+            if (userInput.first == -1) {  // Quit
                 std::cout << "Thanks for playing!\n";
                 break;
             }
             
-            if (move.first == -2) {  // Error de input
+            if (userInput.first == -2) {  // Error de input
                 std::cout << "Invalid input! Try again (e.g., 'J10')\n";
                 continue;
             }
             
-            if (!board.placePiece(move.first, move.second, currentPlayer)) {
+            Move humanMove(userInput.first, userInput.second);
+            if (!game.makeHumanMove(humanMove)) {
                 std::cout << "❌ Invalid move! Reasons:\n";
                 std::cout << "- Position occupied or out of bounds\n";  
                 std::cout << "- Double free-three rule violation\n";
@@ -53,46 +51,27 @@ int main() {
                 continue;
             }
             
-            // Informar al AI sobre el movimiento del jugador humano
-            ai.updatePlayerTurn(Move(move.first, move.second));
         } else {
             // Turno de la IA
             std::cout << "AI thinking..." << std::endl;
             
-            auto start = std::chrono::high_resolution_clock::now();
-            
-            // NUEVO: Usar el árbol de búsqueda minimax
-            Move aiMove = ai.getBestMoveWithTree(board);
-            
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration<double>(end - start).count();
+            Move aiMove = game.makeAIMove();
             
             if (aiMove.isValid()) {
-                if (board.placePiece(aiMove.x, aiMove.y, currentPlayer)) {
-                    std::cout << "AI played: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
-                    Display::printGameInfo(board, duration);
-                } else {
-                    std::cout << "AI generated invalid move!" << std::endl;
-                    break;
-                }
+                std::cout << "AI played: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
+                std::cout << "Nodes evaluated: " << game.getLastNodesEvaluated() << std::endl;
             } else {
                 std::cout << "AI couldn't find a valid move!" << std::endl;
                 break;
             }
         }
-        
-        // Verificar victoria después del movimiento
-        if (board.checkWin(currentPlayer)) {
-            Display::printBoard(board);
-            Display::printGameInfo(board);
-            Display::printWinner(currentPlayer);
-            return 0;
-        }
-        
-        // Cambiar al siguiente jugador
-        board.newturn();
-		board.incPieces();
-        currentPlayer = (currentPlayer == 1) ? 2 : 1;
+    }
+    
+    // Mostrar resultado final
+    if (game.isGameOver()) {
+        Display::printBoard(game.getState());
+        Display::printGameInfo(game.getState(), game.getLastAIThinkingTime());
+        Display::printWinner(game.getWinner());
     }
     
     return 0;

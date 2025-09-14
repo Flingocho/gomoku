@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/21 16:36:12 by jainavas          #+#    #+#             */
-/*   Updated: 2025/08/31 20:10:31 by jainavas         ###   ########.fr       */
+/*   Created: 2025/09/14 21:27:21 by jainavas          #+#    #+#             */
+/*   Updated: 2025/09/14 21:27:26 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,37 +32,37 @@ void Display::clearScreen() {
 
 char Display::getPieceChar(int piece) {
     switch (piece) {
-        case 0: return '.';
-        case 1: return 'O';  // Humano
-        case 2: return 'X';  // AI
+        case GameState::EMPTY: return '.';
+        case GameState::PLAYER1: return 'O';  // Humano
+        case GameState::PLAYER2: return 'X';  // AI
         default: return '?';
     }
 }
 
 std::string Display::getPieceColor(int piece) {
     switch (piece) {
-        case 1: return BLUE;   // Humano en azul
-        case 2: return RED;    // AI en rojo
+        case GameState::PLAYER1: return BLUE;   // Humano en azul
+        case GameState::PLAYER2: return RED;    // AI en rojo
         default: return RESET;
     }
 }
 
-void Display::printBoard(const Board& board) {
+void Display::printBoard(const GameState& state) {
     std::cout << "\n  ";
     
     // Imprimir coordenadas superiores (A-S)
-    for (int j = 0; j < 19; j++) {
+    for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         std::cout << " " << char('A' + j);
     }
     std::cout << "\n";
     
     // Imprimir filas
-    for (int i = 0; i < 19; i++) {
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         // Número de fila (1-19)
         std::cout << std::setw(2) << (i + 1) << " ";
         
-        for (int j = 0; j < 19; j++) {
-            int piece = board.getPiece(i, j);
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            int piece = state.getPiece(i, j);
             std::cout << getPieceColor(piece) << getPieceChar(piece) << RESET << " ";
         }
         
@@ -71,29 +71,29 @@ void Display::printBoard(const Board& board) {
     
     // Coordenadas inferiores
     std::cout << "  ";
-    for (int j = 0; j < 19; j++) {
+    for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         std::cout << " " << char('A' + j);
     }
     std::cout << "\n";
 }
 
-void Display::printGameInfo(const Board& board, double aiTime) {
+void Display::printGameInfo(const GameState& state, int aiTimeMs) {
     std::cout << "\n" << GREEN << "=== GOMOKU ===" << RESET << "\n";
-    std::cout << "Captures: " << BLUE << "You: " << board.getCaptures(1) << RESET;
-    std::cout << "  " << RED << "AI: " << board.getCaptures(2) << RESET;
+    std::cout << "Captures: " << BLUE << "You: " << state.captures[0] << RESET;
+    std::cout << "  " << RED << "AI: " << state.captures[1] << RESET;
     
     // Mostrar si alguien está cerca de ganar por capturas
-    if (board.getCaptures(1) >= 8) {
+    if (state.captures[0] >= 8) {
         std::cout << " " << BLUE << "(2 more to win!)" << RESET;
     }
-    if (board.getCaptures(2) >= 8) {
+    if (state.captures[1] >= 8) {
         std::cout << " " << RED << "(2 more to win!)" << RESET;
     }
     std::cout << "\n";
     
-    if (aiTime > 0) {
-        std::cout << "AI thinking time: " << YELLOW << std::fixed 
-                  << std::setprecision(3) << aiTime << "s" << RESET << "\n";
+    if (aiTimeMs > 0) {
+        std::cout << "AI thinking time: " << YELLOW 
+                  << (aiTimeMs / 1000.0) << "s" << RESET << "\n";
     }
     std::cout << "\n";
 }
@@ -122,7 +122,7 @@ std::pair<int, int> Display::parseCoordinate(const std::string& input) {
     std::string rowStr = input.substr(1);
     try {
         int row = std::stoi(rowStr) - 1;  // 1-based to 0-based
-        if (row < 0 || row >= 19) return {-2, -2};
+        if (row < 0 || row >= GameState::BOARD_SIZE) return {-2, -2};
         return {row, col};
     } catch (...) {
         return {-2, -2};
@@ -144,9 +144,9 @@ void Display::printWelcome() {
 
 void Display::printWinner(int player) {
     std::cout << "\n" << GREEN << "=== GAME OVER ===" << RESET << "\n";
-    if (player == 1) {
+    if (player == GameState::PLAYER1) {
         std::cout << BLUE << "🎉 YOU WIN! 🎉" << RESET << "\n";
-    } else if (player == 2) {
+    } else if (player == GameState::PLAYER2) {
         std::cout << RED << "🤖 AI WINS! 🤖" << RESET << "\n";
     } else {
         std::cout << YELLOW << "DRAW!" << RESET << "\n";
