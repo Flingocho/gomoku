@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:21 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 21:27:26 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/14 23:38:10 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ std::pair<int, int> Display::parseCoordinate(const std::string& input) {
 }
 
 void Display::printWelcome() {
-    clearScreen();
+    //clearScreen();
     std::cout << GREEN << "=================================\n";
     std::cout << "         GOMOKU AI GAME\n";
     std::cout << "=================================" << RESET << "\n\n";

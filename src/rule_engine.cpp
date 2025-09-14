@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 21:24:30 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/14 23:30:11 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,10 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState& state, const Move& move)
         return result; // success = false
     }
     
+    // NUEVO: Guardar estado para actualización de hash
+    int oldCaptures = state.captures[state.currentPlayer - 1];
+    int currentPlayer = state.currentPlayer;  // Guardar antes de cambiar
+    
     // 3. Colocar la pieza temporalmente
     state.board[move.x][move.y] = state.currentPlayer;
     
@@ -40,9 +44,13 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState& state, const Move& move)
     // 6. Verificar victoria
     result.createsWin = checkWin(state, state.currentPlayer);
     
-    // 7. Avanzar turno
+    // 7. Avanzar turno PRIMERO
     state.currentPlayer = state.getOpponent(state.currentPlayer);
     state.turnCount++;
+    
+    // 8. NUEVO: Actualizar hash Zobrist DESPUÉS de cambiar todo el estado
+    // El hash ahora refleja el estado final correcto
+    state.updateHashAfterMove(move, currentPlayer, result.capturedPieces, oldCaptures);
     
     result.success = true;
     return result;

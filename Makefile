@@ -8,7 +8,8 @@ SRCS = src/ai.cpp\
 		src/game_types.cpp\
 		src/main.cpp\
 		src/rule_engine.cpp\
-		src/transposition_search.cpp
+		src/transposition_search.cpp\
+		src/zobrist_hasher.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 EXEC = gomoku

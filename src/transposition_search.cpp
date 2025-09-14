@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 22:03:21 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/14 23:43:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,44 @@
 #include <algorithm>
 #include <limits>
 #include <iostream>
+#include <cmath>
+
+TranspositionSearch::TranspositionSearch(size_t tableSizeMB) 
+    : nodesEvaluated(0), cacheHits(0) {
+    initializeTranspositionTable(tableSizeMB);
+}
+
+void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB) {
+    // Calcular número de entradas: cada CacheEntry ~40 bytes
+    size_t bytesPerEntry = sizeof(CacheEntry);
+    size_t totalBytes = sizeInMB * 1024 * 1024;
+    size_t numEntries = totalBytes / bytesPerEntry;
+    
+    // Redondear a la potencia de 2 más cercana (para usar & en lugar de %)
+    size_t powerOf2 = 1;
+    while (powerOf2 < numEntries) {
+        powerOf2 <<= 1;
+    }
+    if (powerOf2 > numEntries) {
+        powerOf2 >>= 1;  // Usar la potencia menor si nos pasamos
+    }
+    
+    transpositionTable.resize(powerOf2);
+    tableSizeMask = powerOf2 - 1;  // Para hacer index = hash & tableSizeMask
+    
+    std::cout << "TranspositionTable: " << (powerOf2 * bytesPerEntry / 1024 / 1024) 
+              << "MB (" << powerOf2 << " entradas) inicializada" << std::endl;
+}
 
 TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameState& state, int maxDepth) {
     SearchResult result;
     nodesEvaluated = 0;
     cacheHits = 0;
     
-    // NUEVO: Profundidad adaptativa basada en fase del juego
+    // Profundidad adaptativa basada en fase del juego
     int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
     
-    std::cout << "AI using depth: " << adaptiveDepth << " (requested: " << maxDepth << ")" << std::endl;
+    std::cout << "AI usando profundidad: " << adaptiveDepth << " (solicitada: " << maxDepth << ")" << std::endl;
     
     Move bestMove;
     int score = minimax(const_cast<GameState&>(state), adaptiveDepth, 
@@ -42,7 +70,6 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameSt
 }
 
 int TranspositionSearch::calculateAdaptiveDepth(const GameState& state, int requestedDepth) {
-    // Profundidad basada en el número de piezas en el tablero
     int pieceCount = state.turnCount;
     
     if (pieceCount <= 2) {
@@ -62,16 +89,16 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
     
     // Debug cada 10000 nodos
     if (nodesEvaluated % 10000 == 0) {
-        std::cout << "Nodes evaluated: " << nodesEvaluated << ", Cache hits: " << cacheHits << std::endl;
+        std::cout << "Nodos evaluados: " << nodesEvaluated << ", Cache hits: " << cacheHits << std::endl;
     }
     
-    // Verificar transposition table
-    StateHash hash = hashState(state);
-    auto it = transpositionTable.find(hash);
+    // OPTIMIZACIÓN CLAVE: Usar Zobrist hash del estado
+    uint64_t zobristKey = state.getZobristHash();
     
-    if (it != transpositionTable.end() && it->second.depth >= depth) {
+    // Verificar transposition table PRIMERO
+    CacheEntry entry;
+    if (lookupTransposition(zobristKey, entry) && entry.depth >= depth) {
         cacheHits++;
-        const CacheEntry& entry = it->second;
         
         if (entry.type == CacheEntry::EXACT) {
             if (bestMove) *bestMove = entry.bestMove;
@@ -88,15 +115,15 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
         RuleEngine::checkWin(state, GameState::PLAYER2)) {
         
         int score = Evaluator::evaluate(state);
-        transpositionTable[hash] = CacheEntry(score, depth, Move(), CacheEntry::EXACT);
+        storeTransposition(zobristKey, score, depth, Move(), CacheEntry::EXACT);
         return score;
     }
     
-    // Generar movimientos
+    // Generar movimientos ordenados
     std::vector<Move> moves = generateOrderedMoves(state);
     if (moves.empty()) {
         int score = Evaluator::evaluate(state);
-        transpositionTable[hash] = CacheEntry(score, depth, Move(), CacheEntry::EXACT);
+        storeTransposition(zobristKey, score, depth, Move(), CacheEntry::EXACT);
         return score;
     }
     
@@ -123,7 +150,7 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
             if (beta <= alpha) break; // Poda alpha-beta
         }
         
-        // Guardar en transposition table
+        // Almacenar en transposition table
         CacheEntry::Type entryType;
         if (maxEval <= originalAlpha) {
             entryType = CacheEntry::UPPER_BOUND;
@@ -133,7 +160,7 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
             entryType = CacheEntry::EXACT;
         }
         
-        transpositionTable[hash] = CacheEntry(maxEval, depth, currentBestMove, entryType);
+        storeTransposition(zobristKey, maxEval, depth, currentBestMove, entryType);
         
         if (bestMove) *bestMove = currentBestMove;
         return maxEval;
@@ -158,7 +185,7 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
             if (beta <= alpha) break; // Poda alpha-beta
         }
         
-        // Guardar en transposition table
+        // Almacenar en transposition table
         CacheEntry::Type entryType;
         if (minEval <= originalAlpha) {
             entryType = CacheEntry::UPPER_BOUND;
@@ -168,40 +195,36 @@ int TranspositionSearch::minimax(GameState& state, int depth, int alpha, int bet
             entryType = CacheEntry::EXACT;
         }
         
-        transpositionTable[hash] = CacheEntry(minEval, depth, currentBestMove, entryType);
+        storeTransposition(zobristKey, minEval, depth, currentBestMove, entryType);
         
         if (bestMove) *bestMove = currentBestMove;
         return minEval;
     }
 }
 
-TranspositionSearch::StateHash TranspositionSearch::hashState(const GameState& state) const {
-    // Hash simple pero efectivo
-    StateHash hash = 0;
-    StateHash multiplier = 1;
+bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry& entry) {
+    size_t index = zobristKey & tableSizeMask;  // O(1) access!
     
-    // Solo hash de piezas no vacías para eficiencia
-    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            int piece = state.getPiece(i, j);
-            if (piece != GameState::EMPTY) {
-                hash ^= (piece * multiplier) + (i * 19 + j);
-                multiplier = multiplier * 3 + 1;
-            }
-        }
+    if (transpositionTable[index].zobristKey == zobristKey) {
+        entry = transpositionTable[index];
+        return true;
     }
     
-    // Hash de capturas y turno
-    hash ^= (state.captures[0] << 16) | state.captures[1];
-    hash ^= (state.currentPlayer << 20);
+    return false;
+}
+
+void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int depth, 
+                                           Move bestMove, CacheEntry::Type type) {
+    size_t index = zobristKey & tableSizeMask;
     
-    return hash;
+    // Simple replacement strategy: always replace
+    // TODO: Implementar depth-preferred replacement para mejor performance
+    transpositionTable[index] = CacheEntry(zobristKey, score, depth, bestMove, type);
 }
 
 std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState& state) {
     std::vector<Move> moves;
     
-    // NUEVO: Estrategia más inteligente basada en fase del juego
     if (state.turnCount == 0) {
         // Primer movimiento: solo centro
         moves.push_back(Move(9, 9));
@@ -240,11 +263,11 @@ std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState& sta
         }
     }
     
-    // Ordenar movimientos
+    // Ordenar movimientos por calidad
     orderMoves(moves, state);
     
-    // NUEVO: Límite más agresivo basado en fase del juego
-    size_t limit = state.turnCount < 10 ? 8 : 15;  // Menos movimientos en early game
+    // Límite más agresivo basado en fase del juego
+    size_t limit = state.turnCount < 10 ? 8 : 15;
     if (moves.size() > limit) {
         moves.resize(limit);
     }
@@ -276,7 +299,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
     int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
     score += (10 - centerDist) * 5;
     
-    // NUEVO: Bonus por crear amenazas
+    // Bonus por crear amenazas
     int threats = countThreats(tempState, state.currentPlayer);
     score += threats * 500;
     
@@ -284,15 +307,11 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
 }
 
 int TranspositionSearch::countThreats(const GameState& state, int player) {
-    // Contar rápidamente amenazas obvias
     int threats = 0;
     
-    // Solo verificar algunas posiciones clave para no hacer esto muy costoso
-    for (int i = 0; i < GameState::BOARD_SIZE; i += 2) {  // Saltar posiciones para rapidez
+    for (int i = 0; i < GameState::BOARD_SIZE; i += 2) {
         for (int j = 0; j < GameState::BOARD_SIZE; j += 2) {
             if (state.getPiece(i, j) == player) {
-                // Contar líneas de 3 o 4 que podrían ser amenazas
-                // (implementación simplificada para rapidez)
                 threats += countLinesFromPosition(state, i, j, player);
             }
         }
@@ -308,12 +327,11 @@ int TranspositionSearch::countLinesFromPosition(const GameState& state, int x, i
     for (int d = 0; d < 4; d++) {
         int dx = directions[d][0], dy = directions[d][1];
         
-        // Contar en ambas direcciones
         int count = 1;  // La pieza actual
         count += countInDirection(state, x, y, dx, dy, player);
         count += countInDirection(state, x, y, -dx, -dy, player);
         
-        if (count >= 3) lines++;  // Línea de 3+ es una amenaza potencial
+        if (count >= 3) lines++;
     }
     
     return lines;
@@ -329,4 +347,26 @@ int TranspositionSearch::countInDirection(const GameState& state, int x, int y, 
     }
     
     return count;
+}
+
+void TranspositionSearch::clearCache() {
+    std::fill(transpositionTable.begin(), transpositionTable.end(), CacheEntry());
+    std::cout << "TranspositionTable: Cache limpiada (" << transpositionTable.size() << " entradas)" << std::endl;
+}
+
+TranspositionSearch::CacheStats TranspositionSearch::getCacheStats() const {
+    CacheStats stats;
+    stats.totalEntries = transpositionTable.size();
+    stats.usedEntries = 0;
+    stats.collisions = 0;
+    
+    for (const auto& entry : transpositionTable) {
+        if (entry.zobristKey != 0) {
+            stats.usedEntries++;
+        }
+    }
+    
+    stats.fillRate = static_cast<double>(stats.usedEntries) / stats.totalEntries;
+    
+    return stats;
 }

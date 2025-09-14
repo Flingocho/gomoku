@@ -6,17 +6,27 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:23:56 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 21:24:00 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/14 23:18:56 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/game_types.hpp"
+#include "../include/zobrist_hasher.hpp"
+#include <iostream>
+
+// Inicialización del hasher estático
+const ZobristHasher* GameState::hasher = nullptr;
 
 GameState::GameState() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             board[i][j] = EMPTY;
         }
+    }
+    
+    // Calcular hash inicial si el hasher está disponible
+    if (hasher) {
+        zobristHash = hasher->computeFullHash(*this);
     }
 }
 
@@ -35,6 +45,7 @@ GameState& GameState::operator=(const GameState& other) {
         captures[1] = other.captures[1];
         currentPlayer = other.currentPlayer;
         turnCount = other.turnCount;
+        zobristHash = other.zobristHash; // Copiar hash también
     }
     return *this;
 }
@@ -53,4 +64,42 @@ int GameState::getPiece(int x, int y) const {
 
 int GameState::getOpponent(int player) const {
     return (player == PLAYER1) ? PLAYER2 : PLAYER1;
+}
+
+void GameState::initializeHasher() {
+    if (!hasher) {
+        hasher = new ZobristHasher();
+        std::cout << "GameState: Hasher Zobrist inicializado globalmente" << std::endl;
+    }
+}
+
+void GameState::updateHashAfterMove(const Move& move, int player, 
+                                   const std::vector<Move>& capturedPieces,
+                                   int oldCaptures) {
+    if (!hasher) {
+        std::cerr << "ERROR: Hasher no inicializado. Llama GameState::initializeHasher() primero." << std::endl;
+        return;
+    }
+    
+    int playerIndex = player - 1;
+    int newCaptures = captures[playerIndex];
+    
+    zobristHash = hasher->updateHashAfterMove(zobristHash, move, player, 
+                                            capturedPieces, oldCaptures, newCaptures);
+}
+
+void GameState::recalculateHash() {
+    if (!hasher) {
+        std::cerr << "ERROR: Hasher no inicializado. Llama GameState::initializeHasher() primero." << std::endl;
+        return;
+    }
+    
+    uint64_t oldHash = zobristHash;
+    zobristHash = hasher->computeFullHash(*this);
+    
+    // Debug: verificar que el hash incremental era correcto
+    if (oldHash != 0 && oldHash != zobristHash) {
+        std::cout << "DEBUG: Hash recalculado difiere del incremental. "
+                  << "Anterior: " << oldHash << ", Nuevo: " << zobristHash << std::endl;
+    }
 }

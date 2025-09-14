@@ -6,20 +6,19 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 22:07:50 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/14 23:15:35 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// include/transposition_search.hpp - VERSION ACTUALIZADA
 #ifndef TRANSPOSITION_SEARCH_HPP
 #define TRANSPOSITION_SEARCH_HPP
 
 #include "game_types.hpp"
 #include "rule_engine.hpp"
 #include "evaluator.hpp"
-#include <unordered_map>
-#include <cstdint>
+#include "zobrist_hasher.hpp"
 #include <vector>
+#include <cstdint>
 
 class TranspositionSearch {
 public:
@@ -34,46 +33,124 @@ public:
     };
 
 private:
-    using StateHash = uint64_t;
-    
     struct CacheEntry {
+        uint64_t zobristKey;  // NUEVO: Clave Zobrist completa para verificar colisiones
         int score;
         int depth;
         Move bestMove;
         enum Type { EXACT, LOWER_BOUND, UPPER_BOUND } type;
         
-        CacheEntry() : score(0), depth(0), type(EXACT) {}
-        CacheEntry(int s, int d, Move m, Type t) : score(s), depth(d), bestMove(m), type(t) {}
+        CacheEntry() : zobristKey(0), score(0), depth(0), type(EXACT) {}
+        CacheEntry(uint64_t key, int s, int d, Move m, Type t) 
+            : zobristKey(key), score(s), depth(d), bestMove(m), type(t) {}
     };
     
-    std::unordered_map<StateHash, CacheEntry> transpositionTable;
+    /**
+     * Transposition Table optimizada con Zobrist
+     * - Tamaño potencia de 2 para usar & en lugar de %
+     * - Verificación de colisiones con clave completa
+     * - Replacement strategy mejorada
+     */
+    std::vector<CacheEntry> transpositionTable;
+    size_t tableSizeMask;  // Para index = zobristKey & tableSizeMask
+    
     int nodesEvaluated;
     int cacheHits;
     
-    StateHash hashState(const GameState& state) const;
-    
+    /**
+     * Calcula profundidad adaptativa basada en fase del juego
+     */
     int calculateAdaptiveDepth(const GameState& state, int requestedDepth);
     
+    /**
+     * Minimax con alpha-beta usando Zobrist hashing
+     * OPTIMIZADO: Usa hash del estado en lugar de recalcular
+     */
     int minimax(GameState& state, int depth, int alpha, int beta, bool maximizing, Move* bestMove = nullptr);
     
+    /**
+     * Genera movimientos ordenados inteligentemente
+     * OPTIMIZADO: Usa hash de movimientos previos para ordenamiento
+     */
     std::vector<Move> generateOrderedMoves(const GameState& state);
     
+    /**
+     * Ordena movimientos por probabilidad de cutoff
+     */
     void orderMoves(std::vector<Move>& moves, const GameState& state);
     
+    /**
+     * Evaluación rápida para move ordering
+     */
     int quickEvaluateMove(const GameState& state, const Move& move);
     
+    // Funciones auxiliares para move ordering
     int countThreats(const GameState& state, int player);
     int countLinesFromPosition(const GameState& state, int x, int y, int player);
     int countInDirection(const GameState& state, int x, int y, int dx, int dy, int player);
+    
+    /**
+     * Busca entrada en transposition table
+     * @param zobristKey: Clave Zobrist del estado
+     * @param entry: [out] Entrada encontrada
+     * @return true si encontró entrada válida
+     */
+    bool lookupTransposition(uint64_t zobristKey, CacheEntry& entry);
+    
+    /**
+     * Almacena entrada en transposition table
+     * @param zobristKey: Clave Zobrist del estado
+     * @param score: Puntuación del estado
+     * @param depth: Profundidad de búsqueda
+     * @param bestMove: Mejor movimiento encontrado
+     * @param type: Tipo de nodo (EXACT, LOWER_BOUND, UPPER_BOUND)
+     */
+    void storeTransposition(uint64_t zobristKey, int score, int depth, Move bestMove, CacheEntry::Type type);
+    
+    /**
+     * Inicializa la transposition table con tamaño óptimo
+     */
+    void initializeTranspositionTable(size_t sizeInMB = 64);
 
 public:
-    TranspositionSearch() : nodesEvaluated(0), cacheHits(0) {}
+    /**
+     * Constructor: Inicializa tabla de transposición
+     * @param tableSizeMB: Tamaño de la tabla en MB (debe ser potencia de 2)
+     */
+    TranspositionSearch(size_t tableSizeMB = 64);
     
+    /**
+     * Destructor: Limpia recursos
+     */
+    ~TranspositionSearch() = default;
+    
+    /**
+     * Encuentra el mejor movimiento usando búsqueda optimizada
+     * NUEVO: Usa Zobrist hashing para máxima eficiencia
+     */
     SearchResult findBestMove(const GameState& state, int maxDepth);
     
-    void clearCache() { transpositionTable.clear(); }
+    /**
+     * Limpia la cache de transposición
+     */
+    void clearCache();
     
+    /**
+     * Obtiene estadísticas de la cache
+     */
     size_t getCacheSize() const { return transpositionTable.size(); }
+    
+    /**
+     * Estadísticas detalladas de cache
+     */
+    struct CacheStats {
+        size_t totalEntries;
+        size_t usedEntries;
+        double fillRate;
+        size_t collisions;
+    };
+    
+    CacheStats getCacheStats() const;
 };
 
 #endif
