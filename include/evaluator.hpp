@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 22:06:48 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/16 19:40:48 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,10 @@ public:
     
     static int evaluateForPlayer(const GameState& state, int player);
     
+    // NUEVO: Evaluador principal con información de distancia al mate
+    static int evaluate(const GameState& state, int maxDepth, int currentDepth);
+    
+    // LEGACY: Mantener la versión anterior para compatibilidad
     static int evaluate(const GameState& state);
     
 private:
@@ -46,6 +50,12 @@ private:
     static int patternToScore(const PatternInfo& pattern);
     
     static int evaluateCaptures(const GameState& state, int player);
+    
+    // NUEVO: Evaluación de amenazas inmediatas
+    static int evaluateImmediateThreats(const GameState& state, int player);
+    
+    // NUEVO: Función auxiliar para contar patrones específicos
+    static int countPatternType(const GameState& state, int player, int consecutiveCount, int freeEnds);
     
     static bool isLineStart(const GameState& state, int x, int y, int dx, int dy, int player);
     

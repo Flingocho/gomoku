@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 23:15:35 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/16 19:18:37 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,9 +64,10 @@ private:
     
     /**
      * Minimax con alpha-beta usando Zobrist hashing
-     * OPTIMIZADO: Usa hash del estado en lugar de recalcular
+     * MODIFICADO: Incluye originalMaxDepth para cálculo de distancia al mate
      */
-    int minimax(GameState& state, int depth, int alpha, int beta, bool maximizing, Move* bestMove = nullptr);
+    int minimax(GameState& state, int depth, int alpha, int beta, bool maximizing, 
+               int originalMaxDepth, Move* bestMove = nullptr);
     
     /**
      * Genera movimientos ordenados inteligentemente

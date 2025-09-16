@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:15:50 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 23:18:47 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/16 19:05:30 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ struct GameState {
     int captures[2] = {0, 0};
     int currentPlayer = PLAYER1;
     int turnCount = 0;
+    int depth = 0;
     
     // NUEVO: Hash Zobrist del estado actual
     uint64_t zobristHash = 0;
@@ -53,6 +54,8 @@ struct GameState {
     bool isValid(int x, int y) const;
     bool isEmpty(int x, int y) const;
     int getPiece(int x, int y) const;
+    int getDepth() const { return depth; };
+    void SetDepth(int ndepth) { depth = ndepth; };
     int getOpponent(int player) const;
     
     // NUEVO: Métodos para manejo de hash
