@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 23:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 16:46:21 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 20:25:29 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,4 +153,50 @@ ZobristHasher::ZobristKey ZobristHasher::getPieceHash(int x, int y, int piece) c
     }
     
     return zobristTable[x][y][piece];
+}
+
+// En zobrist_hasher.cpp:
+ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
+    ZobristKey currentHash,
+    const Move& move,
+    int player,
+    const std::vector<Move>& myCapturedPieces,
+    const std::vector<Move>& opponentCapturedPieces,
+    int oldMyCaptures,
+    int newMyCaptures,
+    int oldOppCaptures,
+    int newOppCaptures) const {
+    
+    ZobristKey newHash = currentHash;
+    int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
+    
+    // 1. Colocar nueva pieza
+    newHash ^= zobristTable[move.x][move.y][player];
+    
+    // 2. Remover capturas propias (piezas del oponente)
+    for (const Move& captured : myCapturedPieces) {
+        newHash ^= zobristTable[captured.x][captured.y][opponent];
+    }
+    
+    // 3. Remover capturas del oponente (mis piezas)
+    for (const Move& captured : opponentCapturedPieces) {
+        newHash ^= zobristTable[captured.x][captured.y][player];
+    }
+    
+    // 4. Cambiar turno
+    newHash ^= turnHash;
+    
+    // 5. Actualizar capturas propias
+    int playerIndex = player - 1;
+    newHash ^= captureHashes[playerIndex][oldMyCaptures];
+    newHash ^= captureHashes[playerIndex][newMyCaptures];
+    
+    // 6. Actualizar capturas del oponente
+    int opponentIndex = opponent - 1;
+    if (oldOppCaptures != newOppCaptures) {
+        newHash ^= captureHashes[opponentIndex][oldOppCaptures];
+        newHash ^= captureHashes[opponentIndex][newOppCaptures];
+    }
+    
+    return newHash;
 }
