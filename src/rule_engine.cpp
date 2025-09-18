@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 23:30:11 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 16:49:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,32 +26,40 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState& state, const Move& move)
     }
     
     // NUEVO: Guardar estado para actualización de hash
-    int oldCaptures = state.captures[state.currentPlayer - 1];
-    int currentPlayer = state.currentPlayer;  // Guardar antes de cambiar
+    int oldMyCaptures = state.captures[state.currentPlayer - 1];
+    int currentPlayer = state.currentPlayer;
     
     // 3. Colocar la pieza temporalmente
     state.board[move.x][move.y] = state.currentPlayer;
     
-    // 4. Buscar capturas
-    result.capturedPieces = findCaptures(state, move, state.currentPlayer);
+    // 4. Buscar TODAS las capturas que se forman
+    CaptureInfo captureInfo = findAllCaptures(state, move, state.currentPlayer);
+    result.myCapturedPieces = captureInfo.myCapturedPieces;
+    result.opponentCapturedPieces = captureInfo.opponentCapturedPieces;
     
-    // 5. Aplicar capturas
-    for (const Move& captured : result.capturedPieces) {
+    // 5. Aplicar MIS capturas
+    for (const Move& captured : result.myCapturedPieces) {
         state.board[captured.x][captured.y] = GameState::EMPTY;
     }
-    state.captures[state.currentPlayer - 1] += result.capturedPieces.size();
+    state.captures[state.currentPlayer - 1] += result.myCapturedPieces.size() / 2;
     
-    // 6. Verificar victoria
+    // 6. Aplicar capturas del OPONENTE (¡aunque sea mi turno!)
+    for (const Move& captured : result.opponentCapturedPieces) {
+        state.board[captured.x][captured.y] = GameState::EMPTY;
+    }
+    int opponentIndex = state.getOpponent(state.currentPlayer) - 1;
+    state.captures[opponentIndex] += result.opponentCapturedPieces.size() / 2;
+    
+    // 7. Verificar victoria
     result.createsWin = checkWin(state, state.currentPlayer);
     
-    // 7. Avanzar turno PRIMERO
+	std::vector<Move> allCaptured = result.myCapturedPieces;
+    allCaptured.insert(allCaptured.end(), result.opponentCapturedPieces.begin(), result.opponentCapturedPieces.end());
+    state.updateHashAfterMove(move, currentPlayer, allCaptured, oldMyCaptures);
+    // 8. Avanzar turno
     state.currentPlayer = state.getOpponent(state.currentPlayer);
     state.turnCount++;
-    
-    // 8. NUEVO: Actualizar hash Zobrist DESPUÉS de cambiar todo el estado
-    // El hash ahora refleja el estado final correcto
-    state.updateHashAfterMove(move, currentPlayer, result.capturedPieces, oldCaptures);
-    
+
     result.success = true;
     return result;
 }
@@ -76,6 +84,71 @@ bool RuleEngine::checkWin(const GameState& state, int player) {
     }
     
     return false;
+}
+
+RuleEngine::CaptureInfo RuleEngine::findAllCaptures(const GameState& state, const Move& move, int player) {
+    CaptureInfo info;
+    int opponent = state.getOpponent(player);
+    
+    // Buscar en las 8 direcciones
+    for (int d = 0; d < 8; d++) {
+        int dx = DIRECTIONS[d][0];
+        int dy = DIRECTIONS[d][1];
+        
+        // Patrón 1: NUEVA-OPP-OPP-MIA (yo capturo hacia adelante)
+        Move pos1(move.x + dx, move.y + dy);
+        Move pos2(move.x + 2*dx, move.y + 2*dy);
+        Move pos3(move.x + 3*dx, move.y + 3*dy);
+        
+        if (state.isValid(pos1.x, pos1.y) && state.isValid(pos2.x, pos2.y) && state.isValid(pos3.x, pos3.y)) {
+            if (state.getPiece(pos1.x, pos1.y) == opponent &&
+                state.getPiece(pos2.x, pos2.y) == opponent &&
+                state.getPiece(pos3.x, pos3.y) == player) {
+                
+                info.myCapturedPieces.push_back(pos1);
+                info.myCapturedPieces.push_back(pos2);
+            }
+        }
+        
+        // Patrón 2: MIA-OPP-OPP-NUEVA (yo capturo hacia atrás)
+        Move back1(move.x - dx, move.y - dy);
+        Move back2(move.x - 2*dx, move.y - 2*dy);
+        Move back3(move.x - 3*dx, move.y - 3*dy);
+        
+        if (state.isValid(back1.x, back1.y) && state.isValid(back2.x, back2.y) && state.isValid(back3.x, back3.y)) {
+            if (state.getPiece(back1.x, back1.y) == opponent &&
+                state.getPiece(back2.x, back2.y) == opponent &&
+                state.getPiece(back3.x, back3.y) == player) {
+                
+                info.myCapturedPieces.push_back(back1);
+                info.myCapturedPieces.push_back(back2);
+            }
+        }
+        
+        // Patrón 3: OPP-NUEVA-MIA-OPP (oponente me captura hacia adelante)
+        if (state.isValid(back1.x, back1.y) && state.isValid(pos1.x, pos1.y) && state.isValid(pos2.x, pos2.y)) {
+            if (state.getPiece(back1.x, back1.y) == opponent &&
+                state.getPiece(pos1.x, pos1.y) == player &&
+                state.getPiece(pos2.x, pos2.y) == opponent) {
+                
+                info.opponentCapturedPieces.push_back(move);      // Mi pieza nueva
+                info.opponentCapturedPieces.push_back(pos1);     // Mi otra pieza
+            }
+        }
+        
+        // Patrón 4: OPP-MIA-NUEVA-OPP (oponente me captura hacia atrás)
+        if (state.isValid(back2.x, back2.y) && state.isValid(back1.x, back1.y) && state.isValid(pos1.x, pos1.y)) {
+            if (state.getPiece(back2.x, back2.y) == opponent &&
+                state.getPiece(back1.x, back1.y) == player &&
+                state.getPiece(pos1.x, pos1.y) == opponent) {
+                
+                info.opponentCapturedPieces.push_back(back1);    // Mi otra pieza
+                info.opponentCapturedPieces.push_back(move);     // Mi pieza nueva
+            }
+        }
+    }
+    
+    return info;
 }
 
 std::vector<Move> RuleEngine::findCaptures(const GameState& state, const Move& move, int player) {

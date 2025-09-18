@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/17 17:31:08 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 16:53:53 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,18 +399,18 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         
         if (result.success) {
             // Capturas tienen prioridad máxima
-            score += result.capturedPieces.size() * 2000;
+            score += result.myCapturedPieces.size() * 2000;
             
             // Victoria inmediata = prioridad absoluta
             if (result.createsWin) {
-                score += 50000;
+                score += (50000 + state.depth * 1000);
             }
             
             // Verificar si el oponente puede ganar tras este movimiento
             tempState.currentPlayer = opponent; // Simular turno del oponente
             bool opponentCanWin = RuleEngine::checkWin(tempState, opponent);
             if (opponentCanWin) {
-                score -= 30000; // Penalizar movimientos que permiten victoria
+                score -= (5500 + state.depth * 1000); // Penalizar movimientos que permiten victoria
             }
         } else {
             score = -10000; // Movimiento ilegal = muy malo
