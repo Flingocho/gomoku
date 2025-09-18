@@ -9,7 +9,8 @@ SRCS = src/ai.cpp\
 		src/main.cpp\
 		src/rule_engine.cpp\
 		src/transposition_search.cpp\
-		src/zobrist_hasher.cpp
+		src/zobrist_hasher.cpp\
+		src/debug_analyzer.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 EXEC = gomoku

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/16 19:18:37 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 18:59:43 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,7 @@ private:
     int countThreats(const GameState& state, int player);
     int countLinesFromPosition(const GameState& state, int x, int y, int player);
     int countInDirection(const GameState& state, int x, int y, int dx, int dy, int player);
+    bool isBlocked(const GameState& state, int x, int y, int dx, int dy, int steps, int player);
     
     /**
      * Busca entrada en transposition table

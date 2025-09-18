@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/16 19:40:48 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 17:13:44 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@ public:
     
     // LEGACY: Mantener la versión anterior para compatibilidad
     static int evaluate(const GameState& state);
+	
+    static int evaluateImmediateThreats(const GameState& state, int player);
+
     
 private:
     struct PatternInfo {
@@ -52,7 +55,6 @@ private:
     static int evaluateCaptures(const GameState& state, int player);
     
     // NUEVO: Evaluación de amenazas inmediatas
-    static int evaluateImmediateThreats(const GameState& state, int player);
     
     // NUEVO: Función auxiliar para contar patrones específicos
     static int countPatternType(const GameState& state, int player, int consecutiveCount, int freeEnds);

@@ -6,14 +6,16 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 16:53:53 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 19:47:50 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/transposition_search.hpp"
+#include "../include/debug_analyzer.hpp"
 #include <algorithm>
 #include <limits>
 #include <iostream>
+#include <sstream>
 #include <cmath>
 
 TranspositionSearch::TranspositionSearch(size_t tableSizeMB)
@@ -47,33 +49,55 @@ void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB)
 			  << "MB (" << powerOf2 << " entradas) inicializada" << std::endl;
 }
 
-TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameState &state, int maxDepth)
-{
-	SearchResult result;
-	nodesEvaluated = 0;
-	cacheHits = 0;
+TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameState &state, int maxDepth) {
+    SearchResult result;
+    nodesEvaluated = 0;
+    cacheHits = 0;
 
-	// Profundidad adaptativa basada en fase del juego
-	int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
+    // Profundidad adaptativa
+    int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
 
-	std::cout << "AI usando profundidad: " << adaptiveDepth << " (solicitada: " << maxDepth << ")" << std::endl;
+    std::cout << "AI usando profundidad: " << adaptiveDepth << " (solicitada: " << maxDepth << ")" << std::endl;
 
-	Move bestMove;
-	// CLAVE: Pasar originalMaxDepth para cálculo de distancia al mate
-	int score = minimax(const_cast<GameState &>(state), adaptiveDepth,
-						std::numeric_limits<int>::min(),
-						std::numeric_limits<int>::max(),
-						state.currentPlayer == GameState::PLAYER2, // AI maximiza
-						adaptiveDepth,							   // ¡NUEVO PARÁMETRO!
-						&bestMove);
+    // **NUEVO: Análisis de movimientos para debug**
+    if (g_debugAnalyzer) {
+        std::vector<Move> candidateMoves = generateOrderedMoves(state);
+        
+        // Analizar cada movimiento candidato
+        for (const Move& move : candidateMoves) {
+            if (candidateMoves.size() > 10) break; // Limitar para performance
+            
+            auto breakdown = DebugAnalyzer::evaluateWithBreakdown(state, move, state.currentPlayer);
+            DEBUG_ROOT_MOVE(move, breakdown.totalScore, breakdown);
+        }
+    }
 
-	result.bestMove = bestMove;
-	result.score = score;
-	result.nodesEvaluated = nodesEvaluated;
-	result.cacheHits = cacheHits;
-	result.cacheHitRate = nodesEvaluated > 0 ? (float)cacheHits / nodesEvaluated : 0.0f;
+    Move bestMove;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    
+    int score = minimax(const_cast<GameState &>(state), adaptiveDepth,
+                        std::numeric_limits<int>::min(),
+                        std::numeric_limits<int>::max(),
+                        state.currentPlayer == GameState::PLAYER2,
+                        adaptiveDepth,
+                        &bestMove);
 
-	return result;
+    auto endTime = std::chrono::high_resolution_clock::now();
+    int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+    result.bestMove = bestMove;
+    result.score = score;
+    result.nodesEvaluated = nodesEvaluated;
+    result.cacheHits = cacheHits;
+    result.cacheHitRate = nodesEvaluated > 0 ? (float)cacheHits / nodesEvaluated : 0.0f;
+
+    // **NUEVO: Debug del movimiento final elegido**
+    if (g_debugAnalyzer) {
+        DEBUG_CHOSEN_MOVE(bestMove, score);
+        DEBUG_SNAPSHOT(state, elapsedTime, nodesEvaluated);
+    }
+
+    return result;
 }
 
 int TranspositionSearch::calculateAdaptiveDepth(const GameState &state, int requestedDepth)
@@ -156,9 +180,36 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 	if (maximizing)
 	{
 		int maxEval = std::numeric_limits<int>::min();
+		bool isRootLevel = (depth == originalMaxDepth);
 
 		for (const Move &move : moves)
 		{
+			// CRÍTICO: En nivel raíz, verificar victoria inmediata ANTES de minimax
+			if (isRootLevel) {
+				int quickScore = quickEvaluateMove(state, move);
+				if (quickScore >= 100000) { // Victoria inmediata detectada
+					// Aplicar movimiento para verificar
+					GameState newState = state;
+					RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
+					
+					if (result.success && (result.createsWin || RuleEngine::checkWin(newState, state.currentPlayer))) {
+						// VICTORIA INMEDIATA: Elegir inmediatamente sin más evaluación
+						maxEval = 100000 + (originalMaxDepth - depth + 1);
+						currentBestMove = move;
+						
+						if (g_debugAnalyzer) {
+							std::ostringstream debugMsg;
+							debugMsg << "ROOT LEVEL: IMMEDIATE WIN DETECTED - Move " << char('A' + move.y) << (move.x + 1)
+									 << " with score " << maxEval << " (GAME OVER)\n";
+							g_debugAnalyzer->logToFile(debugMsg.str());
+						}
+						
+						// TERMINAR BÚSQUEDA INMEDIATAMENTE
+						break;
+					}
+				}
+			}
+			
 			GameState newState = state;
 			RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
 
@@ -168,10 +219,26 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			// PASAR originalMaxDepth en recursión
 			int eval = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth);
 
+			// DEBUG: Log movimientos en nivel raíz
+			if (isRootLevel && g_debugAnalyzer) {
+				std::ostringstream debugMsg;
+				debugMsg << "ROOT LEVEL: Move " << char('A' + move.y) << (move.x + 1)
+						 << " evaluated to " << eval << "\n";
+				g_debugAnalyzer->logToFile(debugMsg.str());
+			}
+
 			if (eval > maxEval)
 			{
 				maxEval = eval;
 				currentBestMove = move;
+				
+				// DEBUG: Log cuando cambia el mejor movimiento
+				if (isRootLevel && g_debugAnalyzer) {
+					std::ostringstream debugMsg;
+					debugMsg << "ROOT LEVEL: NEW BEST MOVE " << char('A' + move.y) << (move.x + 1)
+							 << " with score " << eval << "\n";
+					g_debugAnalyzer->logToFile(debugMsg.str());
+				}
 
 				// Cutoff inmediato si superamos beta
 				if (eval >= beta)
@@ -329,95 +396,132 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 }
 
 int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& move) {
-    int score = 0;
-    
-    // 1. EVALUACIÓN SÚPER RÁPIDA (sin copiar estado)
-    
-    // Proximidad al centro (tableros de Go favorecen centro)
-    int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
-    score += (9 - centerDist) * 5; // Máximo +45 puntos
-    
-    // Densidad local - contar piezas en radio 2
-    int friendlyNearby = 0, enemyNearby = 0;
     int currentPlayer = state.currentPlayer;
     int opponent = state.getOpponent(currentPlayer);
     
-    for (int dx = -2; dx <= 2; dx++) {
-        for (int dy = -2; dy <= 2; dy++) {
-            if (dx == 0 && dy == 0) continue;
-            
-            int nx = move.x + dx, ny = move.y + dy;
-            if (state.isValid(nx, ny) && !state.isEmpty(nx, ny)) {
-                int piece = state.getPiece(nx, ny);
-                if (piece == currentPlayer) {
-                    // Más peso para piezas más cercanas
-                    int distance = std::max(std::abs(dx), std::abs(dy));
-                    friendlyNearby += (3 - distance) * 10; // 20, 10 puntos según distancia
-                } else if (piece == opponent) {
-                    enemyNearby += 5;
-                }
-            }
-        }
+    // PASO 1: Evaluación ultrarrápida sin copiar estado
+    GameState tempState = state;
+    RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, move);
+    
+    if (!result.success) {
+        return -10000; // Movimiento ilegal
     }
     
-    score += friendlyNearby; // Máximo ~+200
-    score += enemyNearby / 2; // Estar cerca del enemigo también es útil
+    // PASO 2: Verificar condiciones críticas primero (alineado con evaluate())
     
-    // 2. PATRONES BÁSICOS (sin minimax)
+    // Victoria inmediata = máxima prioridad (alineado con Evaluator::WIN)
+    if (result.createsWin || RuleEngine::checkWin(tempState, currentPlayer)) {
+        return 100000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
+    }
     
-    // Contar líneas potenciales en las 4 direcciones principales
+    // Evitar movimientos que permiten victoria al oponente
+    if (RuleEngine::checkWin(tempState, opponent)) {
+        return -400000;
+    }
+    
+    // PASO 3: Evaluar capturas (alineado con evaluateCaptures())
+    int score = 0;
+    
+    // Capturas propias - usar escalas similares a Evaluator
+    int myCaptureValue = result.myCapturedPieces.size() * 1000;
+    if (tempState.captures[currentPlayer - 1] >= 8) myCaptureValue *= 10; // Cerca de ganar por capturas
+    else if (tempState.captures[currentPlayer - 1] >= 6) myCaptureValue *= 5;
+    else if (tempState.captures[currentPlayer - 1] >= 4) myCaptureValue *= 2;
+    score += myCaptureValue;
+    
+    // Capturas del oponente - penalizar
+    int oppCaptureValue = result.opponentCapturedPieces.size() * 1000;
+    if (tempState.captures[opponent - 1] >= 8) oppCaptureValue *= 10;
+    else if (tempState.captures[opponent - 1] >= 6) oppCaptureValue *= 5;
+    else if (tempState.captures[opponent - 1] >= 4) oppCaptureValue *= 2;
+    score -= oppCaptureValue;
+    
+    // PASO 4: Evaluación de amenazas inmediatas (simplificada de evaluateImmediateThreats)
+    
+    // Buscar amenazas de 4 en línea (cuasi-victoria)
     int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
     
     for (int d = 0; d < 4; d++) {
         int dx = directions[d][0], dy = directions[d][1];
         
-        // Contar hacia adelante y atrás
-        int forward = countInDirection(state, move.x, move.y, dx, dy, currentPlayer);
-        int backward = countInDirection(state, move.x, move.y, -dx, -dy, currentPlayer);
-        int total = forward + backward + 1; // +1 por la pieza que vamos a colocar
+        // Contar piezas propias en ambas direcciones
+        int forward = countInDirection(tempState, move.x, move.y, dx, dy, currentPlayer);
+        int backward = countInDirection(tempState, move.x, move.y, -dx, -dy, currentPlayer);
+        int myTotal = forward + backward + 1; // +1 por la pieza recién colocada
         
-        // Bonificación por líneas largas
-        if (total >= 4) score += 1000;      // Cerca de ganar
-        else if (total >= 3) score += 200;  // Buena línea
-        else if (total >= 2) score += 50;   // Desarrollo
-        
-        // Detectar bloqueos al oponente
+        // Contar piezas del oponente (para detectar bloqueos)
         int oppForward = countInDirection(state, move.x, move.y, dx, dy, opponent);
         int oppBackward = countInDirection(state, move.x, move.y, -dx, -dy, opponent);
         int oppTotal = oppForward + oppBackward;
         
-        if (oppTotal >= 3) score += 500; // Bloquear amenaza seria
-        else if (oppTotal >= 2) score += 100; // Bloquear desarrollo
-    }
-    
-    // 3. EVALUACIÓN COMPLETA SOLO SI ES PROMETEDOR
-    
-    // Solo para movimientos que ya parecen buenos, hacer la evaluación costosa
-    if (score > 300) {
-        GameState tempState = state;
-        RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, move);
+        // Amenazas propias (alineado con Evaluator::patternToScore)
+        if (myTotal >= 4) {
+            // Verificar si es una amenaza abierta o semicerrada
+            bool blocked1 = isBlocked(tempState, move.x, move.y, dx, dy, forward + 1, currentPlayer);
+            bool blocked2 = isBlocked(tempState, move.x, move.y, -dx, -dy, backward + 1, currentPlayer);
+            
+            if (!blocked1 && !blocked2) {
+                score += 50000; // FOUR_OPEN - imparable
+            } else {
+                score += 10000; // FOUR_HALF - amenaza forzada
+            }
+        } else if (myTotal == 3) {
+            // Verificar si es una amenaza real (no bloqueada)
+            bool blocked1 = isBlocked(tempState, move.x, move.y, dx, dy, forward + 1, currentPlayer);
+            bool blocked2 = isBlocked(tempState, move.x, move.y, -dx, -dy, backward + 1, currentPlayer);
+            
+            if (!blocked1 && !blocked2) {
+                score += 5000; // THREE_OPEN - muy peligroso
+            } else if (!blocked1 || !blocked2) {
+                score += 1500; // THREE_HALF - amenaza
+            }
+        } else if (myTotal == 2) {
+            score += 100; // TWO_OPEN - desarrollo
+        }
         
-        if (result.success) {
-            // Capturas tienen prioridad máxima
-            score += result.myCapturedPieces.size() * 2000;
-            
-            // Victoria inmediata = prioridad absoluta
-            if (result.createsWin) {
-                score += (50000 + state.depth * 1000);
-            }
-            
-            // Verificar si el oponente puede ganar tras este movimiento
-            tempState.currentPlayer = opponent; // Simular turno del oponente
-            bool opponentCanWin = RuleEngine::checkWin(tempState, opponent);
-            if (opponentCanWin) {
-                score -= (5500 + state.depth * 1000); // Penalizar movimientos que permiten victoria
-            }
-        } else {
-            score = -10000; // Movimiento ilegal = muy malo
+        // Bloquear amenazas del oponente (defensivo) - valores alineados
+        if (oppTotal >= 4) {
+            score += 40000; // Bloquear four - crítico
+        } else if (oppTotal >= 3) {
+            score += 8000; // Bloquear three - importante
+        } else if (oppTotal >= 2) {
+            score += 200; // Bloquear desarrollo - básico
         }
     }
     
+    // PASO 5: Evaluación posicional básica (alineada con analyzePosition simplificado)
+    
+    // Proximidad al centro (tableros favorecen centro)
+    int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
+    score += (9 - centerDist) * 20;
+    
+    // Conectividad con piezas propias (importante para patrones)
+    int connectivity = 0;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) continue;
+            int nx = move.x + dx, ny = move.y + dy;
+            if (state.isValid(nx, ny) && state.getPiece(nx, ny) == currentPlayer) {
+                connectivity += 50; // Bonificación por conexión directa
+            }
+        }
+    }
+    score += connectivity;
+    
     return score;
+}
+
+// Función auxiliar para verificar si una línea está bloqueada
+bool TranspositionSearch::isBlocked(const GameState& state, int x, int y, int dx, int dy, int steps, int player) {
+    int nx = x + dx * steps;
+    int ny = y + dy * steps;
+    
+    if (!state.isValid(nx, ny)) {
+        return true; // Bloqueado por borde
+    }
+    
+    int piece = state.getPiece(nx, ny);
+    return (piece != GameState::EMPTY && piece != player); // Bloqueado por oponente
 }
 
 int TranspositionSearch::countThreats(const GameState &state, int player)
