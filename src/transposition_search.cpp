@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/19 17:30:25 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/19 18:41:16 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -345,39 +345,24 @@ void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int
 }
 
 std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState& state) {
-    std::vector<Move> moves;
+    // NUEVO: Generar candidatos con filtrado adaptativo por fase de juego
+    std::vector<Move> candidates = generateCandidatesAdaptiveRadius(state);
     
-    // Generar movimientos candidatos (código existente)
-    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            if (!state.isEmpty(i, j)) continue;
-            
-            bool nearPiece = false;
-            for (int di = -1; di <= 1 && !nearPiece; di++) {
-                for (int dj = -1; dj <= 1 && !nearPiece; dj++) {
-                    int ni = i + di, nj = j + dj;
-                    if (state.isValid(ni, nj) && state.getPiece(ni, nj) != GameState::EMPTY) {
-                        nearPiece = true;
-                    }
-                }
-            }
-            
-            if (nearPiece && RuleEngine::isLegalMove(state, Move(i, j))) {
-                moves.push_back(Move(i, j));
-            }
-        }
+    // NUEVO: Determinar límite de candidatos según fase del juego
+    int maxCandidates = getMaxCandidatesForGamePhase(state);
+    
+    // NUEVO: Ordenar candidatos con evaluación geométrica rápida
+    orderMovesByGeometricValue(candidates, state);
+    
+    // NUEVO: Limitar a los mejores candidatos
+    if (candidates.size() > (size_t)maxCandidates) {
+        candidates.resize(maxCandidates);
     }
     
-    // NUEVO: Ordenar con mejor movimiento anterior primero
-    orderMovesWithPreviousBest(moves, state);
+    // Aplicar move ordering con mejor movimiento de iteración anterior
+    orderMovesWithPreviousBest(candidates, state);
     
-    // Limitar candidatos
-    size_t limit = 10;
-    if (moves.size() > limit) {
-        moves.resize(limit);
-    }
-    
-    return moves;
+    return candidates;
 }
 
 void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move>& moves, const GameState& state) {
@@ -682,3 +667,177 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     
     return bestResult;
 }
+
+// En transposition_search.cpp:
+std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const GameState& state) {
+    std::vector<Move> candidates;
+    
+    int pieceCount = state.turnCount;
+    int searchRadius = getSearchRadiusForGamePhase(pieceCount);
+    
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (!state.isEmpty(i, j)) continue;
+            
+            // Verificar si está dentro del radio de influencia de alguna pieza
+            bool withinInfluenceRadius = false;
+            
+            for (int pi = 0; pi < GameState::BOARD_SIZE && !withinInfluenceRadius; pi++) {
+                for (int pj = 0; pj < GameState::BOARD_SIZE && !withinInfluenceRadius; pj++) {
+                    if (state.getPiece(pi, pj) != GameState::EMPTY) {
+                        int distance = std::max(std::abs(i - pi), std::abs(j - pj));
+                        if (distance <= searchRadius) {
+                            withinInfluenceRadius = true;
+                        }
+                    }
+                }
+            }
+            
+            // En opening, también considerar movimientos centrales estratégicos
+            if (!withinInfluenceRadius && isEarlyGamePhase(pieceCount)) {
+                if (isCentralStrategicPosition(i, j)) {
+                    withinInfluenceRadius = true;
+                }
+            }
+            
+            if (withinInfluenceRadius && RuleEngine::isLegalMove(state, Move(i, j))) {
+                candidates.push_back(Move(i, j));
+            }
+        }
+    }
+    
+    return candidates;
+}
+
+int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount) {
+    if (pieceCount <= 2) {
+        return 3; // Opening: radio amplio para explorar
+    } else if (pieceCount <= 8) {
+        return 2; // Early game: radio moderado
+    } else {
+        return 1; // Mid/late game: radio enfocado
+    }
+}
+
+int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState& state) {
+    int pieceCount = state.turnCount;
+    
+    if (pieceCount <= 4) {
+        return 8;  // Opening: muy selectivo para evitar explosion combinatoria
+    } else if (pieceCount <= 10) {
+        return 10; // Early game: moderadamente selectivo  
+    } else {
+        return 12; // Mid/late game: más opciones disponibles
+    }
+}
+
+bool TranspositionSearch::isEarlyGamePhase(int pieceCount) {
+    return pieceCount <= 4;
+}
+
+bool TranspositionSearch::isCentralStrategicPosition(int x, int y) {
+    int centerDistance = std::max(std::abs(x - 9), std::abs(y - 9));
+    return centerDistance <= 2; // Posiciones dentro del área central 5x5
+}
+
+void TranspositionSearch::orderMovesByGeometricValue(std::vector<Move>& moves, const GameState& state) {
+    // Ordenar usando evaluación basada en patrones geométricos
+    std::sort(moves.begin(), moves.end(), [&](const Move& a, const Move& b) {
+        return calculateGeometricMoveValue(state, a) > calculateGeometricMoveValue(state, b);
+    });
+}
+
+int TranspositionSearch::calculateGeometricMoveValue(const GameState& state, const Move& move) {
+    int value = 0;
+    int currentPlayer = state.currentPlayer;
+    int opponent = state.getOpponent(currentPlayer);
+    
+    // 1. VALOR POSICIONAL: Proximidad al centro (importante en opening)
+    int centralityBonus = calculateCentralityBonus(move);
+    value += centralityBonus;
+    
+    // 2. ANÁLISIS DE PATRONES: Evaluar alineaciones potenciales en 4 direcciones
+    int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+    
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0], dy = directions[d][1];
+        
+        // Contar piezas propias que se alinearían con este movimiento
+        int myAlignment = 1; // La pieza que vamos a colocar
+        myAlignment += countPiecesInDirection(state, move.x, move.y, dx, dy, currentPlayer);
+        myAlignment += countPiecesInDirection(state, move.x, move.y, -dx, -dy, currentPlayer);
+        
+        // Contar piezas del oponente para evaluar interrupciones
+        int opponentInterruption = 0;
+        opponentInterruption += countPiecesInDirection(state, move.x, move.y, dx, dy, opponent);  
+        opponentInterruption += countPiecesInDirection(state, move.x, move.y, -dx, -dy, opponent);
+        
+        // SCORING basado en valor táctico de las alineaciones
+        value += calculateAlignmentValue(myAlignment);
+        value += calculateInterruptionValue(opponentInterruption);
+    }
+    
+    // 3. CONECTIVIDAD: Bonus por estar adyacente a piezas propias
+    int connectivityBonus = calculateConnectivityBonus(state, move, currentPlayer);
+    value += connectivityBonus;
+    
+    return value;
+}
+
+int TranspositionSearch::calculateCentralityBonus(const Move& move) {
+    int centerDistance = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
+    return (9 - centerDistance) * 10;
+}
+
+int TranspositionSearch::calculateAlignmentValue(int alignmentLength) {
+    switch (alignmentLength) {
+        case 5: return 10000; // Victoria inmediata
+        case 4: return 5000;  // Amenaza crítica
+        case 3: return 1000;  // Amenaza fuerte
+        case 2: return 100;   // Desarrollo básico
+        default: return 0;
+    }
+}
+
+int TranspositionSearch::calculateInterruptionValue(int interruptionLength) {
+    switch (interruptionLength) {
+        case 4: return 3000;  // Bloqueo crítico de amenaza inmediata
+        case 3: return 2000;  // Bloqueo de amenaza fuerte
+        case 2: return 200;   // Prevención temprana
+        default: return 0;
+    }
+}
+
+int TranspositionSearch::calculateConnectivityBonus(const GameState& state, const Move& move, int player) {
+    int connectivity = 0;
+    
+    // Verificar las 8 direcciones adyacentes
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) continue;
+            
+            int adjX = move.x + dx, adjY = move.y + dy;
+            if (state.isValid(adjX, adjY) && state.getPiece(adjX, adjY) == player) {
+                connectivity += 30;
+            }
+        }
+    }
+    
+    return connectivity;
+}
+
+// Método auxiliar optimizado para contar piezas consecutivas
+int TranspositionSearch::countPiecesInDirection(const GameState& state, int x, int y, 
+                                               int dx, int dy, int player) {
+    int count = 0;
+    x += dx; y += dy;
+    
+    // Limitar conteo a 4 (suficiente para todas las evaluaciones tácticas)
+    while (count < 4 && state.isValid(x, y) && state.getPiece(x, y) == player) {
+        count++;
+        x += dx; y += dy;
+    }
+    
+    return count;
+}
+
