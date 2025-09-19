@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 19:47:50 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/19 17:30:25 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <iomanip>
 
 TranspositionSearch::TranspositionSearch(size_t tableSizeMB)
 	: nodesEvaluated(0), cacheHits(0)
@@ -343,50 +344,67 @@ void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int
 	transpositionTable[index] = CacheEntry(zobristKey, score, depth, bestMove, type);
 }
 
-std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState &state)
-{
-	std::vector<Move> moves;
+std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState& state) {
+    std::vector<Move> moves;
+    
+    // Generar movimientos candidatos (código existente)
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (!state.isEmpty(i, j)) continue;
+            
+            bool nearPiece = false;
+            for (int di = -1; di <= 1 && !nearPiece; di++) {
+                for (int dj = -1; dj <= 1 && !nearPiece; dj++) {
+                    int ni = i + di, nj = j + dj;
+                    if (state.isValid(ni, nj) && state.getPiece(ni, nj) != GameState::EMPTY) {
+                        nearPiece = true;
+                    }
+                }
+            }
+            
+            if (nearPiece && RuleEngine::isLegalMove(state, Move(i, j))) {
+                moves.push_back(Move(i, j));
+            }
+        }
+    }
+    
+    // NUEVO: Ordenar con mejor movimiento anterior primero
+    orderMovesWithPreviousBest(moves, state);
+    
+    // Limitar candidatos
+    size_t limit = 10;
+    if (moves.size() > limit) {
+        moves.resize(limit);
+    }
+    
+    return moves;
+}
 
-	// Movimientos normales: cerca de piezas existentes
-	for (int i = 0; i < GameState::BOARD_SIZE; i++)
-	{
-		for (int j = 0; j < GameState::BOARD_SIZE; j++)
-		{
-			if (!state.isEmpty(i, j))
-				continue;
-
-			// Solo considerar si está cerca de alguna pieza
-			bool nearPiece = false;
-			for (int di = -1; di <= 1 && !nearPiece; di++)
-			{
-				for (int dj = -1; dj <= 1 && !nearPiece; dj++)
-				{
-					int ni = i + di, nj = j + dj;
-					if (state.isValid(ni, nj) && state.getPiece(ni, nj) != GameState::EMPTY)
-					{
-						nearPiece = true;
-					}
-				}
-			}
-
-			if (nearPiece && RuleEngine::isLegalMove(state, Move(i, j)))
-			{
-				moves.push_back(Move(i, j));
-			}
-		}
-	}
-
-	// Ordenar movimientos por calidad
-	orderMoves(moves, state);
-
-	// Límite más agresivo basado en fase del juego
-	size_t limit = 10;
-	if (moves.size() > limit)
-	{
-		moves.resize(limit);
-	}
-
-	return moves;
+void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move>& moves, const GameState& state) {
+    // Si tenemos mejor movimiento de iteración anterior, ponerlo primero
+    if (previousBestMove.isValid()) {
+        auto it = std::find_if(moves.begin(), moves.end(), 
+                              [this](const Move& m) { 
+                                  return m.x == previousBestMove.x && m.y == previousBestMove.y; 
+                              });
+        
+        if (it != moves.end()) {
+            // Mover al frente
+            std::iter_swap(moves.begin(), it);
+            
+            // Ordenar el resto normalmente
+            if (moves.size() > 1) {
+                std::sort(moves.begin() + 1, moves.end(), [&](const Move& a, const Move& b) {
+                    return quickEvaluateMove(state, a) > quickEvaluateMove(state, b);
+                });
+            }
+            
+            return;
+        }
+    }
+    
+    // Si no hay movimiento anterior, orden normal
+    orderMoves(moves, state);
 }
 
 void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &state)
@@ -602,4 +620,65 @@ TranspositionSearch::CacheStats TranspositionSearch::getCacheStats() const
 	stats.fillRate = static_cast<double>(stats.usedEntries) / stats.totalEntries;
 
 	return stats;
+}
+
+TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
+    const GameState& state, int maxDepth) {
+    
+    auto startTime = std::chrono::high_resolution_clock::now();
+    SearchResult bestResult;
+    
+    nodesEvaluated = 0;
+    cacheHits = 0;
+    
+    std::cout << "Búsqueda iterativa hasta profundidad " << maxDepth << std::endl;
+    
+    // Iterative deepening loop
+    for (int depth = 1; depth <= maxDepth; depth++) {
+        auto iterationStart = std::chrono::high_resolution_clock::now();
+        
+        // Usar el mejor movimiento de la iteración anterior como primer candidato
+        if (bestResult.bestMove.isValid()) {
+            previousBestMove = bestResult.bestMove;
+        }
+        
+        Move bestMove;
+        int score = minimax(const_cast<GameState&>(state), depth,
+                           std::numeric_limits<int>::min(),
+                           std::numeric_limits<int>::max(),
+                           state.currentPlayer == GameState::PLAYER2,
+                           depth, &bestMove);
+        
+        auto iterationEnd = std::chrono::high_resolution_clock::now();
+        auto iterationTime = std::chrono::duration_cast<std::chrono::milliseconds>(iterationEnd - iterationStart);
+        
+        // Actualizar resultado
+        bestResult.bestMove = bestMove;
+        bestResult.score = score;
+        bestResult.nodesEvaluated = nodesEvaluated;
+        bestResult.cacheHits = cacheHits;
+        bestResult.cacheHitRate = nodesEvaluated > 0 ? (float)cacheHits / nodesEvaluated : 0.0f;
+        
+        std::cout << "Profundidad " << depth 
+                  << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
+                  << " (score: " << score << ")"
+                  << " - " << iterationTime.count() << "ms"
+                  << " (" << nodesEvaluated << " nodos, " 
+                  << std::fixed << std::setprecision(1) << (bestResult.cacheHitRate * 100) << "% cache hit)"
+                  << std::endl;
+        
+        // Si encontramos mate, podemos parar (opcional)
+        if (std::abs(score) > 90000) {
+            std::cout << "Mate detectado en profundidad " << depth 
+                      << ", completando búsqueda" << std::endl;
+            break;
+        }
+    }
+    
+    auto totalTime = std::chrono::high_resolution_clock::now() - startTime;
+    std::cout << "Búsqueda completada en " 
+              << std::chrono::duration_cast<std::chrono::milliseconds>(totalTime).count() 
+              << "ms total" << std::endl;
+    
+    return bestResult;
 }

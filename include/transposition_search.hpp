@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 18:59:43 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/19 17:33:02 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ private:
     
     int nodesEvaluated;
     int cacheHits;
+	Move previousBestMove;
     
     /**
      * Calcula profundidad adaptativa basada en fase del juego
@@ -113,7 +114,7 @@ private:
      * Inicializa la transposition table con tamaño óptimo
      */
     void initializeTranspositionTable(size_t sizeInMB = 64);
-
+	
 public:
     /**
      * Constructor: Inicializa tabla de transposición
@@ -153,6 +154,10 @@ public:
     };
     
     CacheStats getCacheStats() const;
+
+	SearchResult findBestMoveIterative(const GameState& state, int maxDepth);
+	void orderMovesWithPreviousBest(std::vector<Move>& moves, const GameState& state);
+
 };
 
 #endif

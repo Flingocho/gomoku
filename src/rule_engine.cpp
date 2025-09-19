@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 20:26:48 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/18 20:33:48 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState &state, const Move &move)
 	// NUEVO: Guardar estado para actualización de hash
 	int oldMyCaptures = state.captures[state.currentPlayer - 1];
 	int currentPlayer = state.currentPlayer;
+	int oldOppCaptures = state.captures[state.getOpponent(currentPlayer) - 1];
 
 	// 3. Colocar la pieza temporalmente
 	state.board[move.x][move.y] = state.currentPlayer;
@@ -56,12 +57,10 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState &state, const Move &move)
 	int opponentIndex = state.getOpponent(state.currentPlayer) - 1;
 	state.captures[opponentIndex] += result.opponentCapturedPieces.size() / 2;
 
-	// 7. Verificar victoria
-	result.createsWin = checkWin(state, state.currentPlayer);
-
-	int oldOppCaptures = state.captures[state.getOpponent(currentPlayer) - 1];
 	int newMyCaptures = state.captures[currentPlayer - 1];
 	int newOppCaptures = state.captures[state.getOpponent(currentPlayer) - 1];
+	// 7. Verificar victoria
+	result.createsWin = checkWin(state, state.currentPlayer);
 
 	state.zobristHash = state.hasher->updateHashAfterMove(
 		state.zobristHash,
