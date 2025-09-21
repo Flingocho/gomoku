@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/16 19:54:37 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/21 18:19:36 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -208,58 +208,82 @@ int Evaluator::evaluateCaptures(const GameState& state, int player) {
     return score;
 }
 
-// NUEVO: Evaluación de amenazas inmediatas integrada con el sistema existente
+// En src/evaluator.cpp, reemplazar evaluateImmediateThreats:
+
 int Evaluator::evaluateImmediateThreats(const GameState& state, int player) {
     int opponent = state.getOpponent(player);
     int threatScore = 0;
     
-    // 1. Contar cuántos 4-abiertos tiene cada jugador (victoria garantizada)
-    int myFourOpen = countPatternType(state, player, 4, 2);     // 4 consecutive, 2 free ends
-    int oppFourOpen = countPatternType(state, opponent, 4, 2);
+    // NUEVA LÓGICA: Detectar amenazas de mate en 1 real
+    std::vector<Move> myMateThreats = findMateInOneThreats(state, player);
+    std::vector<Move> oppMateThreats = findMateInOneThreats(state, opponent);
     
-    // 2. Contar cuántos 4-semi tiene cada jugador (victoria en 1 turno si no se bloquea)
-    int myFourHalf = countPatternType(state, player, 4, 1);     // 4 consecutive, 1 free end
+    // 1. Si tengo amenazas de mate en 1
+    if (!myMateThreats.empty()) {
+        threatScore += 90000; // Muy bueno - puedo ganar
+    }
+    
+    // 2. CRÍTICO: Si el oponente tiene amenazas de mate en 1
+    if (!oppMateThreats.empty()) {
+        threatScore -= 95000; // Muy malo - debo defender
+        
+        // Si hay múltiples amenazas del oponente = desastre
+        if (oppMateThreats.size() > 1) {
+            threatScore -= 100000; // Imposible defender múltiples amenazas
+        }
+    }
+    
+    // 3. LÓGICA ORIGINAL: Contar patrones de 4 (como respaldo)
+    int myFourOpen = countPatternType(state, player, 4, 2);
+    int oppFourOpen = countPatternType(state, opponent, 4, 2);
+    int myFourHalf = countPatternType(state, player, 4, 1);
     int oppFourHalf = countPatternType(state, opponent, 4, 1);
     
-    // 3. CLAVE: Si el oponente tiene amenazas de 4, son MUY peligrosas
-    // Usamos valores altos pero no tan altos como WIN para mantener el balance
     if (oppFourOpen > 0) {
-        threatScore -= 80000;  // El oponente puede ganar inmediatamente
+        threatScore -= 80000;
     }
     if (oppFourHalf > 0) {
-        threatScore -= 60000;  // El oponente puede ganar en 1 turno
+        threatScore -= 60000;
     }
-    
-    // 4. Nuestras amenazas son buenas, pero consideramos el contexto
     if (myFourOpen > 0) {
-        if (oppFourOpen == 0 && oppFourHalf == 0) {
-            threatScore += 70000;  // Solo nosotros amenazamos = muy bueno
-        } else {
-            // Si ambos amenazan, el que mueve primero gana
-            // Como somos la IA (PLAYER2), movemos después del humano
-            threatScore += 20000;  // Situación compleja, menos bonus
-        }
+        threatScore += 70000;
     }
-    
     if (myFourHalf > 0) {
-        if (oppFourOpen == 0 && oppFourHalf == 0) {
-            threatScore += 40000;  // Solo nosotros amenazamos
-        } else {
-            threatScore += 10000;  // Ambos amenazan = situación defensiva
-        }
-    }
-    
-    // 5. Múltiples amenazas del oponente = desastre total
-    if (oppFourOpen + oppFourHalf > 1) {
-        threatScore -= 95000;  // Múltiples amenazas = imposible defender
-    }
-    
-    // 6. BONUS: Si tenemos múltiples amenazas y el oponente no tiene ninguna
-    if ((myFourOpen + myFourHalf > 1) && (oppFourOpen + oppFourHalf == 0)) {
-        threatScore += 85000;  // Victoria garantizada con múltiples amenazas
+        threatScore += 40000;
     }
     
     return threatScore;
+}
+
+// NUEVA: Función que detecta amenazas reales de mate en 1
+std::vector<Move> Evaluator::findMateInOneThreats(const GameState& state, int player) {
+    std::vector<Move> threats;
+    
+    // Buscar todas las posiciones vacías
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (state.isEmpty(i, j)) {
+                Move candidate(i, j);
+                
+                // Simular el movimiento
+                GameState tempState = state;
+                tempState.board[i][j] = player;
+                
+                // ¿Este movimiento resulta en victoria?
+                if (RuleEngine::checkWin(tempState, player)) {
+                    threats.push_back(candidate);
+                }
+            }
+        }
+    }
+    
+    return threats;
+}
+
+// NUEVA: Verificar si un movimiento bloquea una amenaza específica
+bool Evaluator::moveBlocksThreat(const Move& move, const Move& threat) {
+    // Bloquea si ocupa la misma posición que la amenaza
+    return (move.x == threat.x && move.y == threat.y);
 }
 
 // NUEVO: Función auxiliar para contar patrones específicos reutilizando lógica existente

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/19 18:41:16 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/21 18:20:04 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -417,9 +417,23 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         return 100000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
     }
     
-    // Evitar movimientos que permiten victoria al oponente
-    if (RuleEngine::checkWin(tempState, opponent)) {
-        return -400000;
+    std::vector<Move> opponentThreats = Evaluator::findMateInOneThreats(state, opponent);
+    
+    if (!opponentThreats.empty()) {
+        // Verificar si este movimiento bloquea alguna amenaza
+        bool blocksAnyThreat = false;
+        for (const Move& threat : opponentThreats) {
+            if (Evaluator::moveBlocksThreat(move, threat)) {
+                blocksAnyThreat = true;
+                break;
+            }
+        }
+        
+        if (blocksAnyThreat) {
+            return 400000; // SUPERVIVENCIA - bloqueo amenaza
+        } else {
+            return -500000; // SUICIDIO - no bloqueo amenaza existente
+        }
     }
     
     // PASO 3: Evaluar capturas (alineado con evaluateCaptures())
