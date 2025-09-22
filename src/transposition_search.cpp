@@ -3,10 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   transposition_search.cpp                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
+/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+       // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente sin iterar
+    bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
+    
+    if (opponentHasThreats) {
+        // Evaluar si este movimiento podría ayudar defensivamente
+        // Simulación rápida: aplicar movimiento y re-evaluar amenazas
+        GameState tempState = state;
+        RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, move);
+        
+        if (result.success) {
+            bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
+            
+            if (!stillHasThreats) {
+                score += 400000; // SUPERVIVENCIA - neutralizó amenazas
+            } else {
+                score -= 200000; // PARCIAL - aún hay amenazas pero es mejor que nada
+            }
+        } else {
+            score -= 500000; // SUICIDIO - movimiento ilegal con amenazas activas
+        }
+    }                                        +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/21 18:20:04 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 16:34:18 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +39,7 @@
 #include <iomanip>
 
 TranspositionSearch::TranspositionSearch(size_t tableSizeMB)
-	: nodesEvaluated(0), cacheHits(0)
+	: currentGeneration(1), nodesEvaluated(0), cacheHits(0)
 {
 	initializeTranspositionTable(tableSizeMB);
 }
@@ -54,6 +73,9 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameSt
     SearchResult result;
     nodesEvaluated = 0;
     cacheHits = 0;
+    
+    // NUEVO: Incrementar generación para aging-based replacement
+    currentGeneration++;
 
     // Profundidad adaptativa
     int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
@@ -132,25 +154,32 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 	// OPTIMIZACIÓN CLAVE: Usar Zobrist hash del estado
 	uint64_t zobristKey = state.getZobristHash();
 
-	// Verificar transposition table PRIMERO
+	// OPTIMIZACIÓN: Verificar transposition table PRIMERO con mejor validación
 	CacheEntry entry;
-	if (lookupTransposition(zobristKey, entry) && entry.depth >= depth)
-	{
+	bool foundInCache = lookupTransposition(zobristKey, entry);
+	
+	if (foundInCache) {
 		cacheHits++;
-
-		if (entry.type == CacheEntry::EXACT)
-		{
-			if (bestMove)
-				*bestMove = entry.bestMove;
-			return entry.score;
+		
+		// CRÍTICO: Solo usar si la profundidad es suficiente
+		if (entry.depth >= depth) {
+			if (entry.type == CacheEntry::EXACT) {
+				if (bestMove)
+					*bestMove = entry.bestMove;
+				return entry.score;
+			}
+			else if (entry.type == CacheEntry::LOWER_BOUND && entry.score >= beta) {
+				return beta; // Beta cutoff del cache
+			}
+			else if (entry.type == CacheEntry::UPPER_BOUND && entry.score <= alpha) {
+				return alpha; // Alpha cutoff del cache
+			}
 		}
-		else if (entry.type == CacheEntry::LOWER_BOUND && entry.score >= beta)
-		{
-			return beta;
-		}
-		else if (entry.type == CacheEntry::UPPER_BOUND && entry.score <= alpha)
-		{
-			return alpha;
+		
+		// NUEVO: Incluso si profundidad es insuficiente, usar el mejor movimiento para ordering
+		if (entry.bestMove.isValid() && bestMove && depth == originalMaxDepth) {
+			// Hint para move ordering en nivel raíz
+			previousBestMove = entry.bestMove;
 		}
 	}
 
@@ -324,13 +353,27 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &entry)
 {
 	size_t index = zobristKey & tableSizeMask; // O(1) access!
+	const CacheEntry& candidate = transpositionTable[index];
 
-	if (transpositionTable[index].zobristKey == zobristKey)
-	{
-		entry = transpositionTable[index];
+	// Verificar si hay entrada válida
+	if (candidate.zobristKey == 0) {
+		return false; // Entrada vacía
+	}
+
+	// Verificar coincidencia exacta de hash
+	if (candidate.zobristKey == zobristKey) {
+		entry = candidate;
+		
+		// NUEVO: Actualizar generación para LRU mejorado
+		if (candidate.generation != currentGeneration) {
+			// Actualizar generación sin cambiar otros datos
+			transpositionTable[index].generation = currentGeneration;
+		}
+		
 		return true;
 	}
 
+	// Hash collision detectada - no usar la entrada
 	return false;
 }
 
@@ -338,10 +381,45 @@ void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int
 											 Move bestMove, CacheEntry::Type type)
 {
 	size_t index = zobristKey & tableSizeMask;
-
-	// Simple replacement strategy: always replace
-	// TODO: Implementar depth-preferred replacement para mejor performance
-	transpositionTable[index] = CacheEntry(zobristKey, score, depth, bestMove, type);
+	CacheEntry& existing = transpositionTable[index];
+	
+	// NUEVA ESTRATEGIA: Reemplazo inteligente basado en importancia
+	bool shouldReplace = false;
+	
+	if (existing.zobristKey == 0) {
+		// Entrada vacía - siempre reemplazar
+		shouldReplace = true;
+	}
+	else if (existing.zobristKey == zobristKey) {
+		// Misma posición - actualizar si profundidad es mayor o igual
+		shouldReplace = (depth >= existing.depth);
+	}
+	else {
+		// Colisión de hash - usar estrategia de reemplazo sofisticada
+		CacheEntry newEntry(zobristKey, score, depth, bestMove, type, currentGeneration);
+		
+		// Calcular valores de importancia
+		int existingImportance = existing.getImportanceValue();
+		int newImportance = newEntry.getImportanceValue();
+		
+		// Factor de aging: entradas más viejas tienen menor prioridad
+		uint32_t ageDiff = currentGeneration - existing.generation;
+		if (ageDiff > 0) {
+			existingImportance -= (ageDiff * 10); // Penalizar entradas viejas
+		}
+		
+		// Reemplazar si la nueva entrada es más importante
+		shouldReplace = (newImportance > existingImportance);
+		
+		// Bias hacia entradas EXACT si hay empate
+		if (newImportance == existingImportance && type == CacheEntry::EXACT) {
+			shouldReplace = true;
+		}
+	}
+	
+	if (shouldReplace) {
+		transpositionTable[index] = CacheEntry(zobristKey, score, depth, bestMove, type, currentGeneration);
+	}
 }
 
 std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState& state) {
@@ -417,22 +495,24 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         return 100000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
     }
     
-    std::vector<Move> opponentThreats = Evaluator::findMateInOneThreats(state, opponent);
+    // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente
+    bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
     
-    if (!opponentThreats.empty()) {
-        // Verificar si este movimiento bloquea alguna amenaza
-        bool blocksAnyThreat = false;
-        for (const Move& threat : opponentThreats) {
-            if (Evaluator::moveBlocksThreat(move, threat)) {
-                blocksAnyThreat = true;
-                break;
-            }
-        }
+    if (opponentHasThreats) {
+        // Evaluar si este movimiento reduce las amenazas
+        GameState tempState = state;
+        RuleEngine::MoveResult moveResult = RuleEngine::applyMove(tempState, move);
         
-        if (blocksAnyThreat) {
-            return 400000; // SUPERVIVENCIA - bloqueo amenaza
+        if (moveResult.success) {
+            bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
+            
+            if (!stillHasThreats) {
+                return 400000; // SUPERVIVENCIA - neutralizó amenazas
+            } else {
+                return -300000; // PARCIAL - aún hay amenazas
+            }
         } else {
-            return -500000; // SUICIDIO - no bloqueo amenaza existente
+            return -500000; // SUICIDIO - movimiento ilegal con amenazas
         }
     }
     
@@ -598,6 +678,7 @@ int TranspositionSearch::countInDirection(const GameState &state, int x, int y, 
 void TranspositionSearch::clearCache()
 {
 	std::fill(transpositionTable.begin(), transpositionTable.end(), CacheEntry());
+	currentGeneration = 1; // NUEVO: Reset generación
 	std::cout << "TranspositionTable: Cache limpiada (" << transpositionTable.size() << " entradas)" << std::endl;
 }
 
@@ -607,18 +688,47 @@ TranspositionSearch::CacheStats TranspositionSearch::getCacheStats() const
 	stats.totalEntries = transpositionTable.size();
 	stats.usedEntries = 0;
 	stats.collisions = 0;
+	stats.currentGeneration = currentGeneration;
+	stats.exactEntries = 0;
+	stats.boundEntries = 0;
+	double totalDepth = 0;
 
 	for (const auto &entry : transpositionTable)
 	{
 		if (entry.zobristKey != 0)
 		{
 			stats.usedEntries++;
+			totalDepth += entry.depth;
+			
+			if (entry.type == CacheEntry::EXACT) {
+				stats.exactEntries++;
+			} else {
+				stats.boundEntries++;
+			}
 		}
 	}
 
 	stats.fillRate = static_cast<double>(stats.usedEntries) / stats.totalEntries;
+	stats.avgDepth = stats.usedEntries > 0 ? totalDepth / stats.usedEntries : 0.0;
 
 	return stats;
+}
+
+void TranspositionSearch::printCacheStats() const {
+	CacheStats stats = getCacheStats();
+	
+	std::cout << "=== TRANSPOSITION TABLE STATS ===" << std::endl;
+	std::cout << "Total entries: " << stats.totalEntries << std::endl;
+	std::cout << "Used entries: " << stats.usedEntries << std::endl;
+	std::cout << "Fill rate: " << std::fixed << std::setprecision(2) << (stats.fillRate * 100) << "%" << std::endl;
+	std::cout << "Current generation: " << stats.currentGeneration << std::endl;
+	std::cout << "Exact entries: " << stats.exactEntries << " (" 
+			  << std::fixed << std::setprecision(1) << (stats.usedEntries > 0 ? (double)stats.exactEntries / stats.usedEntries * 100 : 0) << "%)" << std::endl;
+	std::cout << "Bound entries: " << stats.boundEntries << " (" 
+			  << std::fixed << std::setprecision(1) << (stats.usedEntries > 0 ? (double)stats.boundEntries / stats.usedEntries * 100 : 0) << "%)" << std::endl;
+	std::cout << "Average depth: " << std::fixed << std::setprecision(1) << stats.avgDepth << std::endl;
+	std::cout << "Memory usage: " << (stats.totalEntries * sizeof(CacheEntry) / 1024 / 1024) << " MB" << std::endl;
+	std::cout << "================================" << std::endl;
 }
 
 TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
@@ -629,6 +739,9 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     
     nodesEvaluated = 0;
     cacheHits = 0;
+    
+    // NUEVO: Incrementar generación para aging-based replacement
+    currentGeneration++;
     
     std::cout << "Búsqueda iterativa hasta profundidad " << maxDepth << std::endl;
     

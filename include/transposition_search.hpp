@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/19 18:39:44 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 16:34:18 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ private:
 		int score;
 		int depth;
 		Move bestMove;
+		uint32_t generation; // NUEVO: Para aging-based replacement
 		enum Type
 		{
 			EXACT,
@@ -48,9 +49,17 @@ private:
 			UPPER_BOUND
 		} type;
 
-		CacheEntry() : zobristKey(0), score(0), depth(0), type(EXACT) {}
-		CacheEntry(uint64_t key, int s, int d, Move m, Type t)
-			: zobristKey(key), score(s), depth(d), bestMove(m), type(t) {}
+		CacheEntry() : zobristKey(0), score(0), depth(0), generation(0), type(EXACT) {}
+		CacheEntry(uint64_t key, int s, int d, Move m, Type t, uint32_t gen = 0)
+			: zobristKey(key), score(s), depth(d), bestMove(m), generation(gen), type(t) {}
+
+		// NUEVO: Calcula valor de importancia para replacement strategy
+		int getImportanceValue() const {
+			int value = depth * 100;  // Profundidad es más importante
+			if (type == EXACT) value += 50;  // Nodos exactos son más valiosos
+			else if (type == LOWER_BOUND) value += 25;
+			return value;
+		}
 	};
 
 	/**
@@ -61,6 +70,7 @@ private:
 	 */
 	std::vector<CacheEntry> transpositionTable;
 	size_t tableSizeMask; // Para index = zobristKey & tableSizeMask
+	uint32_t currentGeneration; // NUEVO: Para aging-based replacement
 
 	int nodesEvaluated;
 	int cacheHits;
@@ -175,9 +185,18 @@ public:
 		size_t usedEntries;
 		double fillRate;
 		size_t collisions;
+		uint32_t currentGeneration;
+		size_t exactEntries;
+		size_t boundEntries;
+		double avgDepth;
 	};
 
 	CacheStats getCacheStats() const;
+
+	/**
+	 * Muestra estadísticas detalladas del cache
+	 */
+	void printCacheStats() const;
 
 	SearchResult findBestMoveIterative(const GameState &state, int maxDepth);
 	void orderMovesWithPreviousBest(std::vector<Move> &moves, const GameState &state);

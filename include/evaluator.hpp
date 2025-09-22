@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/21 18:19:51 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 16:46:31 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,16 +37,20 @@ public:
 
 	static int evaluateImmediateThreats(const GameState &state, int player);
 
-	static std::vector<Move> findMateInOneThreats(const GameState &state, int player);
 	static bool moveBlocksThreat(const Move &move, const Move &threat);
+
+	// NUEVO: Detección eficiente de amenazas de mate en 1 usando patrones
+	static bool hasWinningThreats(const GameState &state, int player);
 
 private:
 	struct PatternInfo
 	{
-		int consecutiveCount;
-		int freeEnds;
-		bool hasGaps;
-		int totalSpan;
+		int consecutiveCount;  // Piezas consecutivas máximas
+		int totalPieces;       // NUEVO: Total de piezas en el patrón (incluyendo gaps)
+		int freeEnds;          // Extremos libres
+		bool hasGaps;          // Si tiene gaps pequeños
+		int totalSpan;         // Span total del patrón
+		int gapCount;          // NUEVO: Número de gaps
 	};
 
 	static int analyzePosition(const GameState &state, int player);

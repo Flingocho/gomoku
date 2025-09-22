@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/21 18:19:36 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 16:46:30 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,9 +97,9 @@ bool Evaluator::isLineStart(const GameState& state, int x, int y, int dx, int dy
 
 Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int y, 
                                              int dx, int dy, int player) {
-    PatternInfo info = {0, 0, false, 0};
+    PatternInfo info = {0, 0, 0, false, 0, 0};
     
-    // Contar piezas consecutivas hacia adelante
+    // PASO 1: Contar piezas consecutivas desde el inicio (comportamiento original)
     int currentX = x, currentY = y;
     while (state.isValid(currentX, currentY) && state.getPiece(currentX, currentY) == player) {
         info.consecutiveCount++;
@@ -107,12 +107,67 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
         currentY += dy;
     }
     
-    // Verificar extremo adelante
-    if (state.isValid(currentX, currentY) && state.isEmpty(currentX, currentY)) {
+    // PASO 2: NUEVO - Analizar patrón extendido con gaps (hasta 5 posiciones)
+    const int MAX_PATTERN_LENGTH = 5;
+    int pieces[MAX_PATTERN_LENGTH];
+    int patternLength = 0;
+    
+    // Escanear hacia adelante hasta MAX_PATTERN_LENGTH posiciones
+    currentX = x; currentY = y;
+    for (int i = 0; i < MAX_PATTERN_LENGTH && state.isValid(currentX, currentY); i++) {
+        int piece = state.getPiece(currentX, currentY);
+        pieces[i] = piece;
+        patternLength++;
+        
+        // Si encontramos pieza del oponente, detener
+        if (piece != GameState::EMPTY && piece != player) {
+            break;
+        }
+        
+        currentX += dx;
+        currentY += dy;
+    }
+    
+    // Analizar el patrón encontrado
+    info.totalPieces = 0;
+    info.gapCount = 0;
+    info.totalSpan = patternLength;
+    
+    for (int i = 0; i < patternLength; i++) {
+        if (pieces[i] == player) {
+            info.totalPieces++;
+        } else if (pieces[i] == GameState::EMPTY) {
+            // Gap de 1: contar solo si está entre piezas
+            if (i > 0 && i < patternLength - 1) {
+                // Verificar si hay piezas antes y después
+                bool hasPieceBefore = false, hasPieceAfter = false;
+                
+                for (int j = 0; j < i; j++) {
+                    if (pieces[j] == player) { hasPieceBefore = true; break; }
+                }
+                for (int j = i + 1; j < patternLength; j++) {
+                    if (pieces[j] == player) { hasPieceAfter = true; break; }
+                }
+                
+                if (hasPieceBefore && hasPieceAfter) {
+                    info.gapCount++;
+                    info.hasGaps = true;
+                }
+            }
+        }
+    }
+    
+    // PASO 3: Verificar extremos libres
+    info.freeEnds = 0;
+    
+    // Extremo adelante
+    int frontX = x + dx * patternLength;
+    int frontY = y + dy * patternLength;
+    if (state.isValid(frontX, frontY) && state.isEmpty(frontX, frontY)) {
         info.freeEnds++;
     }
     
-    // Verificar extremo atrás
+    // Extremo atrás
     int backX = x - dx, backY = y - dy;
     if (state.isValid(backX, backY) && state.isEmpty(backX, backY)) {
         info.freeEnds++;
@@ -122,25 +177,42 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
 }
 
 int Evaluator::patternToScore(const PatternInfo& pattern) {
-    int count = pattern.consecutiveCount;
+    int consecutiveCount = pattern.consecutiveCount;
+    int totalPieces = pattern.totalPieces;
     int freeEnds = pattern.freeEnds;
+    bool hasGaps = pattern.hasGaps;
     
-    // Patrones de victoria
-    if (count >= 5) return WIN;
+    // PASO 1: Patrones de victoria (consecutivos)
+    if (consecutiveCount >= 5) return WIN;
     
-    // Patrones críticos
-    if (count == 4) {
+    // PASO 2: Patrones críticos (consecutivos)
+    if (consecutiveCount == 4) {
         if (freeEnds == 2) return FOUR_OPEN;    // Imparable
         if (freeEnds == 1) return FOUR_HALF;    // Amenaza forzada
     }
     
-    if (count == 3) {
+    if (consecutiveCount == 3) {
         if (freeEnds == 2) return THREE_OPEN;   // Muy peligroso
         if (freeEnds == 1) return THREE_HALF;   // Amenaza
     }
     
-    if (count == 2 && freeEnds == 2) {
+    if (consecutiveCount == 2 && freeEnds == 2) {
         return TWO_OPEN; // Desarrollo
+    }
+    
+    // PASO 3: NUEVO - Patrones con gaps (menos valiosos pero importantes)
+    if (hasGaps && totalPieces >= 3) {
+        // Patrones partidos de 4 piezas: -OOO-O- o -OO-OO-
+        if (totalPieces == 4) {
+            if (freeEnds == 2) return FOUR_OPEN / 2;    // Amenaza partida fuerte
+            if (freeEnds == 1) return FOUR_HALF / 2;    // Amenaza partida media
+        }
+        
+        // Patrones partidos de 3 piezas: -OO-O- o -O-OO-
+        if (totalPieces == 3) {
+            if (freeEnds == 2) return THREE_OPEN / 2;   // Amenaza partida abierta
+            if (freeEnds == 1) return THREE_HALF / 2;   // Amenaza partida semicerrada
+        }
     }
     
     return 0;
@@ -214,23 +286,18 @@ int Evaluator::evaluateImmediateThreats(const GameState& state, int player) {
     int opponent = state.getOpponent(player);
     int threatScore = 0;
     
-    // NUEVA LÓGICA: Detectar amenazas de mate en 1 real
-    std::vector<Move> myMateThreats = findMateInOneThreats(state, player);
-    std::vector<Move> oppMateThreats = findMateInOneThreats(state, opponent);
+    // NUEVA LÓGICA EFICIENTE: Detectar amenazas usando patrones existentes
+    bool myHasWinThreats = hasWinningThreats(state, player);
+    bool oppHasWinThreats = hasWinningThreats(state, opponent);
     
     // 1. Si tengo amenazas de mate en 1
-    if (!myMateThreats.empty()) {
+    if (myHasWinThreats) {
         threatScore += 90000; // Muy bueno - puedo ganar
     }
     
     // 2. CRÍTICO: Si el oponente tiene amenazas de mate en 1
-    if (!oppMateThreats.empty()) {
+    if (oppHasWinThreats) {
         threatScore -= 95000; // Muy malo - debo defender
-        
-        // Si hay múltiples amenazas del oponente = desastre
-        if (oppMateThreats.size() > 1) {
-            threatScore -= 100000; // Imposible defender múltiples amenazas
-        }
     }
     
     // 3. LÓGICA ORIGINAL: Contar patrones de 4 (como respaldo)
@@ -255,35 +322,37 @@ int Evaluator::evaluateImmediateThreats(const GameState& state, int player) {
     return threatScore;
 }
 
-// NUEVA: Función que detecta amenazas reales de mate en 1
-std::vector<Move> Evaluator::findMateInOneThreats(const GameState& state, int player) {
-    std::vector<Move> threats;
+// NUEVA: Función EFICIENTE que detecta amenazas de mate usando patrones existentes
+bool Evaluator::hasWinningThreats(const GameState& state, int player) {
+    // Buscar patrones de 4 consecutivas con al menos un extremo libre
+    // Esto indica una amenaza de mate en 1 movimiento
     
-    // Buscar todas las posiciones vacías
-    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            if (state.isEmpty(i, j)) {
-                Move candidate(i, j);
-                
-                // Simular el movimiento
-                GameState tempState = state;
-                tempState.board[i][j] = player;
-                
-                // ¿Este movimiento resulta en victoria?
-                if (RuleEngine::checkWin(tempState, player)) {
-                    threats.push_back(candidate);
-                }
-            }
-        }
+    // FOUR_OPEN (4 con ambos extremos libres) = amenaza imparable
+    int fourOpen = countPatternType(state, player, 4, 2);
+    if (fourOpen > 0) {
+        return true; // Amenaza imparable
     }
     
-    return threats;
+    // FOUR_HALF (4 con un extremo libre) = amenaza forzada
+    int fourHalf = countPatternType(state, player, 4, 1);
+    if (fourHalf > 0) {
+        return true; // Amenaza que requiere defensa
+    }
+    
+    // Verificar múltiples THREE_OPEN que crean amenazas duales
+    int threeOpen = countPatternType(state, player, 3, 2);
+    if (threeOpen >= 2) {
+        return true; // Múltiples amenazas de 3 abiertas = mate probable
+    }
+    
+    return false;
 }
 
-// NUEVA: Verificar si un movimiento bloquea una amenaza específica
-bool Evaluator::moveBlocksThreat(const Move& move, const Move& threat) {
-    // Bloquea si ocupa la misma posición que la amenaza
-    return (move.x == threat.x && move.y == threat.y);
+// NUEVA: Verificar si un movimiento reduce las amenazas del oponente
+bool Evaluator::moveBlocksThreat(const Move& move, const Move& /* threat */) {
+    // Simplificación: cualquier movimiento táctico puede potencialmente bloquear amenazas
+    // Esta función se mantiene por compatibilidad pero se simplifica
+    return (move.x >= 0 && move.y >= 0); // Movimiento válido
 }
 
 // NUEVO: Función auxiliar para contar patrones específicos reutilizando lógica existente
