@@ -497,7 +497,6 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
     
     // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente
     bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
-    
     if (opponentHasThreats) {
         // Evaluar si este movimiento reduce las amenazas
         GameState tempState = state;
@@ -507,12 +506,12 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
             
             if (!stillHasThreats) {
-                return 400000; // SUPERVIVENCIA - neutralizó amenazas
+                return 40000; // SUPERVIVENCIA - neutralizó amenazas
             } else {
-                return -300000; // PARCIAL - aún hay amenazas
+                return -30000; // PARCIAL - aún hay amenazas
             }
         } else {
-            return -500000; // SUICIDIO - movimiento ilegal con amenazas
+            return -50000; // SUICIDIO - movimiento ilegal con amenazas
         }
     }
     
@@ -801,6 +800,10 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
     
     int pieceCount = state.turnCount;
     int searchRadius = getSearchRadiusForGamePhase(pieceCount);
+    int opponent = state.getOpponent(state.currentPlayer);
+    
+    // NUEVO: Detectar si el oponente tiene amenazas críticas
+    bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
     
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -816,6 +819,20 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
                         if (distance <= searchRadius) {
                             withinInfluenceRadius = true;
                         }
+                    }
+                }
+            }
+            
+            // NUEVO: Si hay amenazas críticas, FORZAR inclusión de movimientos defensivos
+            if (!withinInfluenceRadius && opponentHasThreats) {
+                // Simular movimiento para ver si bloquea amenazas
+                GameState tempState = state;
+                RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, Move(i, j));
+                
+                if (result.success) {
+                    bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
+                    if (!stillHasThreats) {
+                        withinInfluenceRadius = true; // FORZAR inclusión - es un bloqueo crítico
                     }
                 }
             }
@@ -928,9 +945,9 @@ int TranspositionSearch::calculateAlignmentValue(int alignmentLength) {
 
 int TranspositionSearch::calculateInterruptionValue(int interruptionLength) {
     switch (interruptionLength) {
-        case 4: return 3000;  // Bloqueo crítico de amenaza inmediata
-        case 3: return 2000;  // Bloqueo de amenaza fuerte
-        case 2: return 200;   // Prevención temprana
+        case 4: return 80000;  // AUMENTADO: Bloqueo crítico debe superar ataque propio (70000)
+        case 3: return 15000;  // AUMENTADO: Bloqueo de amenaza fuerte
+        case 2: return 1000;   // AUMENTADO: Prevención temprana
         default: return 0;
     }
 }

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 16:46:31 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 20:18:40 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 class Evaluator
 {
 public:
-	static constexpr int WIN = 100000;
+	static constexpr int WIN = 500000;
+	static constexpr int OPPWIN = 400000;
 	static constexpr int FOUR_OPEN = 50000;
 	static constexpr int FOUR_HALF = 10000;
 	static constexpr int THREE_OPEN = 5000;

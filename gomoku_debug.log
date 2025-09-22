@@ -1,7 +1,7 @@
 === GOMOKU DEBUG SESSION START ===
-ROOT LEVEL: Move K10 evaluated to 0
+ROOT LEVEL: Move J10 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE K10 with score 0
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
 
 ROOT LEVEL: Move K11 evaluated to 0
 
@@ -9,17 +9,17 @@ ROOT LEVEL: Move J11 evaluated to 0
 
 ROOT LEVEL: Move I11 evaluated to 0
 
-ROOT LEVEL: Move I10 evaluated to 0
-
-ROOT LEVEL: Move K9 evaluated to 0
+ROOT LEVEL: Move I9 evaluated to 0
 
 ROOT LEVEL: Move J9 evaluated to 0
 
-ROOT LEVEL: Move I9 evaluated to 0
+ROOT LEVEL: Move K10 evaluated to 0
 
-ROOT LEVEL: Move K10 evaluated to -100
+ROOT LEVEL: Move I10 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE K10 with score -100
+ROOT LEVEL: Move J10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -100
 
 ROOT LEVEL: Move K11 evaluated to -100
 
@@ -27,53 +27,560 @@ ROOT LEVEL: Move J11 evaluated to -100
 
 ROOT LEVEL: Move I11 evaluated to -100
 
-ROOT LEVEL: Move I10 evaluated to -100
-
-ROOT LEVEL: Move K9 evaluated to -100
+ROOT LEVEL: Move I9 evaluated to -100
 
 ROOT LEVEL: Move J9 evaluated to -100
 
-ROOT LEVEL: Move I9 evaluated to -100
+ROOT LEVEL: Move K10 evaluated to -100
 
-ROOT LEVEL: Move K10 evaluated to 100
+ROOT LEVEL: Move I10 evaluated to -100
 
-ROOT LEVEL: NEW BEST MOVE K10 with score 100
+ROOT LEVEL: Move J10 evaluated to 2400
 
-ROOT LEVEL: Move K11 evaluated to 100
+ROOT LEVEL: NEW BEST MOVE J10 with score 2400
 
-ROOT LEVEL: Move J11 evaluated to 100
+ROOT LEVEL: Move K11 evaluated to 2400
 
-ROOT LEVEL: Move I11 evaluated to 100
+ROOT LEVEL: Move J11 evaluated to 2400
 
-ROOT LEVEL: Move I10 evaluated to 100
+ROOT LEVEL: Move I11 evaluated to 2400
 
-ROOT LEVEL: Move K9 evaluated to 100
+ROOT LEVEL: Move I9 evaluated to 2400
 
-ROOT LEVEL: Move J9 evaluated to 100
+ROOT LEVEL: Move J9 evaluated to 2400
 
-ROOT LEVEL: Move I9 evaluated to 100
+ROOT LEVEL: Move K10 evaluated to 2400
 
-ROOT LEVEL: Move K10 evaluated to -1500
+ROOT LEVEL: Move I10 evaluated to 2400
 
-ROOT LEVEL: NEW BEST MOVE K10 with score -1500
+ROOT LEVEL: Move J10 evaluated to -4900
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -4900
 
 ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE K11 with score -1500
 
 ROOT LEVEL: Move J11 evaluated to -1500
 
 ROOT LEVEL: Move I11 evaluated to -1500
 
-ROOT LEVEL: Move I10 evaluated to -1500
-
-ROOT LEVEL: Move K9 evaluated to -1500
+ROOT LEVEL: Move I9 evaluated to -1500
 
 ROOT LEVEL: Move J9 evaluated to -1500
 
-ROOT LEVEL: Move I9 evaluated to -1500
+ROOT LEVEL: Move K10 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K11 with score 0
+
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
 
 ROOT LEVEL: Move K10 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE K10 with score 0
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move K11 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE K11 with score -4000
+
+ROOT LEVEL: Move J10 evaluated to -4000
+
+ROOT LEVEL: Move J11 evaluated to -4000
+
+ROOT LEVEL: Move I11 evaluated to -2700
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -2700
+
+ROOT LEVEL: Move I9 evaluated to -2700
+
+ROOT LEVEL: Move J9 evaluated to -2700
+
+ROOT LEVEL: Move K10 evaluated to -2700
+
+ROOT LEVEL: Move I10 evaluated to -2700
+
+ROOT LEVEL: Move C8 evaluated to 2400
+
+ROOT LEVEL: NEW BEST MOVE C8 with score 2400
+
+ROOT LEVEL: Move J10 evaluated to 2400
+
+ROOT LEVEL: Move J11 evaluated to 2400
+
+ROOT LEVEL: Move I10 evaluated to 2400
+
+ROOT LEVEL: Move H11 evaluated to 2400
+
+ROOT LEVEL: Move H12 evaluated to 2400
+
+ROOT LEVEL: Move H10 evaluated to 2400
+
+ROOT LEVEL: Move C5 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score 2500
+
+ROOT LEVEL: Move C8 evaluated to -5000
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -5000
+
+ROOT LEVEL: Move J10 evaluated to -4900
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -4900
+
+ROOT LEVEL: Move J11 evaluated to -4900
+
+ROOT LEVEL: Move I10 evaluated to -4900
+
+ROOT LEVEL: Move H11 evaluated to -4900
+
+ROOT LEVEL: Move H12 evaluated to -4900
+
+ROOT LEVEL: Move H10 evaluated to -4900
+
+ROOT LEVEL: Move C5 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1500
+
+ROOT LEVEL: Move C8 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1500
+
+ROOT LEVEL: Move J10 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move H11 evaluated to -1500
+
+ROOT LEVEL: Move H12 evaluated to -1500
+
+ROOT LEVEL: Move H10 evaluated to -1500
+
+ROOT LEVEL: Move C5 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1400
+
+ROOT LEVEL: Move C8 evaluated to -1700
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1700
+
+ROOT LEVEL: Move J10 evaluated to -1700
+
+ROOT LEVEL: Move J11 evaluated to -1700
+
+ROOT LEVEL: Move I10 evaluated to -1700
+
+ROOT LEVEL: Move H11 evaluated to -1700
+
+ROOT LEVEL: Move H12 evaluated to -1700
+
+ROOT LEVEL: Move H10 evaluated to -1700
+
+ROOT LEVEL: Move C5 evaluated to -1700
+
+ROOT LEVEL: Move C8 evaluated to 900
+
+ROOT LEVEL: NEW BEST MOVE C8 with score 900
+
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 900
+
+ROOT LEVEL: Move I10 evaluated to 900
+
+ROOT LEVEL: Move H11 evaluated to 900
+
+ROOT LEVEL: Move H12 evaluated to 900
+
+ROOT LEVEL: Move H10 evaluated to 900
+
+ROOT LEVEL: Move C5 evaluated to 900
+
+ROOT LEVEL: Move C8 evaluated to -4100
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -4100
+
+ROOT LEVEL: Move J10 evaluated to -4100
+
+ROOT LEVEL: Move J11 evaluated to -4100
+
+ROOT LEVEL: Move I10 evaluated to -4100
+
+ROOT LEVEL: Move H11 evaluated to -4100
+
+ROOT LEVEL: Move H12 evaluated to -4100
+
+ROOT LEVEL: Move H10 evaluated to -4100
+
+ROOT LEVEL: Move C5 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -4000
+
+ROOT LEVEL: Move C9 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE C9 with score -1600
+
+ROOT LEVEL: Move J10 evaluated to -99999
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move I12 evaluated to -1600
+
+ROOT LEVEL: Move H10 evaluated to -1600
+
+ROOT LEVEL: Move H11 evaluated to -1600
+
+ROOT LEVEL: Move H12 evaluated to -1600
+
+ROOT LEVEL: Move J12 evaluated to -1600
+
+ROOT LEVEL: Move D4 evaluated to -99999
+
+ROOT LEVEL: Move C9 evaluated to -8100
+
+ROOT LEVEL: NEW BEST MOVE C9 with score -8100
+
+ROOT LEVEL: Move J10 evaluated to -99998
+
+ROOT LEVEL: Move I10 evaluated to -8100
+
+ROOT LEVEL: Move J11 evaluated to -8100
+
+ROOT LEVEL: Move I12 evaluated to -8100
+
+ROOT LEVEL: Move H10 evaluated to -8100
+
+ROOT LEVEL: Move H11 evaluated to -8100
+
+ROOT LEVEL: Move H12 evaluated to -8100
+
+ROOT LEVEL: Move J12 evaluated to -8100
+
+ROOT LEVEL: Move D4 evaluated to -99998
+
+ROOT LEVEL: Move D8 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE D8 with score -1500
+
+ROOT LEVEL: Move J10 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1400
+
+ROOT LEVEL: Move J11 evaluated to -1400
+
+ROOT LEVEL: Move I10 evaluated to -1400
+
+ROOT LEVEL: Move H11 evaluated to -1400
+
+ROOT LEVEL: Move H10 evaluated to -1400
+
+ROOT LEVEL: Move H12 evaluated to -1400
+
+ROOT LEVEL: Move I12 evaluated to -1400
+
+ROOT LEVEL: Move J12 evaluated to -1400
+
+ROOT LEVEL: Move D7 evaluated to -1500
+
+ROOT LEVEL: Move J10 evaluated to -6500
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -6500
+
+ROOT LEVEL: Move D8 evaluated to -6600
+
+ROOT LEVEL: Move J11 evaluated to -6500
+
+ROOT LEVEL: Move I10 evaluated to -6500
+
+ROOT LEVEL: Move H11 evaluated to -6500
+
+ROOT LEVEL: Move H10 evaluated to -6500
+
+ROOT LEVEL: Move H12 evaluated to -6500
+
+ROOT LEVEL: Move I12 evaluated to -6500
+
+ROOT LEVEL: Move J12 evaluated to -6500
+
+ROOT LEVEL: Move D7 evaluated to -6600
+
+ROOT LEVEL: Move J10 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1600
+
+ROOT LEVEL: Move D8 evaluated to -1600
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move H11 evaluated to -1600
+
+ROOT LEVEL: Move H10 evaluated to -1600
+
+ROOT LEVEL: Move H12 evaluated to -1600
+
+ROOT LEVEL: Move I12 evaluated to -1600
+
+ROOT LEVEL: Move J12 evaluated to -1600
+
+ROOT LEVEL: Move D7 evaluated to -1600
+
+ROOT LEVEL: Move J10 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -296400
+
+ROOT LEVEL: Move D8 evaluated to -296400
+
+ROOT LEVEL: Move J11 evaluated to -296400
+
+ROOT LEVEL: Move I10 evaluated to -296400
+
+ROOT LEVEL: Move H11 evaluated to -296400
+
+ROOT LEVEL: Move H10 evaluated to -296400
+
+ROOT LEVEL: Move H12 evaluated to -296400
+
+ROOT LEVEL: Move I12 evaluated to -296400
+
+ROOT LEVEL: Move J12 evaluated to -296400
+
+ROOT LEVEL: Move D7 evaluated to -296400
+
+ROOT LEVEL: Move B8 evaluated to -2900
+
+ROOT LEVEL: NEW BEST MOVE B8 with score -2900
+
+ROOT LEVEL: Move F8 evaluated to -6500
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -1600
+
+ROOT LEVEL: Move H12 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -1500
+
+ROOT LEVEL: Move I10 evaluated to -6300
+
+ROOT LEVEL: Move J11 evaluated to -6300
+
+ROOT LEVEL: Move B6 evaluated to -3900
+
+ROOT LEVEL: Move J9 evaluated to -6400
+
+ROOT LEVEL: Move E9 evaluated to -4000
+
+ROOT LEVEL: Move D7 evaluated to -1500
+
+ROOT LEVEL: Move B8 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE B8 with score -296400
+
+ROOT LEVEL: Move F8 evaluated to -386500
+
+ROOT LEVEL: Move K9 evaluated to -381600
+
+ROOT LEVEL: Move H12 evaluated to -381500
+
+ROOT LEVEL: Move I10 evaluated to -386300
+
+ROOT LEVEL: Move J11 evaluated to -386300
+
+ROOT LEVEL: Move B6 evaluated to -383900
+
+ROOT LEVEL: Move J9 evaluated to -386400
+
+ROOT LEVEL: Move E9 evaluated to -384000
+
+ROOT LEVEL: Move D7 evaluated to -296400
+
+ROOT LEVEL: Move B5 evaluated to -4500
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -4500
+
+ROOT LEVEL: Move F9 evaluated to -8100
+
+ROOT LEVEL: Move F8 evaluated to -8100
+
+ROOT LEVEL: Move K9 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -3200
+
+ROOT LEVEL: Move H12 evaluated to -3100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -3100
+
+ROOT LEVEL: Move D10 evaluated to -3200
+
+ROOT LEVEL: Move A7 evaluated to -6700
+
+ROOT LEVEL: Move B9 evaluated to -5500
+
+ROOT LEVEL: Move I10 evaluated to -7900
+
+ROOT LEVEL: Move J11 evaluated to -7900
+
+ROOT LEVEL: Move D6 evaluated to -5400
+
+ROOT LEVEL: Move D9 evaluated to -5500
+
+ROOT LEVEL: Move H12 evaluated to -383100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -383100
+
+ROOT LEVEL: Move B5 evaluated to -298000
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -298000
+
+ROOT LEVEL: Move F9 evaluated to -301600
+
+ROOT LEVEL: Move F8 evaluated to -388100
+
+ROOT LEVEL: Move K9 evaluated to -383200
+
+ROOT LEVEL: Move D10 evaluated to -383200
+
+ROOT LEVEL: Move A7 evaluated to -386700
+
+ROOT LEVEL: Move B9 evaluated to -385500
+
+ROOT LEVEL: Move I10 evaluated to -387900
+
+ROOT LEVEL: Move J11 evaluated to -387900
+
+ROOT LEVEL: Move D6 evaluated to -385400
+
+ROOT LEVEL: Move D9 evaluated to -385500
+
+ROOT LEVEL: Move H12 evaluated to -1100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -1100
+
+ROOT LEVEL: Move B6 evaluated to -5900
+
+ROOT LEVEL: Move F9 evaluated to -9500
+
+ROOT LEVEL: Move F8 evaluated to -9500
+
+ROOT LEVEL: Move F10 evaluated to -9500
+
+ROOT LEVEL: Move K9 evaluated to -4600
+
+ROOT LEVEL: Move D5 evaluated to -4600
+
+ROOT LEVEL: Move D10 evaluated to -4600
+
+ROOT LEVEL: Move A5 evaluated to -8100
+
+ROOT LEVEL: Move A7 evaluated to -8100
+
+ROOT LEVEL: Move B9 evaluated to -4400
+
+ROOT LEVEL: Move E7 evaluated to -4400
+
+ROOT LEVEL: Move H12 evaluated to -384700
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -384700
+
+ROOT LEVEL: Move B6 evaluated to -299500
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -299500
+
+ROOT LEVEL: Move F9 evaluated to -389600
+
+ROOT LEVEL: Move F8 evaluated to -389600
+
+ROOT LEVEL: Move F10 evaluated to -303100
+
+ROOT LEVEL: Move K9 evaluated to -384700
+
+ROOT LEVEL: Move D5 evaluated to -384700
+
+ROOT LEVEL: Move D10 evaluated to -384700
+
+ROOT LEVEL: Move A5 evaluated to -388100
+
+ROOT LEVEL: Move A7 evaluated to -388200
+
+ROOT LEVEL: Move B9 evaluated to -387000
+
+ROOT LEVEL: Move E7 evaluated to -384500
+
+ROOT LEVEL: Move H12 evaluated to -293100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -293100
+
+ROOT LEVEL: Move G10 evaluated to -299500
+
+ROOT LEVEL: Move A7 evaluated to -296600
+
+ROOT LEVEL: Move F10 evaluated to -299500
+
+ROOT LEVEL: Move F8 evaluated to -299500
+
+ROOT LEVEL: Move B4 evaluated to -294500
+
+ROOT LEVEL: Move A5 evaluated to -298100
+
+ROOT LEVEL: Move K9 evaluated to -294600
+
+ROOT LEVEL: Move B7 evaluated to 88000
+
+ROOT LEVEL: NEW BEST MOVE B7 with score 88000
+
+ROOT LEVEL: Move D5 evaluated to -294600
+
+ROOT LEVEL: Move D4 evaluated to -298000
+
+ROOT LEVEL: Move D10 evaluated to -294600
+
+ROOT LEVEL: Move B7 evaluated to -100000
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -100000
+
+ROOT LEVEL: Move G10 evaluated to -307100
+
+ROOT LEVEL: Move A7 evaluated to -300700
+
+ROOT LEVEL: Move F10 evaluated to -307100
+
+ROOT LEVEL: Move F8 evaluated to -307100
+
+ROOT LEVEL: Move B4 evaluated to -303000
+
+ROOT LEVEL: Move A5 evaluated to -305700
+
+ROOT LEVEL: Move K9 evaluated to -302200
+
+ROOT LEVEL: Move H12 evaluated to -300700
+
+ROOT LEVEL: Move D5 evaluated to -299700
+
+ROOT LEVEL: Move D4 evaluated to -305600
+
+ROOT LEVEL: Move D10 evaluated to -302200
+
+=== GOMOKU DEBUG SESSION START ===
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
 
 ROOT LEVEL: Move K11 evaluated to 0
 
@@ -81,461 +588,2015 @@ ROOT LEVEL: Move J11 evaluated to 0
 
 ROOT LEVEL: Move I11 evaluated to 0
 
-ROOT LEVEL: Move I10 evaluated to 0
-
-ROOT LEVEL: Move K9 evaluated to 0
-
-ROOT LEVEL: Move J9 evaluated to 0
-
 ROOT LEVEL: Move I9 evaluated to 0
 
-ROOT LEVEL: Move K10 evaluated to -1800
-
-ROOT LEVEL: NEW BEST MOVE K10 with score -1800
-
-ROOT LEVEL: Move K11 evaluated to -1800
-
-ROOT LEVEL: Move J11 evaluated to -1800
-
-ROOT LEVEL: Move I11 evaluated to -1800
-
-ROOT LEVEL: Move I10 evaluated to -1800
-
-ROOT LEVEL: Move K9 evaluated to -1800
-
-ROOT LEVEL: Move J9 evaluated to -1800
-
-ROOT LEVEL: Move I9 evaluated to -1800
-
-ROOT LEVEL: Move I9 evaluated to 2500
-
-ROOT LEVEL: NEW BEST MOVE I9 with score 2500
-
-ROOT LEVEL: Move L12 evaluated to 2500
-
 ROOT LEVEL: Move J9 evaluated to 0
 
-ROOT LEVEL: Move K9 evaluated to 2500
+ROOT LEVEL: Move K10 evaluated to 0
 
-ROOT LEVEL: Move J11 evaluated to 2500
+ROOT LEVEL: Move I10 evaluated to 0
 
-ROOT LEVEL: Move L11 evaluated to 2500
+ROOT LEVEL: Move J10 evaluated to -100
 
-ROOT LEVEL: Move L9 evaluated to 2500
+ROOT LEVEL: NEW BEST MOVE J10 with score -100
 
-ROOT LEVEL: Move L10 evaluated to 2500
+ROOT LEVEL: Move K11 evaluated to -100
+
+ROOT LEVEL: Move J11 evaluated to -100
+
+ROOT LEVEL: Move I11 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to -100
+
+ROOT LEVEL: Move J9 evaluated to -100
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: Move I10 evaluated to -100
+
+ROOT LEVEL: Move J10 evaluated to 2400
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 2400
+
+ROOT LEVEL: Move K11 evaluated to 2400
+
+ROOT LEVEL: Move J11 evaluated to 2400
+
+ROOT LEVEL: Move I11 evaluated to 2400
+
+ROOT LEVEL: Move I9 evaluated to 2400
+
+ROOT LEVEL: Move J9 evaluated to 2400
+
+ROOT LEVEL: Move K10 evaluated to 2400
+
+ROOT LEVEL: Move I10 evaluated to 2400
+
+ROOT LEVEL: Move J10 evaluated to -4900
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -4900
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE K11 with score -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
 
 ROOT LEVEL: Move I9 evaluated to -1500
 
-ROOT LEVEL: NEW BEST MOVE I9 with score -1500
+ROOT LEVEL: Move J9 evaluated to -1500
 
-ROOT LEVEL: Move L12 evaluated to -1500
+ROOT LEVEL: Move K10 evaluated to -1500
 
-ROOT LEVEL: Move J9 evaluated to 0
+ROOT LEVEL: Move I10 evaluated to -1500
 
-ROOT LEVEL: NEW BEST MOVE J9 with score 0
+ROOT LEVEL: Move K11 evaluated to 0
 
-ROOT LEVEL: Move K9 evaluated to 0
+ROOT LEVEL: NEW BEST MOVE K11 with score 0
 
-ROOT LEVEL: Move J11 evaluated to 0
-
-ROOT LEVEL: Move L11 evaluated to 0
-
-ROOT LEVEL: Move L9 evaluated to 0
-
-ROOT LEVEL: Move L10 evaluated to 0
-
-ROOT LEVEL: Move I9 evaluated to -1300
-
-ROOT LEVEL: NEW BEST MOVE I9 with score -1300
-
-ROOT LEVEL: Move L12 evaluated to -1300
-
-ROOT LEVEL: Move J9 evaluated to 0
-
-ROOT LEVEL: NEW BEST MOVE J9 with score 0
-
-ROOT LEVEL: Move K9 evaluated to 0
+ROOT LEVEL: Move J10 evaluated to 0
 
 ROOT LEVEL: Move J11 evaluated to 0
 
-ROOT LEVEL: Move L11 evaluated to 0
+ROOT LEVEL: Move I11 evaluated to 0
 
-ROOT LEVEL: Move L9 evaluated to 0
+ROOT LEVEL: Move I9 evaluated to 0
 
-ROOT LEVEL: Move L10 evaluated to 0
+ROOT LEVEL: Move J9 evaluated to 0
 
-ROOT LEVEL: Move I9 evaluated to -1700
+ROOT LEVEL: Move K10 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE I9 with score -1700
+ROOT LEVEL: Move I10 evaluated to 0
 
-ROOT LEVEL: Move L12 evaluated to -1700
+ROOT LEVEL: Move K11 evaluated to -4000
 
-ROOT LEVEL: Move J9 evaluated to -1700
+ROOT LEVEL: NEW BEST MOVE K11 with score -4000
 
-ROOT LEVEL: Move K9 evaluated to -1700
+ROOT LEVEL: Move J10 evaluated to -4000
+
+ROOT LEVEL: Move J11 evaluated to -4000
+
+ROOT LEVEL: Move I11 evaluated to -2700
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -2700
+
+ROOT LEVEL: Move I9 evaluated to -2700
+
+ROOT LEVEL: Move J9 evaluated to -2700
+
+ROOT LEVEL: Move K10 evaluated to -2700
+
+ROOT LEVEL: Move I10 evaluated to -2700
+
+ROOT LEVEL: Move C8 evaluated to 2400
+
+ROOT LEVEL: NEW BEST MOVE C8 with score 2400
+
+ROOT LEVEL: Move J10 evaluated to 2400
+
+ROOT LEVEL: Move J11 evaluated to 2400
+
+ROOT LEVEL: Move I10 evaluated to 2400
+
+ROOT LEVEL: Move H11 evaluated to 2400
+
+ROOT LEVEL: Move H12 evaluated to 2400
+
+ROOT LEVEL: Move H10 evaluated to 2400
+
+ROOT LEVEL: Move C5 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score 2500
+
+ROOT LEVEL: Move C8 evaluated to -5000
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -5000
+
+ROOT LEVEL: Move J10 evaluated to -4900
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -4900
+
+ROOT LEVEL: Move J11 evaluated to -4900
+
+ROOT LEVEL: Move I10 evaluated to -4900
+
+ROOT LEVEL: Move H11 evaluated to -4900
+
+ROOT LEVEL: Move H12 evaluated to -4900
+
+ROOT LEVEL: Move H10 evaluated to -4900
+
+ROOT LEVEL: Move C5 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1500
+
+ROOT LEVEL: Move C8 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1500
+
+ROOT LEVEL: Move J10 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move H11 evaluated to -1500
+
+ROOT LEVEL: Move H12 evaluated to -1500
+
+ROOT LEVEL: Move H10 evaluated to -1500
+
+ROOT LEVEL: Move C5 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1400
+
+ROOT LEVEL: Move C8 evaluated to -1700
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1700
+
+ROOT LEVEL: Move J10 evaluated to -1700
 
 ROOT LEVEL: Move J11 evaluated to -1700
 
-ROOT LEVEL: Move L11 evaluated to -1700
+ROOT LEVEL: Move I10 evaluated to -1700
 
-ROOT LEVEL: Move L9 evaluated to -1700
+ROOT LEVEL: Move H11 evaluated to -1700
 
-ROOT LEVEL: Move L10 evaluated to -1700
+ROOT LEVEL: Move H12 evaluated to -1700
 
-ROOT LEVEL: Move I9 evaluated to 900
+ROOT LEVEL: Move H10 evaluated to -1700
 
-ROOT LEVEL: NEW BEST MOVE I9 with score 900
+ROOT LEVEL: Move C5 evaluated to -1700
 
-ROOT LEVEL: Move L12 evaluated to 900
+ROOT LEVEL: Move C8 evaluated to 900
 
-ROOT LEVEL: Move J9 evaluated to 900
+ROOT LEVEL: NEW BEST MOVE C8 with score 900
 
-ROOT LEVEL: Move K9 evaluated to 900
+ROOT LEVEL: Move J10 evaluated to 0
 
 ROOT LEVEL: Move J11 evaluated to 900
 
-ROOT LEVEL: Move L11 evaluated to 900
+ROOT LEVEL: Move I10 evaluated to 900
 
-ROOT LEVEL: Move L9 evaluated to 900
+ROOT LEVEL: Move H11 evaluated to 900
 
-ROOT LEVEL: Move L10 evaluated to 900
+ROOT LEVEL: Move H12 evaluated to 900
 
-ROOT LEVEL: Move I9 evaluated to -6400
+ROOT LEVEL: Move H10 evaluated to 900
 
-ROOT LEVEL: NEW BEST MOVE I9 with score -6400
+ROOT LEVEL: Move C5 evaluated to 900
 
-ROOT LEVEL: Move L12 evaluated to -6400
+ROOT LEVEL: Move C8 evaluated to -4100
 
-ROOT LEVEL: Move J9 evaluated to -6400
+ROOT LEVEL: NEW BEST MOVE C8 with score -4100
 
-ROOT LEVEL: Move K9 evaluated to -6400
+ROOT LEVEL: Move J10 evaluated to -4100
 
-ROOT LEVEL: Move J11 evaluated to -6400
+ROOT LEVEL: Move J11 evaluated to -4100
 
-ROOT LEVEL: Move L11 evaluated to -6400
+ROOT LEVEL: Move I10 evaluated to -4100
 
-ROOT LEVEL: Move L9 evaluated to -6400
+ROOT LEVEL: Move H11 evaluated to -4100
 
-ROOT LEVEL: Move L10 evaluated to -6400
+ROOT LEVEL: Move H12 evaluated to -4100
 
-ROOT LEVEL: Move M13 evaluated to -1400
+ROOT LEVEL: Move H10 evaluated to -4100
 
-ROOT LEVEL: NEW BEST MOVE M13 with score -1400
+ROOT LEVEL: Move C5 evaluated to -4000
 
-ROOT LEVEL: Move J9 evaluated to -99999
+ROOT LEVEL: NEW BEST MOVE C5 with score -4000
 
-ROOT LEVEL: Move K9 evaluated to -1400
+ROOT LEVEL: Move C9 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE C9 with score -1600
+
+ROOT LEVEL: Move J10 evaluated to -99999
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move I12 evaluated to -1600
+
+ROOT LEVEL: Move H10 evaluated to -1600
+
+ROOT LEVEL: Move H11 evaluated to -1600
+
+ROOT LEVEL: Move H12 evaluated to -1600
+
+ROOT LEVEL: Move J12 evaluated to -1600
+
+ROOT LEVEL: Move D4 evaluated to -99999
+
+ROOT LEVEL: Move C9 evaluated to -8100
+
+ROOT LEVEL: NEW BEST MOVE C9 with score -8100
+
+ROOT LEVEL: Move J10 evaluated to -99998
+
+ROOT LEVEL: Move I10 evaluated to -8100
+
+ROOT LEVEL: Move J11 evaluated to -8100
+
+ROOT LEVEL: Move I12 evaluated to -8100
+
+ROOT LEVEL: Move H10 evaluated to -8100
+
+ROOT LEVEL: Move H11 evaluated to -8100
+
+ROOT LEVEL: Move H12 evaluated to -8100
+
+ROOT LEVEL: Move J12 evaluated to -8100
+
+ROOT LEVEL: Move D4 evaluated to -99998
+
+ROOT LEVEL: Move D8 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE D8 with score -1500
+
+ROOT LEVEL: Move J10 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1400
 
 ROOT LEVEL: Move J11 evaluated to -1400
 
 ROOT LEVEL: Move I10 evaluated to -1400
 
-ROOT LEVEL: Move H8 evaluated to -1400
-
-ROOT LEVEL: Move L11 evaluated to -1400
-
-ROOT LEVEL: Move L10 evaluated to -1400
+ROOT LEVEL: Move H11 evaluated to -1400
 
 ROOT LEVEL: Move H10 evaluated to -1400
 
-ROOT LEVEL: Move L9 evaluated to -1400
+ROOT LEVEL: Move H12 evaluated to -1400
 
-ROOT LEVEL: Move M13 evaluated to -8200
+ROOT LEVEL: Move I12 evaluated to -1400
 
-ROOT LEVEL: NEW BEST MOVE M13 with score -8200
+ROOT LEVEL: Move J12 evaluated to -1400
 
-ROOT LEVEL: Move J9 evaluated to -99998
+ROOT LEVEL: Move D7 evaluated to -1500
 
-ROOT LEVEL: Move K9 evaluated to -8200
+ROOT LEVEL: Move J10 evaluated to -6500
 
-ROOT LEVEL: Move J11 evaluated to -8200
+ROOT LEVEL: NEW BEST MOVE J10 with score -6500
 
-ROOT LEVEL: Move I10 evaluated to -8200
+ROOT LEVEL: Move D8 evaluated to -6600
 
-ROOT LEVEL: Move H8 evaluated to -8200
+ROOT LEVEL: Move J11 evaluated to -6500
 
-ROOT LEVEL: Move L11 evaluated to -8200
+ROOT LEVEL: Move I10 evaluated to -6500
 
-ROOT LEVEL: Move L10 evaluated to -8200
+ROOT LEVEL: Move H11 evaluated to -6500
 
-ROOT LEVEL: Move H10 evaluated to -8200
+ROOT LEVEL: Move H10 evaluated to -6500
 
-ROOT LEVEL: Move L9 evaluated to -8200
+ROOT LEVEL: Move H12 evaluated to -6500
 
-ROOT LEVEL: Move J12 evaluated to -3100
+ROOT LEVEL: Move I12 evaluated to -6500
 
-ROOT LEVEL: NEW BEST MOVE J12 with score -3100
+ROOT LEVEL: Move J12 evaluated to -6500
 
-ROOT LEVEL: Move J9 evaluated to 3200
+ROOT LEVEL: Move D7 evaluated to -6600
 
-ROOT LEVEL: NEW BEST MOVE J9 with score 3200
+ROOT LEVEL: Move J10 evaluated to -1600
 
-ROOT LEVEL: Move L11 evaluated to 3200
+ROOT LEVEL: NEW BEST MOVE J10 with score -1600
 
-ROOT LEVEL: Move I11 evaluated to 3200
+ROOT LEVEL: Move D8 evaluated to -1600
 
-ROOT LEVEL: Move K9 evaluated to 3200
+ROOT LEVEL: Move J11 evaluated to -1600
 
-ROOT LEVEL: Move I10 evaluated to 3200
+ROOT LEVEL: Move I10 evaluated to -1600
 
-ROOT LEVEL: Move L9 evaluated to 3200
+ROOT LEVEL: Move H11 evaluated to -1600
 
-ROOT LEVEL: Move H9 evaluated to 3200
+ROOT LEVEL: Move H10 evaluated to -1600
 
-ROOT LEVEL: Move H10 evaluated to 3200
+ROOT LEVEL: Move H12 evaluated to -1600
 
-ROOT LEVEL: Move L10 evaluated to 3200
+ROOT LEVEL: Move I12 evaluated to -1600
 
-ROOT LEVEL: Move J9 evaluated to -100000
+ROOT LEVEL: Move J12 evaluated to -1600
 
-ROOT LEVEL: NEW BEST MOVE J9 with score -100000
+ROOT LEVEL: Move D7 evaluated to -1600
 
-ROOT LEVEL: Move L11 evaluated to -100000
+ROOT LEVEL: Move J10 evaluated to -296400
 
-ROOT LEVEL: Move I11 evaluated to -100000
+ROOT LEVEL: NEW BEST MOVE J10 with score -296400
 
-ROOT LEVEL: Move J12 evaluated to -100000
+ROOT LEVEL: Move D8 evaluated to -296400
 
-ROOT LEVEL: Move K9 evaluated to -100000
+ROOT LEVEL: Move J11 evaluated to -296400
 
-ROOT LEVEL: Move I10 evaluated to -100000
+ROOT LEVEL: Move I10 evaluated to -296400
 
-ROOT LEVEL: Move L9 evaluated to -100000
+ROOT LEVEL: Move H11 evaluated to -296400
 
-ROOT LEVEL: Move H9 evaluated to -100000
+ROOT LEVEL: Move H10 evaluated to -296400
 
-ROOT LEVEL: Move H10 evaluated to -100000
+ROOT LEVEL: Move H12 evaluated to -296400
 
-ROOT LEVEL: Move L10 evaluated to -100000
+ROOT LEVEL: Move I12 evaluated to -296400
 
-ROOT LEVEL: Move M12 evaluated to 294500
+ROOT LEVEL: Move J12 evaluated to -296400
 
-ROOT LEVEL: NEW BEST MOVE M12 with score 294500
+ROOT LEVEL: Move D7 evaluated to -296400
 
-ROOT LEVEL: Move J13 evaluated to 900
+ROOT LEVEL: Move B8 evaluated to -2900
 
-ROOT LEVEL: Move K9 evaluated to 3400
+ROOT LEVEL: NEW BEST MOVE B8 with score -2900
 
-ROOT LEVEL: Move H9 evaluated to 5800
+ROOT LEVEL: Move F8 evaluated to -6500
 
-ROOT LEVEL: Move I11 evaluated to 2400
+ROOT LEVEL: Move K9 evaluated to -1600
 
-ROOT LEVEL: Move L10 evaluated to -1400
+ROOT LEVEL: NEW BEST MOVE K9 with score -1600
 
-ROOT LEVEL: Move K12 evaluated to 1000
+ROOT LEVEL: Move H12 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -1500
+
+ROOT LEVEL: Move I10 evaluated to -6300
+
+ROOT LEVEL: Move J11 evaluated to -6300
+
+ROOT LEVEL: Move B6 evaluated to -3900
+
+ROOT LEVEL: Move J9 evaluated to -6400
+
+ROOT LEVEL: Move E9 evaluated to -4000
+
+ROOT LEVEL: Move D7 evaluated to -1500
+
+ROOT LEVEL: Move B8 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE B8 with score -296400
+
+ROOT LEVEL: Move F8 evaluated to -386500
+
+ROOT LEVEL: Move K9 evaluated to -381600
+
+ROOT LEVEL: Move H12 evaluated to -381500
+
+ROOT LEVEL: Move I10 evaluated to -386300
+
+ROOT LEVEL: Move J11 evaluated to -386300
+
+ROOT LEVEL: Move B6 evaluated to -383900
+
+ROOT LEVEL: Move J9 evaluated to -386400
+
+ROOT LEVEL: Move E9 evaluated to -384000
+
+ROOT LEVEL: Move D7 evaluated to -296400
+
+ROOT LEVEL: Move B5 evaluated to -4500
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -4500
+
+ROOT LEVEL: Move F9 evaluated to -8100
+
+ROOT LEVEL: Move F8 evaluated to -8100
+
+ROOT LEVEL: Move K9 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -3200
+
+ROOT LEVEL: Move H12 evaluated to -3100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -3100
+
+ROOT LEVEL: Move D10 evaluated to -3200
+
+ROOT LEVEL: Move A7 evaluated to -6700
+
+ROOT LEVEL: Move B9 evaluated to -5500
+
+ROOT LEVEL: Move I10 evaluated to -7900
+
+ROOT LEVEL: Move J11 evaluated to -7900
+
+ROOT LEVEL: Move D6 evaluated to -5400
+
+ROOT LEVEL: Move D9 evaluated to -5500
+
+ROOT LEVEL: Move H12 evaluated to -383100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -383100
+
+ROOT LEVEL: Move B5 evaluated to -298000
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -298000
+
+ROOT LEVEL: Move F9 evaluated to -301600
+
+ROOT LEVEL: Move F8 evaluated to -388100
+
+ROOT LEVEL: Move K9 evaluated to -383200
+
+ROOT LEVEL: Move D10 evaluated to -383200
+
+ROOT LEVEL: Move A7 evaluated to -386700
+
+ROOT LEVEL: Move B9 evaluated to -385500
+
+ROOT LEVEL: Move I10 evaluated to -387900
+
+ROOT LEVEL: Move J11 evaluated to -387900
+
+ROOT LEVEL: Move D6 evaluated to -385400
+
+ROOT LEVEL: Move D9 evaluated to -385500
+
+ROOT LEVEL: Move H12 evaluated to -1100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -1100
+
+ROOT LEVEL: Move B6 evaluated to -5900
+
+ROOT LEVEL: Move F9 evaluated to -9500
+
+ROOT LEVEL: Move F8 evaluated to -9500
+
+ROOT LEVEL: Move F10 evaluated to -9500
+
+ROOT LEVEL: Move K9 evaluated to -4600
+
+ROOT LEVEL: Move D5 evaluated to -4600
+
+ROOT LEVEL: Move D10 evaluated to -4600
+
+ROOT LEVEL: Move A5 evaluated to -8100
+
+ROOT LEVEL: Move A7 evaluated to -8100
+
+ROOT LEVEL: Move B9 evaluated to -4400
+
+ROOT LEVEL: Move E7 evaluated to -4400
+
+ROOT LEVEL: Move H12 evaluated to -384700
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -384700
+
+ROOT LEVEL: Move B6 evaluated to -299500
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -299500
+
+ROOT LEVEL: Move F9 evaluated to -389600
+
+ROOT LEVEL: Move F8 evaluated to -389600
+
+ROOT LEVEL: Move F10 evaluated to -303100
+
+ROOT LEVEL: Move K9 evaluated to -384700
+
+ROOT LEVEL: Move D5 evaluated to -384700
+
+ROOT LEVEL: Move D10 evaluated to -384700
+
+ROOT LEVEL: Move A5 evaluated to -388100
+
+ROOT LEVEL: Move A7 evaluated to -388200
+
+ROOT LEVEL: Move B9 evaluated to -387000
+
+ROOT LEVEL: Move E7 evaluated to -384500
+
+ROOT LEVEL: Move H12 evaluated to -293100
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -293100
+
+ROOT LEVEL: Move B7 evaluated to 88000
+
+ROOT LEVEL: NEW BEST MOVE B7 with score 88000
+
+ROOT LEVEL: Move G10 evaluated to -299500
+
+ROOT LEVEL: Move F10 evaluated to -299500
+
+ROOT LEVEL: Move F8 evaluated to -299500
+
+ROOT LEVEL: Move B4 evaluated to -294500
+
+ROOT LEVEL: Move K9 evaluated to -294600
+
+ROOT LEVEL: Move D5 evaluated to -294600
+
+ROOT LEVEL: Move D4 evaluated to -298000
+
+ROOT LEVEL: Move D10 evaluated to -294600
+
+ROOT LEVEL: Move A7 evaluated to -296600
+
+ROOT LEVEL: Move A5 evaluated to -298100
+
+ROOT LEVEL: Move B7 evaluated to -100000
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -100000
+
+ROOT LEVEL: Move G10 evaluated to -307100
+
+ROOT LEVEL: Move F10 evaluated to -307100
+
+ROOT LEVEL: Move F8 evaluated to -307100
+
+ROOT LEVEL: Move B4 evaluated to -303000
+
+ROOT LEVEL: Move K9 evaluated to -302200
+
+ROOT LEVEL: Move H12 evaluated to -300700
+
+ROOT LEVEL: Move D5 evaluated to -299700
+
+ROOT LEVEL: Move D4 evaluated to -305600
+
+ROOT LEVEL: Move D10 evaluated to -302200
+
+ROOT LEVEL: Move A7 evaluated to -300700
+
+ROOT LEVEL: Move A5 evaluated to -305700
+
+=== GOMOKU DEBUG SESSION START ===
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move J10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -100
+
+ROOT LEVEL: Move K11 evaluated to -100
+
+ROOT LEVEL: Move J11 evaluated to -100
+
+ROOT LEVEL: Move I11 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to -100
+
+ROOT LEVEL: Move J9 evaluated to -100
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: Move I10 evaluated to -100
+
+ROOT LEVEL: Move J10 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 2500
+
+ROOT LEVEL: Move K11 evaluated to 2500
+
+ROOT LEVEL: Move J11 evaluated to 2500
+
+ROOT LEVEL: Move I11 evaluated to 2500
+
+ROOT LEVEL: Move I9 evaluated to 2500
+
+ROOT LEVEL: Move J9 evaluated to 2500
+
+ROOT LEVEL: Move K10 evaluated to 2500
+
+ROOT LEVEL: Move I10 evaluated to 2500
+
+ROOT LEVEL: Move J10 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
+
+ROOT LEVEL: Move I9 evaluated to -1500
+
+ROOT LEVEL: Move J9 evaluated to -1500
+
+ROOT LEVEL: Move K10 evaluated to -1500
 
 ROOT LEVEL: Move I10 evaluated to -1500
 
-ROOT LEVEL: Move J8 evaluated to -1500
+ROOT LEVEL: Move J10 evaluated to 0
 
-ROOT LEVEL: Move I13 evaluated to 3400
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
 
-ROOT LEVEL: Move K8 evaluated to 1000
+ROOT LEVEL: Move K11 evaluated to 0
 
-ROOT LEVEL: Move L9 evaluated to -1500
+ROOT LEVEL: Move J11 evaluated to 0
 
-ROOT LEVEL: Move J13 evaluated to 294500
+ROOT LEVEL: Move I11 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE J13 with score 294500
+ROOT LEVEL: Move I9 evaluated to 0
 
-ROOT LEVEL: Move K9 evaluated to 297000
+ROOT LEVEL: Move J9 evaluated to 0
 
-ROOT LEVEL: NEW BEST MOVE K9 with score 297000
+ROOT LEVEL: Move K10 evaluated to 0
 
-ROOT LEVEL: Move M11 evaluated to 297000
+ROOT LEVEL: Move I10 evaluated to 0
 
-ROOT LEVEL: Move H9 evaluated to 299400
+ROOT LEVEL: Move J10 evaluated to -1700
 
-ROOT LEVEL: NEW BEST MOVE H9 with score 299400
+ROOT LEVEL: NEW BEST MOVE J10 with score -1700
 
-ROOT LEVEL: Move M14 evaluated to 299400
+ROOT LEVEL: Move K11 evaluated to -1700
 
-ROOT LEVEL: Move I11 evaluated to 296000
+ROOT LEVEL: Move J11 evaluated to -1700
 
-ROOT LEVEL: Move L10 evaluated to 292200
+ROOT LEVEL: Move I11 evaluated to -1700
 
-ROOT LEVEL: Move K12 evaluated to 294600
+ROOT LEVEL: Move I9 evaluated to -1700
 
-ROOT LEVEL: Move I10 evaluated to 292100
+ROOT LEVEL: Move J9 evaluated to -1700
 
-ROOT LEVEL: Move J8 evaluated to 292100
+ROOT LEVEL: Move K10 evaluated to -1700
 
-ROOT LEVEL: Move L13 evaluated to 292200
+ROOT LEVEL: Move I10 evaluated to -1700
 
-ROOT LEVEL: Move N12 evaluated to 292100
+ROOT LEVEL: Move C8 evaluated to 2400
 
-ROOT LEVEL: Move K9 evaluated to 302000
+ROOT LEVEL: NEW BEST MOVE C8 with score 2400
 
-ROOT LEVEL: NEW BEST MOVE K9 with score 302000
+ROOT LEVEL: Move I9 evaluated to 0
 
-ROOT LEVEL: Move J13 evaluated to 295900
+ROOT LEVEL: Move J9 evaluated to 2400
 
-ROOT LEVEL: Move M11 evaluated to 298400
+ROOT LEVEL: Move K11 evaluated to 2400
 
-ROOT LEVEL: Move M14 evaluated to 300800
+ROOT LEVEL: Move J11 evaluated to 2400
 
-ROOT LEVEL: Move L10 evaluated to 293600
+ROOT LEVEL: Move I11 evaluated to 2400
 
-ROOT LEVEL: Move I10 evaluated to 291100
+ROOT LEVEL: Move K9 evaluated to 2400
 
-ROOT LEVEL: Move K12 evaluated to 296000
+ROOT LEVEL: Move C5 evaluated to 2500
 
-ROOT LEVEL: Move H8 evaluated to 293500
+ROOT LEVEL: NEW BEST MOVE C5 with score 2500
 
-ROOT LEVEL: Move J8 evaluated to 293500
+ROOT LEVEL: Move C8 evaluated to -5000
 
-ROOT LEVEL: Move H10 evaluated to 296100
+ROOT LEVEL: NEW BEST MOVE C8 with score -5000
 
-ROOT LEVEL: Move L13 evaluated to 293600
+ROOT LEVEL: Move I9 evaluated to -294900
 
-ROOT LEVEL: Move N12 evaluated to 293500
+ROOT LEVEL: Move J9 evaluated to -5000
 
-ROOT LEVEL: Move J13 evaluated to 302000
+ROOT LEVEL: Move K11 evaluated to -5000
 
-ROOT LEVEL: NEW BEST MOVE J13 with score 302000
+ROOT LEVEL: Move J11 evaluated to -5000
 
-ROOT LEVEL: Move M11 evaluated to 304500
+ROOT LEVEL: Move I11 evaluated to -5000
 
-ROOT LEVEL: NEW BEST MOVE M11 with score 304500
+ROOT LEVEL: Move K9 evaluated to -5000
 
-ROOT LEVEL: Move M14 evaluated to 306900
+ROOT LEVEL: Move C5 evaluated to -1500
 
-ROOT LEVEL: NEW BEST MOVE M14 with score 306900
+ROOT LEVEL: NEW BEST MOVE C5 with score -1500
 
-ROOT LEVEL: Move K8 evaluated to 309500
+ROOT LEVEL: Move C8 evaluated to -1500
 
-ROOT LEVEL: NEW BEST MOVE K8 with score 309500
+ROOT LEVEL: NEW BEST MOVE C8 with score -1500
 
-ROOT LEVEL: Move I10 evaluated to 297200
+ROOT LEVEL: Move I9 evaluated to -294900
 
-ROOT LEVEL: Move J8 evaluated to 299700
+ROOT LEVEL: Move J9 evaluated to -1500
 
-ROOT LEVEL: Move K12 evaluated to 302000
+ROOT LEVEL: Move K11 evaluated to -1500
 
-ROOT LEVEL: Move H8 evaluated to 299600
+ROOT LEVEL: Move J11 evaluated to -1500
 
-ROOT LEVEL: Move H10 evaluated to 302200
+ROOT LEVEL: Move I11 evaluated to -1500
 
-ROOT LEVEL: Move L13 evaluated to 299700
+ROOT LEVEL: Move K9 evaluated to -1500
 
-ROOT LEVEL: Move N12 evaluated to 299600
+ROOT LEVEL: Move C5 evaluated to -1400
 
-ROOT LEVEL: Move L10 evaluated to 286950
+ROOT LEVEL: NEW BEST MOVE C5 with score -1400
 
-ROOT LEVEL: Move J13 evaluated to 306000
+ROOT LEVEL: Move C8 evaluated to -1700
 
-ROOT LEVEL: NEW BEST MOVE J13 with score 306000
+ROOT LEVEL: NEW BEST MOVE C8 with score -1700
 
-ROOT LEVEL: Move I10 evaluated to 306000
+ROOT LEVEL: Move I9 evaluated to -294900
 
-ROOT LEVEL: Move M11 evaluated to 308500
+ROOT LEVEL: Move J9 evaluated to -1700
 
-ROOT LEVEL: NEW BEST MOVE M11 with score 308500
+ROOT LEVEL: Move K11 evaluated to -1700
 
-ROOT LEVEL: Move L7 evaluated to 310900
+ROOT LEVEL: Move J11 evaluated to -1700
 
-ROOT LEVEL: NEW BEST MOVE L7 with score 310900
+ROOT LEVEL: Move I11 evaluated to -1700
 
-ROOT LEVEL: Move M14 evaluated to 310900
+ROOT LEVEL: Move K9 evaluated to -1700
 
-ROOT LEVEL: Move J8 evaluated to 298600
+ROOT LEVEL: Move C5 evaluated to -1700
 
-ROOT LEVEL: Move K12 evaluated to 304600
+ROOT LEVEL: Move C8 evaluated to 900
 
-ROOT LEVEL: Move H10 evaluated to 306200
+ROOT LEVEL: NEW BEST MOVE C8 with score 900
 
-ROOT LEVEL: Move H8 evaluated to 303600
+ROOT LEVEL: Move I9 evaluated to 0
 
-ROOT LEVEL: Move L8 evaluated to 303700
+ROOT LEVEL: Move J9 evaluated to 900
 
-ROOT LEVEL: Move L13 evaluated to 303700
+ROOT LEVEL: Move K11 evaluated to 900
 
-ROOT LEVEL: Move L10 evaluated to 290950
+ROOT LEVEL: Move J11 evaluated to 900
 
-ROOT LEVEL: Move I10 evaluated to 311000
+ROOT LEVEL: Move I11 evaluated to 900
 
-ROOT LEVEL: NEW BEST MOVE I10 with score 311000
+ROOT LEVEL: Move K9 evaluated to 900
 
-ROOT LEVEL: Move J13 evaluated to 307400
+ROOT LEVEL: Move C5 evaluated to 900
 
-ROOT LEVEL: Move M11 evaluated to 309900
+ROOT LEVEL: Move C8 evaluated to -4000
 
-ROOT LEVEL: Move M14 evaluated to 312300
+ROOT LEVEL: NEW BEST MOVE C8 with score -4000
 
-ROOT LEVEL: NEW BEST MOVE M14 with score 312300
+ROOT LEVEL: Move I9 evaluated to -4000
 
-ROOT LEVEL: Move J8 evaluated to 300000
+ROOT LEVEL: Move J9 evaluated to -4000
 
-ROOT LEVEL: Move L8 evaluated to 302700
+ROOT LEVEL: Move K11 evaluated to -4000
 
-ROOT LEVEL: Move K12 evaluated to 306000
+ROOT LEVEL: Move J11 evaluated to -4000
 
-ROOT LEVEL: Move H8 evaluated to 305000
+ROOT LEVEL: Move I11 evaluated to -4000
 
-ROOT LEVEL: Move H10 evaluated to 307600
+ROOT LEVEL: Move K9 evaluated to -4000
 
-ROOT LEVEL: Move L13 evaluated to 305100
+ROOT LEVEL: Move C5 evaluated to -4000
 
-ROOT LEVEL: Move N12 evaluated to 305000
+ROOT LEVEL: Move C4 evaluated to -1600
 
-ROOT LEVEL: Move L10 evaluated to 292350
+ROOT LEVEL: NEW BEST MOVE C4 with score -1600
 
-ROOT LEVEL: Move I10 evaluated to 315900
+ROOT LEVEL: Move J11 evaluated to -99999
 
-ROOT LEVEL: NEW BEST MOVE I10 with score 315900
+ROOT LEVEL: Move J9 evaluated to -1600
 
-ROOT LEVEL: Move M11 evaluated to 504900
+ROOT LEVEL: Move K9 evaluated to -1600
 
-ROOT LEVEL: NEW BEST MOVE M11 with score 504900
+ROOT LEVEL: Move I10 evaluated to -1600
 
-ROOT LEVEL: Move J13 evaluated to 312300
+ROOT LEVEL: Move K10 evaluated to -1600
 
-ROOT LEVEL: Move J8 evaluated to 304900
+ROOT LEVEL: Move I9 evaluated to -1600
 
-ROOT LEVEL: Move L8 evaluated to 307600
+ROOT LEVEL: Move I11 evaluated to -1600
 
-ROOT LEVEL: Move L13 evaluated to 310100
+ROOT LEVEL: Move K11 evaluated to -1600
 
-ROOT LEVEL: Move K12 evaluated to 310900
+ROOT LEVEL: Move D8 evaluated to -2600
 
-ROOT LEVEL: Move H10 evaluated to 312500
+ROOT LEVEL: Move C4 evaluated to -8100
 
-ROOT LEVEL: Move H8 evaluated to 309900
+ROOT LEVEL: NEW BEST MOVE C4 with score -8100
 
-ROOT LEVEL: Move L14 evaluated to 312500
+ROOT LEVEL: Move J11 evaluated to -99998
 
-ROOT LEVEL: Move N12 evaluated to 309900
+ROOT LEVEL: Move J9 evaluated to -8100
 
-ROOT LEVEL: Move L10 evaluated to 297250
+ROOT LEVEL: Move K9 evaluated to -8100
 
-ROOT LEVEL: Move I10 evaluated to 321000
+ROOT LEVEL: Move I10 evaluated to -8100
 
-ROOT LEVEL: NEW BEST MOVE I10 with score 321000
+ROOT LEVEL: Move K10 evaluated to -8100
 
-ROOT LEVEL: Move J13 evaluated to 317400
+ROOT LEVEL: Move I9 evaluated to -8100
 
-ROOT LEVEL: Move N11 evaluated to 509800
+ROOT LEVEL: Move I11 evaluated to -8100
 
-ROOT LEVEL: NEW BEST MOVE N11 with score 509800
+ROOT LEVEL: Move K11 evaluated to -8100
 
-ROOT LEVEL: Move J8 evaluated to 310000
+ROOT LEVEL: Move D8 evaluated to -10000
 
-ROOT LEVEL: Move L8 evaluated to 312700
+ROOT LEVEL: Move D7 evaluated to -1500
 
-ROOT LEVEL: Move L13 evaluated to 315200
+ROOT LEVEL: NEW BEST MOVE D7 with score -1500
 
-ROOT LEVEL: Move N12 evaluated to 317600
+ROOT LEVEL: Move I11 evaluated to -1400
 
-ROOT LEVEL: Move K12 evaluated to 313400
+ROOT LEVEL: NEW BEST MOVE I11 with score -1400
 
-ROOT LEVEL: Move H10 evaluated to 317600
+ROOT LEVEL: Move I9 evaluated to -1400
 
-ROOT LEVEL: Move H8 evaluated to 315000
+ROOT LEVEL: Move J9 evaluated to -1400
 
-ROOT LEVEL: Move N14 evaluated to 316500
+ROOT LEVEL: Move K9 evaluated to -1400
 
-ROOT LEVEL: Move L10 evaluated to 299300
+ROOT LEVEL: Move I10 evaluated to -1400
 
-ROOT LEVEL: IMMEDIATE WIN DETECTED - Move L9 with score 100001 (GAME OVER)
+ROOT LEVEL: Move K10 evaluated to -1400
+
+ROOT LEVEL: Move J11 evaluated to -1400
+
+ROOT LEVEL: Move K11 evaluated to -1400
+
+ROOT LEVEL: Move D6 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -6500
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -6500
+
+ROOT LEVEL: Move D7 evaluated to -6600
+
+ROOT LEVEL: Move I9 evaluated to -6500
+
+ROOT LEVEL: Move J9 evaluated to -6500
+
+ROOT LEVEL: Move K9 evaluated to -6500
+
+ROOT LEVEL: Move I10 evaluated to -6500
+
+ROOT LEVEL: Move K10 evaluated to -6500
+
+ROOT LEVEL: Move J11 evaluated to -6500
+
+ROOT LEVEL: Move K11 evaluated to -6500
+
+ROOT LEVEL: Move D6 evaluated to -6600
+
+ROOT LEVEL: Move I11 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -1600
+
+ROOT LEVEL: Move D7 evaluated to -1600
+
+ROOT LEVEL: Move I9 evaluated to -1600
+
+ROOT LEVEL: Move J9 evaluated to -1600
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move K10 evaluated to -1600
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move K11 evaluated to -1600
+
+ROOT LEVEL: Move D6 evaluated to -1600
+
+ROOT LEVEL: Move I11 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -296400
+
+ROOT LEVEL: Move D7 evaluated to -296400
+
+ROOT LEVEL: Move I9 evaluated to -296400
+
+ROOT LEVEL: Move J9 evaluated to -296400
+
+ROOT LEVEL: Move K9 evaluated to -296400
+
+ROOT LEVEL: Move I10 evaluated to -296400
+
+ROOT LEVEL: Move K10 evaluated to -296400
+
+ROOT LEVEL: Move J11 evaluated to -296400
+
+ROOT LEVEL: Move K11 evaluated to -296400
+
+ROOT LEVEL: Move D6 evaluated to -296400
+
+ROOT LEVEL: Move B7 evaluated to -2900
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -2900
+
+ROOT LEVEL: Move F7 evaluated to -6500
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -1600
+
+ROOT LEVEL: Move H12 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -6300
+
+ROOT LEVEL: Move J11 evaluated to -6300
+
+ROOT LEVEL: Move B5 evaluated to -3900
+
+ROOT LEVEL: Move J9 evaluated to -6400
+
+ROOT LEVEL: Move E8 evaluated to -4000
+
+ROOT LEVEL: Move D6 evaluated to -6500
+
+ROOT LEVEL: Move B7 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -296400
+
+ROOT LEVEL: Move F7 evaluated to -386500
+
+ROOT LEVEL: Move K9 evaluated to -381600
+
+ROOT LEVEL: Move H12 evaluated to -381600
+
+ROOT LEVEL: Move I10 evaluated to -386300
+
+ROOT LEVEL: Move J11 evaluated to -386300
+
+ROOT LEVEL: Move B5 evaluated to -383900
+
+ROOT LEVEL: Move J9 evaluated to -386400
+
+ROOT LEVEL: Move E8 evaluated to -384000
+
+ROOT LEVEL: Move D6 evaluated to -386500
+
+ROOT LEVEL: Move B4 evaluated to -4500
+
+ROOT LEVEL: NEW BEST MOVE B4 with score -4500
+
+ROOT LEVEL: Move F8 evaluated to -8100
+
+ROOT LEVEL: Move F7 evaluated to -8100
+
+ROOT LEVEL: Move K9 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -3200
+
+ROOT LEVEL: Move H12 evaluated to -3200
+
+ROOT LEVEL: Move D9 evaluated to -3200
+
+ROOT LEVEL: Move B8 evaluated to -5500
+
+ROOT LEVEL: Move D5 evaluated to -5400
+
+ROOT LEVEL: Move D8 evaluated to -5500
+
+ROOT LEVEL: Move B5 evaluated to -5500
+
+ROOT LEVEL: Move B6 evaluated to -5400
+
+ROOT LEVEL: Move E6 evaluated to -5600
+
+ROOT LEVEL: Move K9 evaluated to -383200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -383200
+
+ROOT LEVEL: Move B4 evaluated to -298000
+
+ROOT LEVEL: NEW BEST MOVE B4 with score -298000
+
+ROOT LEVEL: Move F8 evaluated to -301600
+
+ROOT LEVEL: Move F7 evaluated to -388100
+
+ROOT LEVEL: Move H12 evaluated to -383200
+
+ROOT LEVEL: Move D9 evaluated to -383200
+
+ROOT LEVEL: Move B8 evaluated to -385500
+
+ROOT LEVEL: Move D5 evaluated to -385400
+
+ROOT LEVEL: Move D8 evaluated to -385500
+
+ROOT LEVEL: Move B5 evaluated to -385500
+
+ROOT LEVEL: Move B6 evaluated to -385400
+
+ROOT LEVEL: Move E6 evaluated to -385600
+
+ROOT LEVEL: Move K9 evaluated to -4600
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -4600
+
+ROOT LEVEL: Move B5 evaluated to -5900
+
+ROOT LEVEL: Move F8 evaluated to -9500
+
+ROOT LEVEL: Move F7 evaluated to -9500
+
+ROOT LEVEL: Move F9 evaluated to -9500
+
+ROOT LEVEL: Move H12 evaluated to -4600
+
+ROOT LEVEL: Move D9 evaluated to -4600
+
+ROOT LEVEL: Move B8 evaluated to -4400
+
+ROOT LEVEL: NEW BEST MOVE B8 with score -4400
+
+ROOT LEVEL: Move E6 evaluated to -4400
+
+ROOT LEVEL: Move D8 evaluated to -9400
+
+ROOT LEVEL: Move D5 evaluated to -6800
+
+ROOT LEVEL: Move B6 evaluated to -4300
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -4300
+
+ROOT LEVEL: Move B6 evaluated to -389500
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -389500
+
+ROOT LEVEL: Move B5 evaluated to -299500
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -299500
+
+ROOT LEVEL: Move F8 evaluated to -389600
+
+ROOT LEVEL: Move F7 evaluated to -389600
+
+ROOT LEVEL: Move F9 evaluated to -303100
+
+ROOT LEVEL: Move K9 evaluated to -384700
+
+ROOT LEVEL: Move H12 evaluated to -384700
+
+ROOT LEVEL: Move D9 evaluated to -384700
+
+ROOT LEVEL: Move B8 evaluated to -387000
+
+ROOT LEVEL: Move E6 evaluated to -384500
+
+ROOT LEVEL: Move D8 evaluated to -389500
+
+ROOT LEVEL: Move D5 evaluated to -384400
+
+ROOT LEVEL: Move B6 evaluated to 88000
+
+ROOT LEVEL: NEW BEST MOVE B6 with score 88000
+
+ROOT LEVEL: Move F9 evaluated to -299500
+
+ROOT LEVEL: Move F7 evaluated to -299500
+
+ROOT LEVEL: Move G9 evaluated to -299500
+
+ROOT LEVEL: Move D8 evaluated to -296900
+
+ROOT LEVEL: Move A6 evaluated to -296600
+
+ROOT LEVEL: Move E6 evaluated to -294400
+
+ROOT LEVEL: Move B8 evaluated to -297000
+
+ROOT LEVEL: Move B3 evaluated to -294500
+
+ROOT LEVEL: Move A4 evaluated to -298100
+
+ROOT LEVEL: Move D5 evaluated to -296800
+
+ROOT LEVEL: Move K9 evaluated to -294600
+
+ROOT LEVEL: Move B6 evaluated to -100000
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -100000
+
+ROOT LEVEL: Move F9 evaluated to -307100
+
+ROOT LEVEL: Move F7 evaluated to -307100
+
+ROOT LEVEL: Move G9 evaluated to -307100
+
+ROOT LEVEL: Move D8 evaluated to -302000
+
+ROOT LEVEL: Move A6 evaluated to -300700
+
+ROOT LEVEL: Move E6 evaluated to -304500
+
+ROOT LEVEL: Move B8 evaluated to -307200
+
+ROOT LEVEL: Move B3 evaluated to -303000
+
+ROOT LEVEL: Move A4 evaluated to -305700
+
+ROOT LEVEL: Move D5 evaluated to -304400
+
+ROOT LEVEL: Move K9 evaluated to -302200
+
+=== GOMOKU DEBUG SESSION START ===
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move J10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -100
+
+ROOT LEVEL: Move K11 evaluated to -100
+
+ROOT LEVEL: Move J11 evaluated to -100
+
+ROOT LEVEL: Move I11 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to -100
+
+ROOT LEVEL: Move J9 evaluated to -100
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: Move I10 evaluated to -100
+
+ROOT LEVEL: Move J10 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 2500
+
+ROOT LEVEL: Move K11 evaluated to 2500
+
+ROOT LEVEL: Move J11 evaluated to 2500
+
+ROOT LEVEL: Move I11 evaluated to 2500
+
+ROOT LEVEL: Move I9 evaluated to 2500
+
+ROOT LEVEL: Move J9 evaluated to 2500
+
+ROOT LEVEL: Move K10 evaluated to 2500
+
+ROOT LEVEL: Move I10 evaluated to 2500
+
+ROOT LEVEL: Move J10 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
+
+ROOT LEVEL: Move I9 evaluated to -1500
+
+ROOT LEVEL: Move J9 evaluated to -1500
+
+ROOT LEVEL: Move K10 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE J10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move J10 evaluated to -1700
+
+ROOT LEVEL: NEW BEST MOVE J10 with score -1700
+
+ROOT LEVEL: Move K11 evaluated to -1700
+
+ROOT LEVEL: Move J11 evaluated to -1700
+
+ROOT LEVEL: Move I11 evaluated to -1700
+
+ROOT LEVEL: Move I9 evaluated to -1700
+
+ROOT LEVEL: Move J9 evaluated to -1700
+
+ROOT LEVEL: Move K10 evaluated to -1700
+
+ROOT LEVEL: Move I10 evaluated to -1700
+
+ROOT LEVEL: Move C8 evaluated to 2400
+
+ROOT LEVEL: NEW BEST MOVE C8 with score 2400
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 2400
+
+ROOT LEVEL: Move K11 evaluated to 2400
+
+ROOT LEVEL: Move J11 evaluated to 2400
+
+ROOT LEVEL: Move I11 evaluated to 2400
+
+ROOT LEVEL: Move K9 evaluated to 2400
+
+ROOT LEVEL: Move C5 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score 2500
+
+ROOT LEVEL: Move C8 evaluated to -5000
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -5000
+
+ROOT LEVEL: Move I9 evaluated to -294900
+
+ROOT LEVEL: Move J9 evaluated to -5000
+
+ROOT LEVEL: Move K11 evaluated to -5000
+
+ROOT LEVEL: Move J11 evaluated to -5000
+
+ROOT LEVEL: Move I11 evaluated to -5000
+
+ROOT LEVEL: Move K9 evaluated to -5000
+
+ROOT LEVEL: Move C5 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1500
+
+ROOT LEVEL: Move C8 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1500
+
+ROOT LEVEL: Move I9 evaluated to -294900
+
+ROOT LEVEL: Move J9 evaluated to -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
+
+ROOT LEVEL: Move K9 evaluated to -1500
+
+ROOT LEVEL: Move C5 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE C5 with score -1400
+
+ROOT LEVEL: Move C8 evaluated to -1700
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -1700
+
+ROOT LEVEL: Move I9 evaluated to -294900
+
+ROOT LEVEL: Move J9 evaluated to -1700
+
+ROOT LEVEL: Move K11 evaluated to -1700
+
+ROOT LEVEL: Move J11 evaluated to -1700
+
+ROOT LEVEL: Move I11 evaluated to -1700
+
+ROOT LEVEL: Move K9 evaluated to -1700
+
+ROOT LEVEL: Move C5 evaluated to -1700
+
+ROOT LEVEL: Move C8 evaluated to 900
+
+ROOT LEVEL: NEW BEST MOVE C8 with score 900
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 900
+
+ROOT LEVEL: Move K11 evaluated to 900
+
+ROOT LEVEL: Move J11 evaluated to 900
+
+ROOT LEVEL: Move I11 evaluated to 900
+
+ROOT LEVEL: Move K9 evaluated to 900
+
+ROOT LEVEL: Move C5 evaluated to 900
+
+ROOT LEVEL: Move C8 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE C8 with score -4000
+
+ROOT LEVEL: Move I9 evaluated to -4000
+
+ROOT LEVEL: Move J9 evaluated to -4000
+
+ROOT LEVEL: Move K11 evaluated to -4000
+
+ROOT LEVEL: Move J11 evaluated to -4000
+
+ROOT LEVEL: Move I11 evaluated to -4000
+
+ROOT LEVEL: Move K9 evaluated to -4000
+
+ROOT LEVEL: Move C5 evaluated to -4000
+
+ROOT LEVEL: Move C4 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE C4 with score -1600
+
+ROOT LEVEL: Move J11 evaluated to -290200
+
+ROOT LEVEL: Move J9 evaluated to -1600
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move K10 evaluated to -1600
+
+ROOT LEVEL: Move I9 evaluated to -1600
+
+ROOT LEVEL: Move I11 evaluated to -1600
+
+ROOT LEVEL: Move K11 evaluated to -1600
+
+ROOT LEVEL: Move D8 evaluated to -2600
+
+ROOT LEVEL: Move C4 evaluated to -8100
+
+ROOT LEVEL: NEW BEST MOVE C4 with score -8100
+
+ROOT LEVEL: Move J11 evaluated to -290200
+
+ROOT LEVEL: Move J9 evaluated to -8100
+
+ROOT LEVEL: Move K9 evaluated to -8100
+
+ROOT LEVEL: Move I10 evaluated to -8100
+
+ROOT LEVEL: Move K10 evaluated to -8100
+
+ROOT LEVEL: Move I9 evaluated to -8100
+
+ROOT LEVEL: Move I11 evaluated to -8100
+
+ROOT LEVEL: Move K11 evaluated to -8100
+
+ROOT LEVEL: Move D8 evaluated to -10000
+
+ROOT LEVEL: Move D7 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE D7 with score -1500
+
+ROOT LEVEL: Move I11 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -1400
+
+ROOT LEVEL: Move I9 evaluated to -1400
+
+ROOT LEVEL: Move J9 evaluated to -1400
+
+ROOT LEVEL: Move K9 evaluated to -1400
+
+ROOT LEVEL: Move I10 evaluated to -1400
+
+ROOT LEVEL: Move K10 evaluated to -1400
+
+ROOT LEVEL: Move J11 evaluated to -1400
+
+ROOT LEVEL: Move K11 evaluated to -1400
+
+ROOT LEVEL: Move D6 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -6500
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -6500
+
+ROOT LEVEL: Move D7 evaluated to -6600
+
+ROOT LEVEL: Move I9 evaluated to -6500
+
+ROOT LEVEL: Move J9 evaluated to -6500
+
+ROOT LEVEL: Move K9 evaluated to -6500
+
+ROOT LEVEL: Move I10 evaluated to -6500
+
+ROOT LEVEL: Move K10 evaluated to -6500
+
+ROOT LEVEL: Move J11 evaluated to -6500
+
+ROOT LEVEL: Move K11 evaluated to -6500
+
+ROOT LEVEL: Move D6 evaluated to -6600
+
+ROOT LEVEL: Move I11 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -1600
+
+ROOT LEVEL: Move D7 evaluated to -1600
+
+ROOT LEVEL: Move I9 evaluated to -1600
+
+ROOT LEVEL: Move J9 evaluated to -1600
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -1600
+
+ROOT LEVEL: Move K10 evaluated to -1600
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move K11 evaluated to -1600
+
+ROOT LEVEL: Move D6 evaluated to -1600
+
+ROOT LEVEL: Move I11 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -296400
+
+ROOT LEVEL: Move D7 evaluated to -296400
+
+ROOT LEVEL: Move I9 evaluated to -296400
+
+ROOT LEVEL: Move J9 evaluated to -296400
+
+ROOT LEVEL: Move K9 evaluated to -296400
+
+ROOT LEVEL: Move I10 evaluated to -296400
+
+ROOT LEVEL: Move K10 evaluated to -296400
+
+ROOT LEVEL: Move J11 evaluated to -296400
+
+ROOT LEVEL: Move K11 evaluated to -296400
+
+ROOT LEVEL: Move D6 evaluated to -296400
+
+ROOT LEVEL: Move B7 evaluated to -2900
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -2900
+
+ROOT LEVEL: Move F7 evaluated to -6500
+
+ROOT LEVEL: Move K9 evaluated to -1600
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -1600
+
+ROOT LEVEL: Move H12 evaluated to -1600
+
+ROOT LEVEL: Move I10 evaluated to -6300
+
+ROOT LEVEL: Move J11 evaluated to -6300
+
+ROOT LEVEL: Move B5 evaluated to -3900
+
+ROOT LEVEL: Move J9 evaluated to -6400
+
+ROOT LEVEL: Move E8 evaluated to -4000
+
+ROOT LEVEL: Move D6 evaluated to -6500
+
+ROOT LEVEL: Move B7 evaluated to -296400
+
+ROOT LEVEL: NEW BEST MOVE B7 with score -296400
+
+ROOT LEVEL: Move F7 evaluated to -386500
+
+ROOT LEVEL: Move K9 evaluated to -381600
+
+ROOT LEVEL: Move H12 evaluated to -381600
+
+ROOT LEVEL: Move I10 evaluated to -386300
+
+ROOT LEVEL: Move J11 evaluated to -386300
+
+ROOT LEVEL: Move B5 evaluated to -383900
+
+ROOT LEVEL: Move J9 evaluated to -386400
+
+ROOT LEVEL: Move E8 evaluated to -384000
+
+ROOT LEVEL: Move D6 evaluated to -386500
+
+ROOT LEVEL: Move B4 evaluated to -4500
+
+ROOT LEVEL: NEW BEST MOVE B4 with score -4500
+
+ROOT LEVEL: Move F8 evaluated to -8100
+
+ROOT LEVEL: Move F7 evaluated to -8100
+
+ROOT LEVEL: Move K9 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -3200
+
+ROOT LEVEL: Move H12 evaluated to -3200
+
+ROOT LEVEL: Move D9 evaluated to -3200
+
+ROOT LEVEL: Move B8 evaluated to -5500
+
+ROOT LEVEL: Move D5 evaluated to -5400
+
+ROOT LEVEL: Move D8 evaluated to -5500
+
+ROOT LEVEL: Move B5 evaluated to -5500
+
+ROOT LEVEL: Move B6 evaluated to -5400
+
+ROOT LEVEL: Move E6 evaluated to -5600
+
+ROOT LEVEL: Move K9 evaluated to -383200
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -383200
+
+ROOT LEVEL: Move B4 evaluated to -298000
+
+ROOT LEVEL: NEW BEST MOVE B4 with score -298000
+
+ROOT LEVEL: Move F8 evaluated to -301600
+
+ROOT LEVEL: Move F7 evaluated to -388100
+
+ROOT LEVEL: Move H12 evaluated to -383200
+
+ROOT LEVEL: Move D9 evaluated to -383200
+
+ROOT LEVEL: Move B8 evaluated to -385500
+
+ROOT LEVEL: Move D5 evaluated to -385400
+
+ROOT LEVEL: Move D8 evaluated to -385500
+
+ROOT LEVEL: Move B5 evaluated to -385500
+
+ROOT LEVEL: Move B6 evaluated to -385400
+
+ROOT LEVEL: Move E6 evaluated to -385600
+
+ROOT LEVEL: Move K9 evaluated to -4600
+
+ROOT LEVEL: NEW BEST MOVE K9 with score -4600
+
+ROOT LEVEL: Move B5 evaluated to -5900
+
+ROOT LEVEL: Move F8 evaluated to -9500
+
+ROOT LEVEL: Move F7 evaluated to -9500
+
+ROOT LEVEL: Move F9 evaluated to -9500
+
+ROOT LEVEL: Move H12 evaluated to -4600
+
+ROOT LEVEL: Move D9 evaluated to -4600
+
+ROOT LEVEL: Move B8 evaluated to -4400
+
+ROOT LEVEL: NEW BEST MOVE B8 with score -4400
+
+ROOT LEVEL: Move E6 evaluated to -4400
+
+ROOT LEVEL: Move D8 evaluated to -9400
+
+ROOT LEVEL: Move D5 evaluated to -6800
+
+ROOT LEVEL: Move B6 evaluated to -4300
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -4300
+
+ROOT LEVEL: Move B6 evaluated to -389500
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -389500
+
+ROOT LEVEL: Move B5 evaluated to -299500
+
+ROOT LEVEL: NEW BEST MOVE B5 with score -299500
+
+ROOT LEVEL: Move F8 evaluated to -389600
+
+ROOT LEVEL: Move F7 evaluated to -389600
+
+ROOT LEVEL: Move F9 evaluated to -303100
+
+ROOT LEVEL: Move K9 evaluated to -384700
+
+ROOT LEVEL: Move H12 evaluated to -384700
+
+ROOT LEVEL: Move D9 evaluated to -384700
+
+ROOT LEVEL: Move B8 evaluated to -387000
+
+ROOT LEVEL: Move E6 evaluated to -384500
+
+ROOT LEVEL: Move D8 evaluated to -389500
+
+ROOT LEVEL: Move D5 evaluated to -384400
+
+ROOT LEVEL: Move B6 evaluated to 88000
+
+ROOT LEVEL: NEW BEST MOVE B6 with score 88000
+
+ROOT LEVEL: Move F9 evaluated to -299500
+
+ROOT LEVEL: Move F7 evaluated to -299500
+
+ROOT LEVEL: Move G9 evaluated to -299500
+
+ROOT LEVEL: Move D8 evaluated to -296900
+
+ROOT LEVEL: Move A6 evaluated to -296600
+
+ROOT LEVEL: Move E6 evaluated to -294400
+
+ROOT LEVEL: Move B8 evaluated to -297000
+
+ROOT LEVEL: Move B3 evaluated to -294500
+
+ROOT LEVEL: Move A4 evaluated to -298100
+
+ROOT LEVEL: Move D5 evaluated to -296800
+
+ROOT LEVEL: Move K9 evaluated to -294600
+
+ROOT LEVEL: Move B6 evaluated to -500000
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -500000
+
+ROOT LEVEL: Move F9 evaluated to -500000
+
+ROOT LEVEL: Move F7 evaluated to -500000
+
+ROOT LEVEL: Move G9 evaluated to -308200
+
+ROOT LEVEL: NEW BEST MOVE G9 with score -308200
+
+ROOT LEVEL: Move D8 evaluated to -500000
+
+ROOT LEVEL: Move A6 evaluated to -500000
+
+ROOT LEVEL: Move E6 evaluated to -500000
+
+ROOT LEVEL: Move B8 evaluated to -500000
+
+ROOT LEVEL: Move B3 evaluated to -500000
+
+ROOT LEVEL: Move A4 evaluated to -500000
+
+ROOT LEVEL: Move D5 evaluated to -500000
+
+ROOT LEVEL: Move K9 evaluated to -500000
+
+ROOT LEVEL: Move B6 evaluated to 79400
+
+ROOT LEVEL: NEW BEST MOVE B6 with score 79400
+
+ROOT LEVEL: Move F7 evaluated to -305500
+
+ROOT LEVEL: Move G10 evaluated to -308000
+
+ROOT LEVEL: Move D8 evaluated to -305500
+
+ROOT LEVEL: Move A6 evaluated to -305200
+
+ROOT LEVEL: Move E6 evaluated to -303000
+
+ROOT LEVEL: Move B8 evaluated to -305600
+
+ROOT LEVEL: Move G8 evaluated to -305500
+
+ROOT LEVEL: Move F10 evaluated to -305500
+
+ROOT LEVEL: Move B3 evaluated to -303100
+
+ROOT LEVEL: Move D5 evaluated to -305400
+
+ROOT LEVEL: Move A4 evaluated to -306700
+
+ROOT LEVEL: Move B6 evaluated to -500000
+
+ROOT LEVEL: NEW BEST MOVE B6 with score -500000
+
+ROOT LEVEL: Move F7 evaluated to -500000
+
+ROOT LEVEL: Move G10 evaluated to -321500
+
+ROOT LEVEL: NEW BEST MOVE G10 with score -321500
+
+ROOT LEVEL: Move D8 evaluated to -500000
+
+ROOT LEVEL: Move A6 evaluated to -500000
+
+ROOT LEVEL: Move E6 evaluated to -500000
+
+ROOT LEVEL: Move B8 evaluated to -500000
+
+ROOT LEVEL: Move G8 evaluated to -500000
+
+ROOT LEVEL: Move F10 evaluated to -500000
+
+ROOT LEVEL: Move B3 evaluated to -500000
+
+ROOT LEVEL: Move D5 evaluated to -500000
+
+ROOT LEVEL: Move A4 evaluated to -500000
+
+ROOT LEVEL: Move A6 evaluated to -309200
+
+ROOT LEVEL: NEW BEST MOVE A6 with score -309200
+
+ROOT LEVEL: Move F7 evaluated to -313000
+
+ROOT LEVEL: Move E6 evaluated to -313000
+
+ROOT LEVEL: Move D8 evaluated to -310500
+
+ROOT LEVEL: Move G8 evaluated to -308200
+
+ROOT LEVEL: NEW BEST MOVE G8 with score -308200
+
+ROOT LEVEL: Move D4 evaluated to -308200
+
+ROOT LEVEL: Move F10 evaluated to -312900
+
+ROOT LEVEL: Move B8 evaluated to -315700
+
+ROOT LEVEL: Move H10 evaluated to -304000
+
+ROOT LEVEL: NEW BEST MOVE H10 with score -304000
+
+ROOT LEVEL: Move A5 evaluated to -313000
+
+ROOT LEVEL: Move B3 evaluated to -311500
+
+ROOT LEVEL: Move A4 evaluated to -314200
+
+ROOT LEVEL: Move A6 evaluated to -300200
+
+ROOT LEVEL: NEW BEST MOVE A6 with score -300200
+
+ROOT LEVEL: Move F7 evaluated to -304000
+
+ROOT LEVEL: Move E6 evaluated to -304000
+
+ROOT LEVEL: Move J12 evaluated to -13100
+
+ROOT LEVEL: NEW BEST MOVE J12 with score -13100
+
+ROOT LEVEL: Move D8 evaluated to -301500
+
+ROOT LEVEL: Move F10 evaluated to -300000
+
+ROOT LEVEL: Move G8 evaluated to -299200
+
+ROOT LEVEL: Move D4 evaluated to -299200
+
+ROOT LEVEL: Move B8 evaluated to -306700
+
+ROOT LEVEL: Move A5 evaluated to -304000
+
+ROOT LEVEL: Move G11 evaluated to -301500
+
+ROOT LEVEL: Move B3 evaluated to -302500
+
+ROOT LEVEL: Move J12 evaluated to -320550
+
+ROOT LEVEL: NEW BEST MOVE J12 with score -320550
+
+ROOT LEVEL: Move F7 evaluated to -501500
+
+ROOT LEVEL: Move E6 evaluated to -318800
+
+ROOT LEVEL: NEW BEST MOVE E6 with score -318800
+
+ROOT LEVEL: Move A6 evaluated to -315000
+
+ROOT LEVEL: NEW BEST MOVE A6 with score -315000
+
+ROOT LEVEL: Move D8 evaluated to -499000
+
+ROOT LEVEL: Move F10 evaluated to -497500
+
+ROOT LEVEL: Move G8 evaluated to -496700
+
+ROOT LEVEL: Move D4 evaluated to -496700
+
+ROOT LEVEL: Move B8 evaluated to -504200
+
+ROOT LEVEL: Move A5 evaluated to -501500
+
+ROOT LEVEL: Move G11 evaluated to -499000
+
+ROOT LEVEL: Move B3 evaluated to -500000
+
+ROOT LEVEL: Move J12 evaluated to -6700
+
+ROOT LEVEL: NEW BEST MOVE J12 with score -6700
+
+ROOT LEVEL: Move E6 evaluated to -297600
+
+ROOT LEVEL: Move F7 evaluated to -297600
+
+ROOT LEVEL: Move D9 evaluated to -6700
+
+ROOT LEVEL: Move D3 evaluated to -6700
+
+ROOT LEVEL: Move D8 evaluated to -295100
+
+ROOT LEVEL: Move F10 evaluated to -293600
+
+ROOT LEVEL: Move G8 evaluated to -292800
+
+ROOT LEVEL: Move D4 evaluated to -292800
+
+ROOT LEVEL: Move A5 evaluated to -297500
+
+ROOT LEVEL: Move J11 evaluated to -300000
+
+ROOT LEVEL: Move B8 evaluated to -300300
+
+ROOT LEVEL: Move J12 evaluated to -314150
+
+ROOT LEVEL: NEW BEST MOVE J12 with score -314150
+
+ROOT LEVEL: Move E6 evaluated to -312400
+
+ROOT LEVEL: NEW BEST MOVE E6 with score -312400
+
+ROOT LEVEL: Move F7 evaluated to -311500
+
+ROOT LEVEL: NEW BEST MOVE F7 with score -311500
+
+ROOT LEVEL: Move D9 evaluated to -21500
+
+ROOT LEVEL: NEW BEST MOVE D9 with score -21500
+
+ROOT LEVEL: Move D3 evaluated to -301700
+
+ROOT LEVEL: Move D8 evaluated to -295200
+
+ROOT LEVEL: Move F10 evaluated to -293700
+
+ROOT LEVEL: Move G8 evaluated to -292900
+
+ROOT LEVEL: Move D4 evaluated to -292900
+
+ROOT LEVEL: Move A5 evaluated to -297600
+
+ROOT LEVEL: Move J11 evaluated to -302600
+
+ROOT LEVEL: Move B8 evaluated to -300400
+
+ROOT LEVEL: Move D9 evaluated to 3200
+
+ROOT LEVEL: NEW BEST MOVE D9 with score 3200
+
+ROOT LEVEL: Move E6 evaluated to -15100
+
+ROOT LEVEL: Move J12 evaluated to -10000
+
+ROOT LEVEL: Move F7 evaluated to -15100
+
+ROOT LEVEL: Move D3 evaluated to -8200
+
+ROOT LEVEL: Move D8 evaluated to -15000
+
+ROOT LEVEL: Move F10 evaluated to -11100
+
+ROOT LEVEL: Move G8 evaluated to 1350
+
+ROOT LEVEL: Move D4 evaluated to -1800
+
+ROOT LEVEL: Move A5 evaluated to -4000
+
+ROOT LEVEL: Move J11 evaluated to -1600
+
+ROOT LEVEL: Move B8 evaluated to -6800
+
+ROOT LEVEL: Move D9 evaluated to -13850
+
+ROOT LEVEL: NEW BEST MOVE D9 with score -13850
+
+ROOT LEVEL: Move E6 evaluated to -299100
+
+ROOT LEVEL: Move J12 evaluated to -20650
+
+ROOT LEVEL: Move F7 evaluated to -13850
+
+ROOT LEVEL: Move D3 evaluated to -19200
+
+ROOT LEVEL: Move D8 evaluated to -13850
+
+ROOT LEVEL: Move F10 evaluated to -13850
+
+ROOT LEVEL: Move G8 evaluated to -13850
+
+ROOT LEVEL: Move D4 evaluated to -13850
+
+ROOT LEVEL: Move A5 evaluated to -13850
+
+ROOT LEVEL: Move J11 evaluated to -13850
+
+ROOT LEVEL: Move B8 evaluated to -13850
+
+ROOT LEVEL: Move D9 evaluated to 187400
+
+ROOT LEVEL: NEW BEST MOVE D9 with score 187400
+
+ROOT LEVEL: Move E6 evaluated to 76300
+
+ROOT LEVEL: Move J12 evaluated to 187400
+
+ROOT LEVEL: Move F7 evaluated to 187400
+
+ROOT LEVEL: Move D3 evaluated to 187400
+
+ROOT LEVEL: Move D8 evaluated to 187400
+
+ROOT LEVEL: Move F10 evaluated to 187400
+
+ROOT LEVEL: Move G8 evaluated to 187400
+
+ROOT LEVEL: Move D4 evaluated to 187400
+
+ROOT LEVEL: Move A5 evaluated to 187400
+
+ROOT LEVEL: Move J11 evaluated to 187400
+
+ROOT LEVEL: Move B8 evaluated to 187400
+
+ROOT LEVEL: Move D8 evaluated to 304750
+
+ROOT LEVEL: NEW BEST MOVE D8 with score 304750
+
+ROOT LEVEL: Move E6 evaluated to 7650
+
+ROOT LEVEL: Move E9 evaluated to 3300
+
+ROOT LEVEL: Move J12 evaluated to 11800
+
+ROOT LEVEL: Move G7 evaluated to 198300
+
+ROOT LEVEL: Move D3 evaluated to 11800
+
+ROOT LEVEL: Move F7 evaluated to 8500
+
+ROOT LEVEL: Move F10 evaluated to 8400
+
+ROOT LEVEL: Move D4 evaluated to 10700
+
+ROOT LEVEL: Move A5 evaluated to 5900
+
+ROOT LEVEL: Move J11 evaluated to 3500
+
+ROOT LEVEL: Move B8 evaluated to 3200
 
