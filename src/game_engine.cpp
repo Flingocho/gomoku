@@ -6,11 +6,12 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 18:22:17 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/game_engine.hpp"
+#include "../include/display.hpp"
 #include "../include/debug_analyzer.hpp"
 #include <chrono>
 #include <iostream>
@@ -46,6 +47,7 @@ Move GameEngine::makeAIMove() {
     }
     
     if (bestMove.isValid()) {
+		Display::printBoardtoFile(state, g_debugAnalyzer->getDebugFile());
         RuleEngine::applyMove(state, bestMove);
         
         // Iniciar cálculo anticipado para el próximo turno

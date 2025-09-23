@@ -1,5 +1,6 @@
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -pthread
+LIBS = -lsfml-graphics -lsfml-window -lsfml-system
 
 SRCS = src/ai.cpp\
 		src/display.cpp\
@@ -10,7 +11,8 @@ SRCS = src/ai.cpp\
 		src/rule_engine.cpp\
 		src/transposition_search.cpp\
 		src/zobrist_hasher.cpp\
-		src/debug_analyzer.cpp
+		src/debug_analyzer.cpp\
+		src/gui_renderer.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 EXEC = gomoku
@@ -18,9 +20,9 @@ EXEC = gomoku
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $(EXEC)
+	$(CXX) $(OBJS) -o $(EXEC) $(LIBS)
 
-%.o: %.cpp %.hpp
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:

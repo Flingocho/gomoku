@@ -223,7 +223,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 					
 					if (result.success && (result.createsWin || RuleEngine::checkWin(newState, state.currentPlayer))) {
 						// VICTORIA INMEDIATA: Elegir inmediatamente sin más evaluación
-						maxEval = 100000 + (originalMaxDepth - depth + 1);
+						maxEval = 500000 + (originalMaxDepth - depth + 1);
 						currentBestMove = move;
 						
 						if (g_debugAnalyzer) {
@@ -252,7 +252,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			if (isRootLevel && g_debugAnalyzer) {
 				std::ostringstream debugMsg;
 				debugMsg << "ROOT LEVEL: Move " << char('A' + move.y) << (move.x + 1)
-						 << " evaluated to " << eval << "\n";
+						 << " evaluated to " << eval;
 				g_debugAnalyzer->logToFile(debugMsg.str());
 			}
 
@@ -491,7 +491,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
     
     // Victoria inmediata = máxima prioridad (alineado con Evaluator::WIN)
     if (result.createsWin || RuleEngine::checkWin(tempState, currentPlayer)) {
-        return 100000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
+        return 500000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
     }
     
     // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente
@@ -983,4 +983,3 @@ int TranspositionSearch::countPiecesInDirection(const GameState& state, int x, i
     
     return count;
 }
-

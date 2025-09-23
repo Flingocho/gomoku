@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:21 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 23:38:10 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 18:25:37 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cctype>
+#include <fstream>
 
 // Códigos de color ANSI
 #define RESET   "\033[0m"
@@ -152,4 +153,35 @@ void Display::printWinner(int player) {
         std::cout << YELLOW << "DRAW!" << RESET << "\n";
     }
     std::cout << "\n";
+}
+
+void Display::printBoardtoFile(const GameState& state, std::ofstream& file) {
+    file << "\n  ";
+    
+    // Imprimir coordenadas superiores (A-S)
+    for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+        file << " " << char('A' + j);
+    }
+    file << "\n";
+    
+    // Imprimir filas
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        // Número de fila (1-19)
+        file << std::setw(2) << (i + 1) << " ";
+        
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            int piece = state.getPiece(i, j);
+            file << getPieceChar(piece) << " ";
+        }
+        
+        file << std::setw(2) << (i + 1) << "\n";
+    }
+    
+    // Coordenadas inferiores
+    file << "  ";
+    for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+        file << " " << char('A' + j);
+    }
+    file << "\n";
+	file.flush();
 }

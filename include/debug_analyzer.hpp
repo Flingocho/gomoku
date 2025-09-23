@@ -120,6 +120,8 @@ public:
     void logStats(const std::string& message) const;
     void logInit(const std::string& message) const;
     void logAI(const std::string& message) const;
+
+    std::ofstream& getDebugFile() { return debugFile; }
     
 private:
     std::string formatMove(const Move& move) const;
