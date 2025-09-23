@@ -2600,3 +2600,1117 @@ ROOT LEVEL: Move J11 evaluated to 3500
 
 ROOT LEVEL: Move B8 evaluated to 3200
 
+=== GOMOKU DEBUG SESSION START ===
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move K9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -100
+
+ROOT LEVEL: Move K11 evaluated to -100
+
+ROOT LEVEL: Move J11 evaluated to -100
+
+ROOT LEVEL: Move I11 evaluated to -100
+
+ROOT LEVEL: Move I10 evaluated to -100
+
+ROOT LEVEL: Move K9 evaluated to -100
+
+ROOT LEVEL: Move J9 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to -100
+
+ROOT LEVEL: Move K10 evaluated to 100
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 100
+
+ROOT LEVEL: Move K11 evaluated to 100
+
+ROOT LEVEL: Move J11 evaluated to 100
+
+ROOT LEVEL: Move I11 evaluated to 100
+
+ROOT LEVEL: Move I10 evaluated to 100
+
+ROOT LEVEL: Move K9 evaluated to 100
+
+ROOT LEVEL: Move J9 evaluated to 100
+
+ROOT LEVEL: Move I9 evaluated to 100
+
+ROOT LEVEL: Move K10 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move K9 evaluated to -1500
+
+ROOT LEVEL: Move J9 evaluated to -1500
+
+ROOT LEVEL: Move I9 evaluated to -1500
+
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move K9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to -1800
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -1800
+
+ROOT LEVEL: Move K11 evaluated to -1800
+
+ROOT LEVEL: Move J11 evaluated to -1800
+
+ROOT LEVEL: Move I11 evaluated to -1800
+
+ROOT LEVEL: Move I10 evaluated to -1800
+
+ROOT LEVEL: Move K9 evaluated to -1800
+
+ROOT LEVEL: Move J9 evaluated to -1800
+
+ROOT LEVEL: Move I9 evaluated to -1800
+
+=== GOMOKU DEBUG SESSION START ===
+[INIT] Zobrist hasher inicializado con 722 claves de pieza + 22 claves de captura + 1 clave de turno
+[INIT] Motor de juego inicializado
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move K9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -100
+
+ROOT LEVEL: Move K11 evaluated to -100
+
+ROOT LEVEL: Move J11 evaluated to -100
+
+ROOT LEVEL: Move I11 evaluated to -100
+
+ROOT LEVEL: Move I10 evaluated to -100
+
+ROOT LEVEL: Move K9 evaluated to -100
+
+ROOT LEVEL: Move J9 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to -100
+
+ROOT LEVEL: Move K10 evaluated to 100
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 100
+
+ROOT LEVEL: Move K11 evaluated to 100
+
+ROOT LEVEL: Move J11 evaluated to 100
+
+ROOT LEVEL: Move I11 evaluated to 100
+
+ROOT LEVEL: Move I10 evaluated to 100
+
+ROOT LEVEL: Move K9 evaluated to 100
+
+ROOT LEVEL: Move J9 evaluated to 100
+
+ROOT LEVEL: Move I9 evaluated to 100
+
+ROOT LEVEL: Move K10 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move J11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move K9 evaluated to -1500
+
+ROOT LEVEL: Move J9 evaluated to -1500
+
+ROOT LEVEL: Move I9 evaluated to -1500
+
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to 0
+
+ROOT LEVEL: Move I10 evaluated to 0
+
+ROOT LEVEL: Move K9 evaluated to 0
+
+ROOT LEVEL: Move J9 evaluated to 0
+
+ROOT LEVEL: Move I9 evaluated to 0
+
+ROOT LEVEL: Move K10 evaluated to -1800
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -1800
+
+ROOT LEVEL: Move K11 evaluated to -1800
+
+ROOT LEVEL: Move J11 evaluated to -1800
+
+ROOT LEVEL: Move I11 evaluated to -1800
+
+ROOT LEVEL: Move I10 evaluated to -1800
+
+ROOT LEVEL: Move K9 evaluated to -1800
+
+ROOT LEVEL: Move J9 evaluated to -1800
+
+ROOT LEVEL: Move I9 evaluated to -1800
+
+[STATS] AI Stats (normal): 6320 nodes, 2351ms
+[STATS] Movimiento: K10, Tiempo: 2351ms, Nodos: 6320, Cache hits: 2273 (35.965191% hit rate), Cache size: 2097152 entradas
+[AI] Background thinking started...
+[AI] Background thinking completed: J9 (depth 11)
+[STATS] AI Stats (background): Using pre-calculated move J9
+[STATS] Movimiento: J9, Tiempo: 0ms, Nodos: 6320, Cache hits: 2273 (35.965191% hit rate), Cache size: 2097152 entradas
+[AI] Background thinking started...
+[AI] Background thinking completed: J12 (depth 11)
+[STATS] AI Stats (background): Using pre-calculated move J12
+[STATS] Movimiento: J12, Tiempo: 0ms, Nodos: 6320, Cache hits: 2273 (35.965191% hit rate), Cache size: 2097152 entradas
+[AI] Background thinking started...
+[STATS] Nodos evaluados: 10000, Cache hits: 3958
+ROOT LEVEL: Move K10 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move J11 evaluated to 100
+
+ROOT LEVEL: NEW BEST MOVE J11 with score 100
+
+ROOT LEVEL: Move K11 evaluated to 100
+
+ROOT LEVEL: Move I11 evaluated to 100
+
+ROOT LEVEL: Move I12 evaluated to 100
+
+ROOT LEVEL: Move K12 evaluated to 100
+
+ROOT LEVEL: Move K13 evaluated to 100
+
+ROOT LEVEL: Move I13 evaluated to 100
+
+ROOT LEVEL: Move J13 evaluated to 100
+
+ROOT LEVEL: Move J10 evaluated to 0
+
+ROOT LEVEL: Move J11 evaluated to -2500
+
+ROOT LEVEL: NEW BEST MOVE J11 with score -2500
+
+ROOT LEVEL: Move I11 evaluated to -2500
+
+ROOT LEVEL: Move K11 evaluated to -2600
+
+ROOT LEVEL: Move I12 evaluated to -2500
+
+ROOT LEVEL: Move K12 evaluated to -2500
+
+ROOT LEVEL: Move K13 evaluated to -2500
+
+ROOT LEVEL: Move I13 evaluated to -2600
+
+ROOT LEVEL: Move J13 evaluated to -2500
+
+ROOT LEVEL: Move J10 evaluated to -2600
+
+ROOT LEVEL: Move K10 evaluated to -100
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -100
+
+ROOT LEVEL: Move K10 evaluated to 2500
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 2500
+
+ROOT LEVEL: Move J11 evaluated to 1500
+
+ROOT LEVEL: Move K11 evaluated to 1400
+
+ROOT LEVEL: Move I11 evaluated to 1500
+
+ROOT LEVEL: Move I12 evaluated to 1500
+
+ROOT LEVEL: Move K12 evaluated to 1500
+
+ROOT LEVEL: Move K13 evaluated to 1500
+
+ROOT LEVEL: Move I13 evaluated to 1400
+
+ROOT LEVEL: Move J13 evaluated to 1500
+
+ROOT LEVEL: Move J10 evaluated to 200
+
+ROOT LEVEL: Move K10 evaluated to -1500
+
+ROOT LEVEL: NEW BEST MOVE K10 with score -1500
+
+ROOT LEVEL: Move J11 evaluated to -1300
+
+ROOT LEVEL: NEW BEST MOVE J11 with score -1300
+
+ROOT LEVEL: Move K11 evaluated to -1300
+
+ROOT LEVEL: Move I11 evaluated to -1300
+
+ROOT LEVEL: Move I12 evaluated to -1300
+
+ROOT LEVEL: Move K12 evaluated to -1300
+
+ROOT LEVEL: Move K13 evaluated to -1300
+
+ROOT LEVEL: Move I13 evaluated to -1300
+
+ROOT LEVEL: Move J13 evaluated to -2500
+
+ROOT LEVEL: Move J10 evaluated to -1300
+
+ROOT LEVEL: Move J11 evaluated to 1800
+
+ROOT LEVEL: NEW BEST MOVE J11 with score 1800
+
+ROOT LEVEL: Move I11 evaluated to 1700
+
+ROOT LEVEL: Move K11 evaluated to 1800
+
+ROOT LEVEL: Move I12 evaluated to 3500
+
+ROOT LEVEL: NEW BEST MOVE I12 with score 3500
+
+ROOT LEVEL: Move K12 evaluated to 3500
+
+ROOT LEVEL: Move K13 evaluated to 2700
+
+ROOT LEVEL: Move I13 evaluated to 3500
+
+ROOT LEVEL: Move J13 evaluated to 1800
+
+ROOT LEVEL: Move J10 evaluated to 2500
+
+[STATS] Nodos evaluados: 20000, Cache hits: 8199
+ROOT LEVEL: Move K10 evaluated to 200
+
+ROOT LEVEL: Move I12 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE I12 with score -4000
+
+ROOT LEVEL: Move J11 evaluated to -2400
+
+ROOT LEVEL: NEW BEST MOVE J11 with score -2400
+
+ROOT LEVEL: Move K11 evaluated to -2400
+
+[STATS] Nodos evaluados: 10000, Cache hits: 2947
+ROOT LEVEL: Move I11 evaluated to -2400
+
+ROOT LEVEL: Move K12 evaluated to -2400
+
+ROOT LEVEL: Move K13 evaluated to -2400
+
+ROOT LEVEL: Move I13 evaluated to -2400
+
+ROOT LEVEL: Move J13 evaluated to -2400
+
+[STATS] Nodos evaluados: 30000, Cache hits: 11939
+ROOT LEVEL: Move J10 evaluated to -2400
+
+ROOT LEVEL: Move K10 evaluated to -2400
+
+ROOT LEVEL: Move J11 evaluated to 4100
+
+ROOT LEVEL: NEW BEST MOVE J11 with score 4100
+
+[STATS] Nodos evaluados: 20000, Cache hits: 6257
+ROOT LEVEL: Move I11 evaluated to 4100
+
+ROOT LEVEL: Move K11 evaluated to 4100
+
+[STATS] Nodos evaluados: 40000, Cache hits: 14907
+ROOT LEVEL: Move I12 evaluated to 4100
+
+[STATS] Nodos evaluados: 30000, Cache hits: 9090
+ROOT LEVEL: Move K12 evaluated to 4200
+
+ROOT LEVEL: NEW BEST MOVE K12 with score 4200
+
+ROOT LEVEL: Move K13 evaluated to 4200
+
+[STATS] Nodos evaluados: 50000, Cache hits: 19244
+ROOT LEVEL: Move I13 evaluated to 4200
+
+[STATS] Nodos evaluados: 40000, Cache hits: 11990
+ROOT LEVEL: Move J13 evaluated to 4200
+
+ROOT LEVEL: Move J10 evaluated to 4200
+
+[AI] Background thinking completed: I8 (depth 11)
+ROOT LEVEL: Move K10 evaluated to 4200
+
+[STATS] Nodos evaluados: 50000, Cache hits: 15187
+ROOT LEVEL: Move K12 evaluated to -5000
+
+ROOT LEVEL: NEW BEST MOVE K12 with score -5000
+
+[STATS] Nodos evaluados: 60000, Cache hits: 18312
+ROOT LEVEL: Move J11 evaluated to -5000
+
+[STATS] Nodos evaluados: 70000, Cache hits: 20795
+[STATS] Nodos evaluados: 80000, Cache hits: 23574
+ROOT LEVEL: Move K11 evaluated to -5000
+
+[STATS] Nodos evaluados: 90000, Cache hits: 26125
+[STATS] Nodos evaluados: 100000, Cache hits: 28553
+ROOT LEVEL: Move I11 evaluated to -2700
+
+ROOT LEVEL: NEW BEST MOVE I11 with score -2700
+
+ROOT LEVEL: Move I12 evaluated to -2600
+
+ROOT LEVEL: NEW BEST MOVE I12 with score -2600
+
+[STATS] Nodos evaluados: 110000, Cache hits: 32822
+[STATS] Nodos evaluados: 120000, Cache hits: 35180
+ROOT LEVEL: Move K13 evaluated to -2600
+
+[STATS] Nodos evaluados: 130000, Cache hits: 38320
+ROOT LEVEL: Move I13 evaluated to -2600
+
+ROOT LEVEL: Move J13 evaluated to -2600
+
+[STATS] Nodos evaluados: 140000, Cache hits: 40740
+ROOT LEVEL: Move J10 evaluated to -2600
+
+[STATS] Nodos evaluados: 150000, Cache hits: 44053
+ROOT LEVEL: Move K10 evaluated to -2600
+
+[STATS] AI Stats (normal): 153568 nodes, 78344ms
+[STATS] Movimiento: I12, Tiempo: 78344ms, Nodos: 153568, Cache hits: 45314 (29.507450% hit rate), Cache size: 2097152 entradas
+[AI] Background thinking started...
+ROOT LEVEL: Move J9 evaluated to 2600
+
+ROOT LEVEL: NEW BEST MOVE J9 with score 2600
+
+ROOT LEVEL: Move K12 evaluated to 2600
+
+ROOT LEVEL: Move H12 evaluated to 2600
+
+ROOT LEVEL: Move J11 evaluated to 2600
+
+ROOT LEVEL: Move I11 evaluated to 2600
+
+ROOT LEVEL: Move J13 evaluated to 2600
+
+ROOT LEVEL: Move I13 evaluated to 2600
+
+ROOT LEVEL: Move M12 evaluated to 2600
+
+ROOT LEVEL: Move K11 evaluated to 2600
+
+ROOT LEVEL: Move H11 evaluated to 2600
+
+ROOT LEVEL: Move J9 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE J9 with score -1400
+
+ROOT LEVEL: Move K12 evaluated to -1400
+
+ROOT LEVEL: Move H12 evaluated to -1400
+
+ROOT LEVEL: Move J11 evaluated to -1400
+
+ROOT LEVEL: Move I11 evaluated to -1400
+
+ROOT LEVEL: Move J13 evaluated to -1400
+
+ROOT LEVEL: Move I13 evaluated to -1400
+
+ROOT LEVEL: Move M12 evaluated to -1400
+
+ROOT LEVEL: Move K11 evaluated to -1400
+
+ROOT LEVEL: Move H11 evaluated to -1400
+
+ROOT LEVEL: Move J9 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE J9 with score -1400
+
+ROOT LEVEL: Move K12 evaluated to -1400
+
+ROOT LEVEL: Move H12 evaluated to -1400
+
+ROOT LEVEL: Move J11 evaluated to -1400
+
+ROOT LEVEL: Move I11 evaluated to -1400
+
+ROOT LEVEL: Move J13 evaluated to -1400
+
+ROOT LEVEL: Move I13 evaluated to -1400
+
+ROOT LEVEL: Move M12 evaluated to -1400
+
+ROOT LEVEL: Move K11 evaluated to -1400
+
+ROOT LEVEL: Move H11 evaluated to -1400
+
+ROOT LEVEL: Move J9 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE J9 with score -4000
+
+ROOT LEVEL: Move K12 evaluated to -4000
+
+ROOT LEVEL: Move H12 evaluated to -4000
+
+ROOT LEVEL: Move J11 evaluated to -4000
+
+ROOT LEVEL: Move I11 evaluated to -4000
+
+ROOT LEVEL: Move J13 evaluated to -4000
+
+ROOT LEVEL: Move I13 evaluated to -4000
+
+ROOT LEVEL: Move M12 evaluated to -4000
+
+ROOT LEVEL: Move K11 evaluated to -4000
+
+ROOT LEVEL: Move H11 evaluated to -4000
+
+ROOT LEVEL: Move J9 evaluated to 3400
+
+ROOT LEVEL: NEW BEST MOVE J9 with score 3400
+
+ROOT LEVEL: Move K12 evaluated to 3400
+
+ROOT LEVEL: Move H12 evaluated to 3400
+
+ROOT LEVEL: Move J11 evaluated to 3400
+
+ROOT LEVEL: Move I11 evaluated to 3400
+
+ROOT LEVEL: Move J13 evaluated to 3400
+
+ROOT LEVEL: Move I13 evaluated to 3400
+
+ROOT LEVEL: Move M12 evaluated to 3400
+
+ROOT LEVEL: Move K11 evaluated to 3400
+
+ROOT LEVEL: Move H11 evaluated to 3400
+
+ROOT LEVEL: Move J9 evaluated to -2600
+
+ROOT LEVEL: NEW BEST MOVE J9 with score -2600
+
+ROOT LEVEL: Move K12 evaluated to -2600
+
+ROOT LEVEL: Move H12 evaluated to -2600
+
+ROOT LEVEL: Move J11 evaluated to -2600
+
+ROOT LEVEL: Move I11 evaluated to -2600
+
+ROOT LEVEL: Move J13 evaluated to -2600
+
+ROOT LEVEL: Move I13 evaluated to -2600
+
+ROOT LEVEL: Move M12 evaluated to -2600
+
+ROOT LEVEL: Move K11 evaluated to -2600
+
+ROOT LEVEL: Move H11 evaluated to -2600
+
+ROOT LEVEL: Move J9 evaluated to 5100
+
+ROOT LEVEL: NEW BEST MOVE J9 with score 5100
+
+ROOT LEVEL: Move K12 evaluated to -499997
+
+ROOT LEVEL: Move H12 evaluated to 5100
+
+ROOT LEVEL: Move J11 evaluated to 5100
+
+ROOT LEVEL: Move I11 evaluated to 5100
+
+ROOT LEVEL: Move J13 evaluated to 5100
+
+ROOT LEVEL: Move I13 evaluated to 5100
+
+ROOT LEVEL: Move M12 evaluated to 5100
+
+ROOT LEVEL: Move K11 evaluated to 5100
+
+ROOT LEVEL: Move H11 evaluated to 5100
+
+[STATS] Nodos evaluados: 10000, Cache hits: 3928
+[STATS] Nodos evaluados: 10000, Cache hits: 4244
+[STATS] Nodos evaluados: 20000, Cache hits: 8445
+[STATS] Nodos evaluados: 20000, Cache hits: 8369
+ROOT LEVEL: Move J9 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE J9 with score -3200
+
+ROOT LEVEL: Move K12 evaluated to -499996
+
+ROOT LEVEL: Move H12 evaluated to -3200
+
+ROOT LEVEL: Move J11 evaluated to -3200
+
+ROOT LEVEL: Move I11 evaluated to -3200
+
+ROOT LEVEL: Move J13 evaluated to -3200
+
+ROOT LEVEL: Move I13 evaluated to -3200
+
+ROOT LEVEL: Move M12 evaluated to -3200
+
+ROOT LEVEL: Move K11 evaluated to -3200
+
+ROOT LEVEL: Move H11 evaluated to -3200
+
+[STATS] AI Stats (normal): 22977 nodes, 12136ms
+[STATS] Movimiento: J9, Tiempo: 12136ms, Nodos: 22977, Cache hits: 9504 (41.363102% hit rate), Cache size: 2097152 entradas
+[STATS] Nodos evaluados: 30000, Cache hits: 12592
+[STATS] Nodos evaluados: 40000, Cache hits: 17120
+[STATS] Nodos evaluados: 50000, Cache hits: 21383
+ROOT LEVEL: Move N13 evaluated to 7500
+
+ROOT LEVEL: NEW BEST MOVE N13 with score 7500
+
+ROOT LEVEL: Move K12 evaluated to 7500
+
+ROOT LEVEL: Move H12 evaluated to 87300
+
+ROOT LEVEL: NEW BEST MOVE H12 with score 87300
+
+ROOT LEVEL: Move I11 evaluated to 87300
+
+ROOT LEVEL: Move J11 evaluated to 87300
+
+ROOT LEVEL: Move I13 evaluated to 87300
+
+ROOT LEVEL: Move J13 evaluated to 87300
+
+ROOT LEVEL: Move J10 evaluated to 87300
+
+[STATS] Nodos evaluados: 10000, Cache hits: 4434
+[AI] Background thinking completed: K12 (depth 11)
+[AI] Background thinking started...
+ROOT LEVEL: Move I9 evaluated to 87300
+
+ROOT LEVEL: Move N13 evaluated to -1400
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -1400
+
+ROOT LEVEL: Move K12 evaluated to 3500
+
+ROOT LEVEL: NEW BEST MOVE K12 with score 3500
+
+ROOT LEVEL: Move H12 evaluated to 0
+
+ROOT LEVEL: Move I11 evaluated to -1200
+
+ROOT LEVEL: Move J11 evaluated to -1300
+
+ROOT LEVEL: Move I13 evaluated to -1200
+
+ROOT LEVEL: Move J13 evaluated to 1300
+
+ROOT LEVEL: Move J10 evaluated to -1300
+
+ROOT LEVEL: Move I9 evaluated to -1300
+
+ROOT LEVEL: Move K9 evaluated to -1300
+
+ROOT LEVEL: Move I10 evaluated to -1300
+
+ROOT LEVEL: Move K11 evaluated to -1300
+
+ROOT LEVEL: Move K12 evaluated to -290000
+
+ROOT LEVEL: NEW BEST MOVE K12 with score -290000
+
+ROOT LEVEL: Move N13 evaluated to -4000
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -4000
+
+ROOT LEVEL: Move H12 evaluated to -293500
+
+ROOT LEVEL: Move I11 evaluated to -294700
+
+ROOT LEVEL: Move J11 evaluated to -294800
+
+ROOT LEVEL: Move I13 evaluated to -294700
+
+ROOT LEVEL: Move J13 evaluated to -292200
+
+ROOT LEVEL: Move J10 evaluated to -294800
+
+ROOT LEVEL: Move I9 evaluated to -294800
+
+ROOT LEVEL: Move K9 evaluated to -294800
+
+ROOT LEVEL: Move I10 evaluated to -294800
+
+ROOT LEVEL: Move K11 evaluated to -294800
+
+ROOT LEVEL: Move N13 evaluated to 0
+
+ROOT LEVEL: NEW BEST MOVE N13 with score 0
+
+ROOT LEVEL: Move K12 evaluated to 90000
+
+ROOT LEVEL: NEW BEST MOVE K12 with score 90000
+
+ROOT LEVEL: Move K9 evaluated to 87300
+
+ROOT LEVEL: Move H12 evaluated to 90000
+
+ROOT LEVEL: Move I11 evaluated to -289700
+
+ROOT LEVEL: Move J11 evaluated to 87600
+
+ROOT LEVEL: Move I13 evaluated to -289700
+
+ROOT LEVEL: Move J13 evaluated to -267300
+
+ROOT LEVEL: Move J10 evaluated to 87600
+
+ROOT LEVEL: Move I9 evaluated to -289900
+
+ROOT LEVEL: Move K9 evaluated to -289900
+
+ROOT LEVEL: Move I10 evaluated to -289700
+
+ROOT LEVEL: Move K11 evaluated to -289800
+
+ROOT LEVEL: Move I10 evaluated to 87300
+
+ROOT LEVEL: Move K12 evaluated to -293700
+
+ROOT LEVEL: NEW BEST MOVE K12 with score -293700
+
+ROOT LEVEL: Move K11 evaluated to 87300
+
+ROOT LEVEL: Move N13 evaluated to -2600
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -2600
+
+ROOT LEVEL: Move H12 evaluated to -2600
+
+ROOT LEVEL: Move I11 evaluated to -2600
+
+ROOT LEVEL: Move J11 evaluated to -2600
+
+ROOT LEVEL: Move I13 evaluated to -2600
+
+ROOT LEVEL: Move J13 evaluated to -2600
+
+ROOT LEVEL: Move J10 evaluated to -2600
+
+ROOT LEVEL: Move I9 evaluated to -2600
+
+ROOT LEVEL: Move K9 evaluated to -2600
+
+ROOT LEVEL: Move I10 evaluated to -2600
+
+ROOT LEVEL: Move K11 evaluated to -2600
+
+ROOT LEVEL: Move N13 evaluated to 5100
+
+ROOT LEVEL: NEW BEST MOVE N13 with score 5100
+
+ROOT LEVEL: Move K12 evaluated to 0
+
+ROOT LEVEL: Move H12 evaluated to 5100
+
+ROOT LEVEL: Move I11 evaluated to 5100
+
+ROOT LEVEL: Move J11 evaluated to 5100
+
+ROOT LEVEL: Move I13 evaluated to 5100
+
+ROOT LEVEL: Move J13 evaluated to 5100
+
+ROOT LEVEL: Move J10 evaluated to 5100
+
+ROOT LEVEL: Move I9 evaluated to 5100
+
+ROOT LEVEL: Move K9 evaluated to 5100
+
+ROOT LEVEL: Move I10 evaluated to 5100
+
+ROOT LEVEL: Move K11 evaluated to 5100
+
+ROOT LEVEL: Move H12 evaluated to -291800
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -291800
+
+ROOT LEVEL: Move N13 evaluated to -3200
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -3200
+
+ROOT LEVEL: Move K12 evaluated to -290000
+
+ROOT LEVEL: Move H12 evaluated to -3200
+
+ROOT LEVEL: Move I11 evaluated to -3200
+
+ROOT LEVEL: Move J11 evaluated to -3200
+
+ROOT LEVEL: Move I13 evaluated to -3200
+
+ROOT LEVEL: Move J13 evaluated to -3200
+
+ROOT LEVEL: Move J10 evaluated to -3200
+
+ROOT LEVEL: Move I9 evaluated to -3200
+
+ROOT LEVEL: Move K9 evaluated to -3200
+
+ROOT LEVEL: Move I10 evaluated to -3200
+
+ROOT LEVEL: Move K11 evaluated to -3200
+
+[STATS] Nodos evaluados: 10000, Cache hits: 3979
+ROOT LEVEL: Move N13 evaluated to 7500
+
+ROOT LEVEL: NEW BEST MOVE N13 with score 7500
+
+[STATS] Nodos evaluados: 20000, Cache hits: 7943
+ROOT LEVEL: Move K12 evaluated to 7500
+
+ROOT LEVEL: Move H12 evaluated to 87300
+
+ROOT LEVEL: NEW BEST MOVE H12 with score 87300
+
+ROOT LEVEL: Move I11 evaluated to 87300
+
+ROOT LEVEL: Move J11 evaluated to 87300
+
+ROOT LEVEL: Move I13 evaluated to 87300
+
+ROOT LEVEL: Move J13 evaluated to 87300
+
+ROOT LEVEL: Move J10 evaluated to 87300
+
+ROOT LEVEL: Move I9 evaluated to 87300
+
+ROOT LEVEL: Move K9 evaluated to 87300
+
+ROOT LEVEL: Move I10 evaluated to 87300
+
+ROOT LEVEL: Move K11 evaluated to 87300
+
+ROOT LEVEL: Move H12 evaluated to -291800
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -291800
+
+ROOT LEVEL: Move N13 evaluated to -8300
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -8300
+
+[STATS] Nodos evaluados: 20000, Cache hits: 8363
+ROOT LEVEL: Move K12 evaluated to -8300
+
+ROOT LEVEL: Move I11 evaluated to -8300
+
+[STATS] Nodos evaluados: 30000, Cache hits: 13451
+ROOT LEVEL: Move J11 evaluated to -8300
+
+ROOT LEVEL: Move I13 evaluated to -8300
+
+ROOT LEVEL: Move J13 evaluated to -8300
+
+ROOT LEVEL: Move J10 evaluated to -8300
+
+[STATS] Nodos evaluados: 30000, Cache hits: 12566
+ROOT LEVEL: Move I9 evaluated to -8300
+
+ROOT LEVEL: Move K9 evaluated to -8300
+
+[STATS] Nodos evaluados: 40000, Cache hits: 16099
+ROOT LEVEL: Move N13 evaluated to -8300
+
+ROOT LEVEL: NEW BEST MOVE N13 with score -8300
+
+ROOT LEVEL: Move K12 evaluated to -8300
+
+ROOT LEVEL: Move I11 evaluated to -8300
+
+ROOT LEVEL: Move I10 evaluated to -8300
+
+ROOT LEVEL: Move K11 evaluated to -8300
+
+[STATS] AI Stats (normal): 42750 nodes, 31032ms
+[STATS] Movimiento: N13, Tiempo: 31032ms, Nodos: 42750, Cache hits: 17064 (39.915787% hit rate), Cache size: 2097152 entradas
+ROOT LEVEL: Move J11 evaluated to -8300
+
+ROOT LEVEL: Move I13 evaluated to -8300
+
+[STATS] Nodos evaluados: 40000, Cache hits: 16704
+ROOT LEVEL: Move J13 evaluated to -8300
+
+ROOT LEVEL: Move J10 evaluated to -8300
+
+ROOT LEVEL: Move I9 evaluated to -8300
+
+ROOT LEVEL: Move K9 evaluated to -8300
+
+ROOT LEVEL: Move I10 evaluated to -8300
+
+ROOT LEVEL: Move K11 evaluated to -8300
+
+[AI] Background thinking completed: N13 (depth 11)
+[AI] Background thinking started...
+[STATS] Nodos evaluados: 10000, Cache hits: 3967
+[AI] Background move no longer legal, recalculating...
+ROOT LEVEL: Move H12 evaluated to 2400
+
+ROOT LEVEL: NEW BEST MOVE H12 with score 2400
+
+ROOT LEVEL: Move L9 evaluated to 5700
+
+ROOT LEVEL: NEW BEST MOVE L9 with score 5700
+
+ROOT LEVEL: Move K12 evaluated to 5900
+
+ROOT LEVEL: NEW BEST MOVE K12 with score 5900
+
+ROOT LEVEL: Move K11 evaluated to 1100
+
+ROOT LEVEL: Move I11 evaluated to 1200
+
+ROOT LEVEL: Move J13 evaluated to -1400
+
+ROOT LEVEL: Move I13 evaluated to 1200
+
+ROOT LEVEL: Move J10 evaluated to -1500
+
+ROOT LEVEL: Move I9 evaluated to 1100
+
+ROOT LEVEL: Move K9 evaluated to 1100
+
+ROOT LEVEL: Move I10 evaluated to 1100
+
+ROOT LEVEL: Move K8 evaluated to 1100
+
+ROOT LEVEL: Move H12 evaluated to -5000
+
+ROOT LEVEL: NEW BEST MOVE H12 with score -5000
+
+ROOT LEVEL: Move L9 evaluated to 3100
+
+ROOT LEVEL: NEW BEST MOVE L9 with score 3100
+
+ROOT LEVEL: Move K12 evaluated to 2400
+
+ROOT LEVEL: Move K11 evaluated to -1500
+
+ROOT LEVEL: Move I11 evaluated to -1400
+
+ROOT LEVEL: Move J13 evaluated to -4000
+
+ROOT LEVEL: Move I13 evaluated to -1400
+
+ROOT LEVEL: Move J10 evaluated to -4100
+
+ROOT LEVEL: Move I9 evaluated to -1500
+
+ROOT LEVEL: Move K9 evaluated to -1500
+
+ROOT LEVEL: Move I10 evaluated to -1500
+
+ROOT LEVEL: Move K8 evaluated to -1500
+
+ROOT LEVEL: Move H12 evaluated to 5600
+
+ROOT LEVEL: NEW BEST MOVE H12 with score 5600
+
+ROOT LEVEL: Move L9 evaluated to 6800
+
+ROOT LEVEL: NEW BEST MOVE L9 with score 6800
+
+ROOT LEVEL: Move K12 evaluated to 295900
+
+ROOT LEVEL: NEW BEST MOVE K12 with score 295900
+
+ROOT LEVEL: Move K11 evaluated to 3500
+
+ROOT LEVEL: Move I11 evaluated to 3600
+
+ROOT LEVEL: Move J13 evaluated to 295900
+
+ROOT LEVEL: Move I13 evaluated to 3600
+
+ROOT LEVEL: Move J10 evaluated to 295900
+
+ROOT LEVEL: Move I9 evaluated to 3400
+
+ROOT LEVEL: Move K9 evaluated to 8100
+
+ROOT LEVEL: Move I10 evaluated to 3600
+
+ROOT LEVEL: Move K8 evaluated to 3400
+
+[STATS] AI Stats (normal): 336 nodes, 130ms
+[STATS] Movimiento: K12, Tiempo: 130ms, Nodos: 336, Cache hits: 190 (56.547619% hit rate), Cache size: 2097152 entradas
+[STATS] Nodos evaluados: 20000, Cache hits: 8338
+[STATS] Nodos evaluados: 30000, Cache hits: 12333
+ROOT LEVEL: Move L12 evaluated to 295900
+
+ROOT LEVEL: NEW BEST MOVE L12 with score 295900
+
+ROOT LEVEL: Move L9 evaluated to 7100
+
+ROOT LEVEL: Move K11 evaluated to 0
+
+ROOT LEVEL: Move J13 evaluated to -2500
+
+ROOT LEVEL: Move I11 evaluated to 2600
+
+ROOT LEVEL: Move I13 evaluated to 2600
+
+ROOT LEVEL: Move K13 evaluated to 2600
+
+ROOT LEVEL: Move J10 evaluated to -100
+
+ROOT LEVEL: Move I9 evaluated to 2500
+
+ROOT LEVEL: Move K9 evaluated to 2500
+
+ROOT LEVEL: Move I10 evaluated to 2500
+
+ROOT LEVEL: Move J8 evaluated to 2400
+
+[STATS] AI Stats (normal): 13 nodes, 1ms
+[STATS] Movimiento: L12, Tiempo: 1ms, Nodos: 13, Cache hits: 13 (100.000000% hit rate), Cache size: 2097152 entradas
+[STATS] Nodos evaluados: 40000, Cache hits: 16673
+[STATS] Nodos evaluados: 50000, Cache hits: 21769
+ROOT LEVEL: Move K9 evaluated to 300700
+
+ROOT LEVEL: NEW BEST MOVE K9 with score 300700
+
+ROOT LEVEL: Move I11 evaluated to 297000
+
+ROOT LEVEL: Move L9 evaluated to 300500
+
+ROOT LEVEL: Move M11 evaluated to 293400
+
+ROOT LEVEL: Move K13 evaluated to 291100
+
+ROOT LEVEL: Move J13 evaluated to 288400
+
+ROOT LEVEL: Move I13 evaluated to 290900
+
+ROOT LEVEL: Move M13 evaluated to 290900
+
+ROOT LEVEL: Move L13 evaluated to 288300
+
+ROOT LEVEL: Move J10 evaluated to 290800
+
+ROOT LEVEL: Move I9 evaluated to 293400
+
+ROOT LEVEL: Move I10 evaluated to 293400
+
+[STATS] AI Stats (normal): 13 nodes, 3ms
+[STATS] Movimiento: K9, Tiempo: 3ms, Nodos: 13, Cache hits: 1 (7.692308% hit rate), Cache size: 2097152 entradas
+[STATS] Nodos evaluados: 60000, Cache hits: 23827
+ROOT LEVEL: Move K10 evaluated to 302900
+
+ROOT LEVEL: NEW BEST MOVE K10 with score 302900
+
+ROOT LEVEL: Move I11 evaluated to 299400
+
+ROOT LEVEL: Move M11 evaluated to 295800
+
+ROOT LEVEL: Move I9 evaluated to 300600
+
+ROOT LEVEL: Move L9 evaluated to 300600
+
+ROOT LEVEL: Move J13 evaluated to 290800
+
+ROOT LEVEL: Move K13 evaluated to 293400
+
+ROOT LEVEL: Move J10 evaluated to 293300
+
+ROOT LEVEL: Move K8 evaluated to 295800
+
+ROOT LEVEL: Move J8 evaluated to 295800
+
+ROOT LEVEL: Move M13 evaluated to 293300
+
+ROOT LEVEL: Move L13 evaluated to 290700
+
+[STATS] AI Stats (normal): 13 nodes, 3ms
+[STATS] Movimiento: K10, Tiempo: 3ms, Nodos: 13, Cache hits: 1 (7.692308% hit rate), Cache size: 2097152 entradas
+[STATS] Nodos evaluados: 70000, Cache hits: 27039
+[AI] Background thinking completed: K12 (depth 11)
+[AI] Background thinking started...
+[AI] Background thinking completed: I11 (depth 11)
+[AI] Background move no longer legal, recalculating...
+ROOT LEVEL: IMMEDIATE WIN DETECTED - Move M12 with score 100001 (GAME OVER)
+
+[STATS] AI Stats (normal): 1 nodes, 1ms
+[STATS] Movimiento: M12, Tiempo: 1ms, Nodos: 1, Cache hits: 0 (0.000000% hit rate), Cache size: 2097152 entradas
+[AI] Background thinking started...
+[STATS] PARTIDA FINALIZADA - Cache size final: 2097152 entradas

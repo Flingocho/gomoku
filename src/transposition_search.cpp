@@ -65,8 +65,7 @@ void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB)
 	transpositionTable.resize(powerOf2);
 	tableSizeMask = powerOf2 - 1; // Para hacer index = hash & tableSizeMask
 
-	std::cout << "TranspositionTable: " << (powerOf2 * bytesPerEntry / 1024 / 1024)
-			  << "MB (" << powerOf2 << " entradas) inicializada" << std::endl;
+	// Inicialización de TranspositionTable se loggeará desde main
 }
 
 TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameState &state, int maxDepth) {
@@ -80,7 +79,7 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameSt
     // Profundidad adaptativa
     int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
 
-    std::cout << "AI usando profundidad: " << adaptiveDepth << " (solicitada: " << maxDepth << ")" << std::endl;
+    DEBUG_LOG_AI("AI usando profundidad: " + std::to_string(adaptiveDepth) + " (solicitada: " + std::to_string(maxDepth) + ")");
 
     // **NUEVO: Análisis de movimientos para debug**
     if (g_debugAnalyzer) {
@@ -148,7 +147,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 	// Debug cada 10000 nodos
 	if (nodesEvaluated % 10000 == 0)
 	{
-		std::cout << "Nodos evaluados: " << nodesEvaluated << ", Cache hits: " << cacheHits << std::endl;
+		DEBUG_LOG_STATS("Nodos evaluados: " + std::to_string(nodesEvaluated) + ", Cache hits: " + std::to_string(cacheHits));
 	}
 
 	// OPTIMIZACIÓN CLAVE: Usar Zobrist hash del estado

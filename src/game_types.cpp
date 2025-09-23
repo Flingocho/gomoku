@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:23:56 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 23:18:56 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ int GameState::getOpponent(int player) const {
 void GameState::initializeHasher() {
     if (!hasher) {
         hasher = new ZobristHasher();
-        std::cout << "GameState: Hasher Zobrist inicializado globalmente" << std::endl;
+        // Hasher Zobrist inicializado - se loggeará desde main
     }
 }
 
@@ -94,12 +94,7 @@ void GameState::recalculateHash() {
         return;
     }
     
-    uint64_t oldHash = zobristHash;
     zobristHash = hasher->computeFullHash(*this);
     
-    // Debug: verificar que el hash incremental era correcto
-    if (oldHash != 0 && oldHash != zobristHash) {
-        std::cout << "DEBUG: Hash recalculado difiere del incremental. "
-                  << "Anterior: " << oldHash << ", Nuevo: " << zobristHash << std::endl;
-    }
+    // Debug del hash eliminado para evitar spam en consola
 }

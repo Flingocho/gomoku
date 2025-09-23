@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 17:17:02 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,17 +22,18 @@ int main()
 	std::cout << "=== GOMOKU AI CON ZOBRIST HASHING ===" << std::endl;
 	std::cout << "Inicializando optimizaciones..." << std::endl;
 
-	// CRÍTICO: Inicializar Zobrist hasher ANTES de crear cualquier GameState
-	GameState::initializeHasher();
-	std::cout << "✓ Zobrist hasher inicializado" << std::endl;
-	std::cout << "✓ Inicializando sistema de debug..." << std::endl;
+	// CRÍTICO: Inicializar sistema de debug PRIMERO
 	g_debugAnalyzer = new DebugAnalyzer(DebugAnalyzer::DEBUG_HEURISTIC);
 	g_debugAnalyzer->enableFileLogging("gomoku_debug.log");
+
+	// CRÍTICO: Inicializar Zobrist hasher ANTES de crear cualquier GameState
+	GameState::initializeHasher();
+	DEBUG_LOG_INIT("Zobrist hasher inicializado con " + std::to_string(GameState::BOARD_SIZE * GameState::BOARD_SIZE * 2) + " claves de pieza + 22 claves de captura + 1 clave de turno");
 
 	// Crear motor de juego (ahora con Zobrist optimizado)
 	GameEngine game;
 	game.newGame();
-	std::cout << "✓ Motor de juego inicializado" << std::endl;
+	DEBUG_LOG_INIT("Motor de juego inicializado");
 
 	Display::printWelcome();
 
@@ -41,20 +42,16 @@ int main()
 	std::cout << "• Transposition Table: ACTIVADO (64MB cache)" << std::endl;
 	std::cout << "• Move Ordering: ACTIVADO (Ordenamiento inteligente)" << std::endl;
 	std::cout << "• Alpha-Beta Pruning: ACTIVADO (Poda agresiva)" << std::endl;
+	std::cout << "• Debug avanzado: ACTIVADO (salida a gomoku_debug.log)" << std::endl;
 	std::cout << "Esperando mejora de ~50-100x en velocidad..." << std::endl;
 	std::cout << "========================================\n"
-			  << std::endl;
-
-	while (!game.isGameOver())
+		  << std::endl;	while (!game.isGameOver())
 	{
 		const GameState &state = game.getState();
 
 		// Mostrar tablero actual
 		Display::printBoard(state);
 		Display::printGameInfo(state, game.getLastAIThinkingTime());
-
-		// DEBUG: Mostrar hash del estado actual
-		std::cout << "Estado Zobrist Hash: 0x" << std::hex << state.getZobristHash() << std::dec << std::endl;
 
 		if (state.currentPlayer == GameState::PLAYER1)
 		{
@@ -97,20 +94,16 @@ int main()
 			{
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
-				std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
-				std::cout << "Tiempo: " << duration.count() << "ms" << std::endl;
-				std::cout << "Nodos evaluados: " << game.getLastNodesEvaluated() << std::endl;
-				std::cout << "Cache hits: " << game.getLastCacheHits()
-						  << " (hit rate: " << (game.getLastCacheHitRate() * 100) << "%)" << std::endl;
-				std::cout << "Cache size: " << game.getCacheSize() << " entradas" << std::endl;
-
-				// Estimación de speedup vs implementación anterior
-				if (duration.count() > 0)
-				{
-					double estimatedOldTime = duration.count() * 50; // Estimación conservadora
-					std::cout << "Speedup estimado: ~" << (estimatedOldTime / duration.count())
-							  << "x más rápido" << std::endl;
-				}
+				std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) 
+						  << " (" << duration.count() << "ms)" << std::endl;
+				
+				// Estadísticas detalladas van al archivo de debug
+				DEBUG_LOG_STATS("Movimiento: " + std::string(1, char('A' + aiMove.y)) + std::to_string(aiMove.x + 1) +
+							   ", Tiempo: " + std::to_string(duration.count()) + "ms" +
+							   ", Nodos: " + std::to_string(game.getLastNodesEvaluated()) +
+							   ", Cache hits: " + std::to_string(game.getLastCacheHits()) + 
+							   " (" + std::to_string(game.getLastCacheHitRate() * 100) + "% hit rate)" +
+							   ", Cache size: " + std::to_string(game.getCacheSize()) + " entradas");
 			}
 			else
 			{
@@ -127,10 +120,8 @@ int main()
 		Display::printGameInfo(game.getState(), game.getLastAIThinkingTime());
 		Display::printWinner(game.getWinner());
 
-		// Estadísticas finales
-		std::cout << "\n=== ESTADÍSTICAS FINALES ===" << std::endl;
-		std::cout << "Cache size final: " << game.getCacheSize() << " entradas" << std::endl;
-		std::cout << "Hash final: 0x" << std::hex << game.getState().getZobristHash() << std::dec << std::endl;
+		// Estadísticas finales van al debug
+		DEBUG_LOG_STATS("PARTIDA FINALIZADA - Cache size final: " + std::to_string(game.getCacheSize()) + " entradas");
 	}
 
 	if (g_debugAnalyzer)

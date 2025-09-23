@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 23:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 20:25:29 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void ZobristHasher::initializeZobristTable() {
         rng.seed(seq);
         rngInitialized = true;
         
-        std::cout << "ZobristHasher: Tabla inicializada con entropía del sistema" << std::endl;
+        // Inicialización exitosa - se loggeará desde main
     }
     
     // Inicializar tabla principal
@@ -61,9 +61,7 @@ void ZobristHasher::initializeZobristTable() {
         }
     }
     
-    std::cout << "ZobristHasher: " << (GameState::BOARD_SIZE * GameState::BOARD_SIZE * 2) 
-              << " claves de pieza + " << (2 * 11) << " claves de captura + 1 clave de turno generadas" 
-              << std::endl;
+    // Estadísticas de Zobrist - se loggeará desde main si es necesario
 }
 
 ZobristHasher::ZobristKey ZobristHasher::generateRandomKey() {

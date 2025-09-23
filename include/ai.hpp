@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/14 21:22:02 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/22 20:28:33 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,10 @@ public:
     
     // Obtener mejor movimiento para el estado actual
     Move getBestMove(const GameState& state);
-    
-    // Configurar profundidad de búsqueda
+
+	int getDepthForGamePhase(const GameState &state);
+
+	// Configurar profundidad de búsqueda
     void setDepth(int newDepth) { depth = newDepth; }
     int getDepth() const { return depth; }
     

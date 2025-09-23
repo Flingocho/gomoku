@@ -372,6 +372,41 @@ void DebugAnalyzer::logToFile(const std::string& message) const {
     }
 }
 
+void DebugAnalyzer::logInfo(const std::string& message) const {
+    if (currentLevel == DEBUG_OFF) return;
+    
+    std::ostringstream logMsg;
+    logMsg << "[INFO] " << message;
+    logToFile(logMsg.str());
+}
+
+void DebugAnalyzer::logStats(const std::string& message) const {
+    if (currentLevel == DEBUG_OFF) return;
+    
+    std::ostringstream logMsg;
+    logMsg << "[STATS] " << message;
+    logToFile(logMsg.str());
+}
+
+void DebugAnalyzer::logInit(const std::string& message) const {
+    if (currentLevel == DEBUG_OFF) return;
+    
+    std::ostringstream logMsg;
+    logMsg << "[INIT] " << message;
+    logToFile(logMsg.str());
+    
+    // También mostrar mensajes de inicialización en consola para feedback inmediato
+    std::cout << "✓ " << message << std::endl;
+}
+
+void DebugAnalyzer::logAI(const std::string& message) const {
+    if (currentLevel == DEBUG_OFF) return;
+    
+    std::ostringstream logMsg;
+    logMsg << "[AI] " << message;
+    logToFile(logMsg.str());
+}
+
 void DebugAnalyzer::GameSnapshot::saveToFile(const std::string& filename) const {
     std::ofstream file(filename);
     if (!file.is_open()) {

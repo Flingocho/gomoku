@@ -115,6 +115,12 @@ public:
     void saveSnapshotToFile(const std::string& filename) const { lastSnapshot.saveToFile(filename); }
     void logToFile(const std::string& message) const;
     
+    // Centralized logging functions
+    void logInfo(const std::string& message) const;
+    void logStats(const std::string& message) const;
+    void logInit(const std::string& message) const;
+    void logAI(const std::string& message) const;
+    
 private:
     std::string formatMove(const Move& move) const;
     std::string formatScore(int score) const;
@@ -138,5 +144,18 @@ extern DebugAnalyzer* g_debugAnalyzer;
 #define DEBUG_CRITICAL(state, reason) \
     if (g_debugAnalyzer && g_debugAnalyzer->shouldDebug(0, 50000, false)) \
         g_debugAnalyzer->logCriticalPosition(state, reason)
+
+// Macros for centralized logging
+#define DEBUG_LOG_INFO(msg) \
+    if (g_debugAnalyzer) g_debugAnalyzer->logInfo(msg)
+
+#define DEBUG_LOG_STATS(msg) \
+    if (g_debugAnalyzer) g_debugAnalyzer->logStats(msg)
+
+#define DEBUG_LOG_INIT(msg) \
+    if (g_debugAnalyzer) g_debugAnalyzer->logInit(msg)
+
+#define DEBUG_LOG_AI(msg) \
+    if (g_debugAnalyzer) g_debugAnalyzer->logAI(msg)
 
 #endif
