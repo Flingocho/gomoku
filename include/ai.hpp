@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 20:28:33 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,11 @@ public:
     
     // Gestión de cache
     void clearCache() { searchEngine.clearCache(); }
+    
+    // Funciones adicionales para game_engine
+    TranspositionSearch::SearchResult findBestMoveIterative(const GameState& state, int maxDepth);
+    std::vector<Move> generateOrderedMoves(const GameState& state);
+    int quickEvaluateMove(const GameState& state, const Move& move);
     
 private:
     int depth;

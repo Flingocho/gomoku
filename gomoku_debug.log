@@ -176,3 +176,322 @@ ROOT LEVEL: Move H10 evaluated to -309700
    A B C D E F G H I J K L M N O P Q R S
 [AI] Background thinking started...
 [AI] Background thinking completed: N14 (depth 11)
+=== GOMOKU DEBUG SESSION START ===
+ROOT LEVEL: Move K10 evaluated to 0
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+ROOT LEVEL: Move J11 evaluated to 0
+ROOT LEVEL: Move I11 evaluated to 0
+ROOT LEVEL: Move I10 evaluated to 0
+ROOT LEVEL: Move K9 evaluated to 0
+ROOT LEVEL: Move J9 evaluated to 0
+ROOT LEVEL: Move I9 evaluated to 0
+ROOT LEVEL: Move K10 evaluated to -100
+ROOT LEVEL: NEW BEST MOVE K10 with score -100
+
+ROOT LEVEL: Move K11 evaluated to -100
+ROOT LEVEL: Move J11 evaluated to -100
+ROOT LEVEL: Move I11 evaluated to -100
+ROOT LEVEL: Move I10 evaluated to -100
+ROOT LEVEL: Move K9 evaluated to -100
+ROOT LEVEL: Move J9 evaluated to -100
+ROOT LEVEL: Move I9 evaluated to -100
+ROOT LEVEL: Move K10 evaluated to 100
+ROOT LEVEL: NEW BEST MOVE K10 with score 100
+
+ROOT LEVEL: Move K11 evaluated to 100
+ROOT LEVEL: Move J11 evaluated to 100
+ROOT LEVEL: Move I11 evaluated to 100
+ROOT LEVEL: Move I10 evaluated to 100
+ROOT LEVEL: Move K9 evaluated to 100
+ROOT LEVEL: Move J9 evaluated to 100
+ROOT LEVEL: Move I9 evaluated to 100
+ROOT LEVEL: Move K10 evaluated to -1500
+ROOT LEVEL: NEW BEST MOVE K10 with score -1500
+
+ROOT LEVEL: Move K11 evaluated to -1500
+ROOT LEVEL: Move J11 evaluated to -1500
+ROOT LEVEL: Move I11 evaluated to -1500
+ROOT LEVEL: Move I10 evaluated to -1500
+ROOT LEVEL: Move K9 evaluated to -1500
+ROOT LEVEL: Move J9 evaluated to -1500
+ROOT LEVEL: Move I9 evaluated to -1500
+ROOT LEVEL: Move K10 evaluated to 0
+ROOT LEVEL: NEW BEST MOVE K10 with score 0
+
+ROOT LEVEL: Move K11 evaluated to 0
+ROOT LEVEL: Move J11 evaluated to 0
+ROOT LEVEL: Move I11 evaluated to 0
+ROOT LEVEL: Move I10 evaluated to 0
+ROOT LEVEL: Move K9 evaluated to 0
+ROOT LEVEL: Move J9 evaluated to 0
+ROOT LEVEL: Move I9 evaluated to 0
+ROOT LEVEL: Move K10 evaluated to -1800
+ROOT LEVEL: NEW BEST MOVE K10 with score -1800
+
+ROOT LEVEL: Move K11 evaluated to -1800
+ROOT LEVEL: Move J11 evaluated to -1800
+ROOT LEVEL: Move I11 evaluated to -1800
+ROOT LEVEL: Move I10 evaluated to -1800
+ROOT LEVEL: Move K9 evaluated to -1800
+ROOT LEVEL: Move J9 evaluated to -1800
+ROOT LEVEL: Move I9 evaluated to -1800
+[STATS] AI Stats (normal): 6203 nodes, 2293ms
+[AI] Background conditional cache building started...
+[AI] Building conditional response cache...
+[AI] Analyzing AI move candidate: J11
+[AI] Cached: AI J11 → Human J9 → AI J12 (score: 200)
+[AI] Cached: AI J11 → Human J12 → AI J9 (score: -500)
+[AI] Cached: AI J11 → Human K9 → AI J9 (score: -309800)
+[AI] Cached: AI J11 → Human K11 → AI J9 (score: -309900)
+[AI] Cached: AI J11 → Human L11 → AI J9 (score: -312500)
+[AI] Analyzing AI move candidate: I11
+[AI] Cached: AI I11 → Human K9 → AI H12 (score: 200)
+[AI] Cached: AI I11 → Human H12 → AI K9 (score: -1400)
+[AI] Cached: AI I11 → Human K11 → AI K9 (score: -312500)
+[AI] Cached: AI I11 → Human J9 → AI K9 (score: -309900)
+[AI] Cached: AI I11 → Human J11 → AI K9 (score: -309900)
+[AI] Analyzing AI move candidate: K11
+ROOT LEVEL: Move I11 evaluated to 2400
+ROOT LEVEL: NEW BEST MOVE I11 with score 2400
+
+ROOT LEVEL: Move L8 evaluated to 2500
+ROOT LEVEL: NEW BEST MOVE L8 with score 2500
+
+ROOT LEVEL: Move K11 evaluated to 2500
+ROOT LEVEL: Move J11 evaluated to 0
+ROOT LEVEL: Move J9 evaluated to 0
+ROOT LEVEL: Move L11 evaluated to 0
+ROOT LEVEL: Move L10 evaluated to -2600
+ROOT LEVEL: Move L9 evaluated to 0
+ROOT LEVEL: Move I11 evaluated to -10000
+ROOT LEVEL: NEW BEST MOVE I11 with score -10000
+
+ROOT LEVEL: Move L8 evaluated to -1300
+ROOT LEVEL: NEW BEST MOVE L8 with score -1300
+
+ROOT LEVEL: Move K11 evaluated to -1300
+ROOT LEVEL: Move J11 evaluated to -309900
+ROOT LEVEL: Move J9 evaluated to -309900
+ROOT LEVEL: Move L11 evaluated to -9900
+ROOT LEVEL: Move L10 evaluated to -12500
+ROOT LEVEL: Move L9 evaluated to -9900
+ROOT LEVEL: Move I11 evaluated to -1500
+ROOT LEVEL: NEW BEST MOVE I11 with score -1500
+
+ROOT LEVEL: Move L8 evaluated to -1300
+ROOT LEVEL: NEW BEST MOVE L8 with score -1300
+
+ROOT LEVEL: Move K11 evaluated to -1300
+ROOT LEVEL: Move J11 evaluated to -309900
+ROOT LEVEL: Move J9 evaluated to -309900
+ROOT LEVEL: Move L11 evaluated to 0
+ROOT LEVEL: NEW BEST MOVE L11 with score 0
+
+ROOT LEVEL: Move L10 evaluated to 0
+ROOT LEVEL: Move L9 evaluated to 0
+ROOT LEVEL: Move I11 evaluated to -1700
+ROOT LEVEL: NEW BEST MOVE I11 with score -1700
+
+ROOT LEVEL: Move L8 evaluated to -1400
+ROOT LEVEL: NEW BEST MOVE L8 with score -1400
+
+ROOT LEVEL: Move K11 evaluated to -312500
+ROOT LEVEL: Move J11 evaluated to -309900
+ROOT LEVEL: Move J9 evaluated to -309900
+ROOT LEVEL: Move L11 evaluated to -1400
+ROOT LEVEL: Move L10 evaluated to -1400
+ROOT LEVEL: Move L9 evaluated to -1400
+ROOT LEVEL: Move L8 evaluated to -1400
+ROOT LEVEL: NEW BEST MOVE L8 with score -1400
+
+ROOT LEVEL: Move I11 evaluated to 1000
+ROOT LEVEL: NEW BEST MOVE I11 with score 1000
+
+ROOT LEVEL: Move K11 evaluated to 1000
+ROOT LEVEL: Move J11 evaluated to 1000
+ROOT LEVEL: Move J9 evaluated to 1000
+ROOT LEVEL: Move L11 evaluated to 1000
+ROOT LEVEL: Move L10 evaluated to 1000
+ROOT LEVEL: Move L9 evaluated to 1000
+[AI] Cached: AI K11 → Human I9 → AI L12 (score: -1500)
+ROOT LEVEL: Move I11 evaluated to -9100
+ROOT LEVEL: NEW BEST MOVE I11 with score -9100
+
+ROOT LEVEL: Move L8 evaluated to -1700
+ROOT LEVEL: NEW BEST MOVE L8 with score -1700
+
+ROOT LEVEL: Move K11 evaluated to -1700
+ROOT LEVEL: Move J11 evaluated to -1700
+ROOT LEVEL: Move J9 evaluated to -1700
+ROOT LEVEL: Move L11 evaluated to -1700
+ROOT LEVEL: Move L10 evaluated to -1700
+[AI] Cached: AI K11 → Human L12 → AI I9 (score: -1400)
+[AI] Cached: AI K11 → Human J9 → AI I9 (score: -309900)
+[AI] Cached: AI K11 → Human K9 → AI I9 (score: -312400)
+ROOT LEVEL: Move L9 evaluated to -1700
+[STATS] AI Stats (normal): 130 nodes, 2679ms
+[AI] Cached: AI K11 → Human J11 → AI I9 (score: -309900)
+[AI] Conditional cache built: 15 combinations
+[AI] Background conditional cache completed: 15 combinations cached
+[AI] Background conditional cache building started...
+[AI] Building conditional response cache...
+[AI] Analyzing AI move candidate: I11
+ROOT LEVEL: Move H12 evaluated to -1500
+ROOT LEVEL: NEW BEST MOVE H12 with score -1500
+
+ROOT LEVEL: Move L9 evaluated to -1500
+ROOT LEVEL: Move K11 evaluated to -1500
+ROOT LEVEL: Move J11 evaluated to -1500
+ROOT LEVEL: Move J9 evaluated to -1500
+ROOT LEVEL: Move L11 evaluated to -1500
+ROOT LEVEL: Move L10 evaluated to -1500
+ROOT LEVEL: Move K8 evaluated to -1500
+ROOT LEVEL: Move M7 evaluated to -1500
+ROOT LEVEL: Move M8 evaluated to -1500
+ROOT LEVEL: Move H12 evaluated to -13200
+ROOT LEVEL: NEW BEST MOVE H12 with score -13200
+
+ROOT LEVEL: Move L9 evaluated to -309800
+ROOT LEVEL: Move K11 evaluated to -13200
+ROOT LEVEL: Move J11 evaluated to -13200
+ROOT LEVEL: Move J9 evaluated to -309900
+ROOT LEVEL: Move L11 evaluated to -13200
+ROOT LEVEL: Move L10 evaluated to -13200
+ROOT LEVEL: Move K8 evaluated to -13200
+ROOT LEVEL: Move M7 evaluated to -13200
+ROOT LEVEL: Move M8 evaluated to -13200
+ROOT LEVEL: Move H12 evaluated to -13200
+ROOT LEVEL: NEW BEST MOVE H12 with score -13200
+
+ROOT LEVEL: Move L9 evaluated to -13200
+ROOT LEVEL: Move K11 evaluated to -13200
+ROOT LEVEL: Move J11 evaluated to -13200
+ROOT LEVEL: Move J9 evaluated to -13200
+ROOT LEVEL: Move L11 evaluated to -13200
+ROOT LEVEL: Move L10 evaluated to -13200
+ROOT LEVEL: Move K8 evaluated to -13200
+ROOT LEVEL: Move M7 evaluated to -13200
+ROOT LEVEL: Move M8 evaluated to -13200
+ROOT LEVEL: Move H12 evaluated to -13200
+ROOT LEVEL: NEW BEST MOVE H12 with score -13200
+
+ROOT LEVEL: Move L9 evaluated to -13200
+ROOT LEVEL: Move K11 evaluated to -13200
+ROOT LEVEL: Move J11 evaluated to -13200
+ROOT LEVEL: Move J9 evaluated to -13200
+ROOT LEVEL: Move L11 evaluated to -13200
+ROOT LEVEL: Move L10 evaluated to -13200
+ROOT LEVEL: Move K8 evaluated to -13200
+ROOT LEVEL: Move M7 evaluated to -386550
+ROOT LEVEL: Move M8 evaluated to -13200
+ROOT LEVEL: Move H12 evaluated to -13100
+ROOT LEVEL: NEW BEST MOVE H12 with score -13100
+
+ROOT LEVEL: Move L9 evaluated to -300000
+ROOT LEVEL: Move K11 evaluated to -13100
+ROOT LEVEL: Move J11 evaluated to -13100
+ROOT LEVEL: Move J9 evaluated to -13100
+ROOT LEVEL: Move L11 evaluated to -13100
+ROOT LEVEL: Move L10 evaluated to -13100
+ROOT LEVEL: Move K8 evaluated to -13100
+ROOT LEVEL: Move M7 evaluated to -310800
+ROOT LEVEL: Move M8 evaluated to -13100
+ROOT LEVEL: Move H12 evaluated to -13100
+ROOT LEVEL: NEW BEST MOVE H12 with score -13100
+
+ROOT LEVEL: Move L9 evaluated to -302700
+ROOT LEVEL: Move K11 evaluated to -13100
+ROOT LEVEL: Move J11 evaluated to -13100
+ROOT LEVEL: Move J9 evaluated to -13100
+ROOT LEVEL: Move L11 evaluated to -13100
+ROOT LEVEL: Move L10 evaluated to -13100
+ROOT LEVEL: Move K8 evaluated to -13100
+ROOT LEVEL: Move M7 evaluated to -308500
+ROOT LEVEL: Move M8 evaluated to -13100
+[STATS] AI Stats (normal): 4439 nodes, 1100ms
+ROOT LEVEL: Move L9 evaluated to -311600
+ROOT LEVEL: NEW BEST MOVE L9 with score -311600
+
+ROOT LEVEL: Move J11 evaluated to -311600
+ROOT LEVEL: Move I9 evaluated to -311600
+ROOT LEVEL: Move J8 evaluated to -311600
+ROOT LEVEL: Move K11 evaluated to -311600
+ROOT LEVEL: Move L10 evaluated to -311600
+ROOT LEVEL: Move I12 evaluated to -311600
+ROOT LEVEL: Move L11 evaluated to -311600
+ROOT LEVEL: Move H11 evaluated to -311600
+[STATS] Nodos evaluados: 10000, Cache hits: 3551
+ROOT LEVEL: Move K8 evaluated to -311600
+[STATS] AI Stats (normal): 10410 nodes, 2987ms
+[STATS] AI Stats (normal): 1 nodes, 0ms
+ROOT LEVEL: Move J11 evaluated to 301000
+ROOT LEVEL: NEW BEST MOVE J11 with score 301000
+
+ROOT LEVEL: Move H9 evaluated to -1500
+ROOT LEVEL: Move L10 evaluated to -2600
+ROOT LEVEL: Move K8 evaluated to 0
+ROOT LEVEL: Move L7 evaluated to 0
+ROOT LEVEL: Move N8 evaluated to -100
+ROOT LEVEL: Move M9 evaluated to -3800
+ROOT LEVEL: Move K11 evaluated to -10000
+ROOT LEVEL: Move M7 evaluated to -12400
+ROOT LEVEL: Move I10 evaluated to -10000
+ROOT LEVEL: Move J8 evaluated to -2400
+ROOT LEVEL: Move H8 evaluated to -7400
+[STATS] AI Stats (normal): 27 nodes, 3ms
+ROOT LEVEL: Move I10 evaluated to 303600
+ROOT LEVEL: NEW BEST MOVE I10 with score 303600
+
+ROOT LEVEL: Move H9 evaluated to 304400
+ROOT LEVEL: NEW BEST MOVE H9 with score 304400
+
+ROOT LEVEL: Move L10 evaluated to 303300
+ROOT LEVEL: Move K8 evaluated to 305900
+ROOT LEVEL: NEW BEST MOVE K8 with score 305900
+
+ROOT LEVEL: Move L7 evaluated to 305900
+ROOT LEVEL: Move N8 evaluated to 305800
+ROOT LEVEL: Move J8 evaluated to 310900
+ROOT LEVEL: NEW BEST MOVE J8 with score 310900
+
+ROOT LEVEL: Move K11 evaluated to 293400
+ROOT LEVEL: Move M9 evaluated to 302100
+ROOT LEVEL: Move I13 evaluated to 298500
+ROOT LEVEL: Move M7 evaluated to 293500
+ROOT LEVEL: Move H8 evaluated to 298500
+[STATS] AI Stats (normal): 19 nodes, 4ms
+ROOT LEVEL: Move I8 evaluated to 1100
+ROOT LEVEL: NEW BEST MOVE I8 with score 1100
+
+ROOT LEVEL: Move I13 evaluated to -68900
+ROOT LEVEL: Move K8 evaluated to 126000
+ROOT LEVEL: NEW BEST MOVE K8 with score 126000
+
+ROOT LEVEL: Move J10 evaluated to -66400
+ROOT LEVEL: Move J9 evaluated to -68800
+ROOT LEVEL: Move L10 evaluated to -59000
+ROOT LEVEL: Move L7 evaluated to -59000
+ROOT LEVEL: Move N8 evaluated to -39100
+ROOT LEVEL: Move M9 evaluated to -71300
+ROOT LEVEL: Move K11 evaluated to -74000
+ROOT LEVEL: Move K7 evaluated to -71300
+ROOT LEVEL: Move M7 evaluated to -71300
+[STATS] AI Stats (normal): 20 nodes, 5ms
+[AI] Cached: AI I11 → Human H12 → AI J8 (score: -313100)
+[AI] Cached: AI I11 → Human L9 → AI H12 (score: -309800)
+[AI] Cached: AI I11 → Human K11 → AI H12 (score: -312500)
+[AI] Cached: AI I11 → Human J11 → AI H12 (score: -309900)
+[AI] Cached: AI I11 → Human J9 → AI H12 (score: -309900)
+[AI] Analyzing AI move candidate: J9
+[AI] Analyzing AI move candidate: I10
+[AI] Conditional cache built: 5 combinations
+[AI] Background conditional cache completed: 5 combinations cached
+[AI] Background conditional cache building started...
+[AI] Building conditional response cache...
+[AI] Analyzing AI move candidate: N8
+[AI] Analyzing AI move candidate: I13
+[AI] Analyzing AI move candidate: I7
+[AI] Conditional cache built: 0 combinations
+[AI] Background conditional cache completed: 0 combinations cached

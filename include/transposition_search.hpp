@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 16:34:18 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,20 +89,9 @@ private:
 				int originalMaxDepth, Move *bestMove = nullptr);
 
 	/**
-	 * Genera movimientos ordenados inteligentemente
-	 * OPTIMIZADO: Usa hash de movimientos previos para ordenamiento
-	 */
-	std::vector<Move> generateOrderedMoves(const GameState &state);
-
-	/**
 	 * Ordena movimientos por probabilidad de cutoff
 	 */
 	void orderMoves(std::vector<Move> &moves, const GameState &state);
-
-	/**
-	 * Evaluación rápida para move ordering
-	 */
-	int quickEvaluateMove(const GameState &state, const Move &move);
 
 	// Funciones auxiliares para move ordering
 	int countThreats(const GameState &state, int player);
@@ -200,6 +189,19 @@ public:
 
 	SearchResult findBestMoveIterative(const GameState &state, int maxDepth);
 	void orderMovesWithPreviousBest(std::vector<Move> &moves, const GameState &state);
+	
+	/**
+	 * Genera movimientos ordenados inteligentemente
+	 * OPTIMIZADO: Usa hash de movimientos previos para ordenamiento
+	 */
+	std::vector<Move> generateOrderedMoves(const GameState &state);
+
+	/**
+	 * Evaluación rápida para move ordering
+	 */
+	int quickEvaluateMove(const GameState &state, const Move &move);
+
+private:
 };
 
 #endif

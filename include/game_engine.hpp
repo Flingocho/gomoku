@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:22:22 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 20:30:54 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 17:49:47 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,18 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+
+struct ConditionalResponse {
+    Move aiMove;           // Movimiento IA que se consideró
+    Move humanMove;        // Movimiento humano esperado
+    Move aiResponse;       // Mejor respuesta IA después de la secuencia
+    int sequenceScore;     // Score de toda la secuencia
+    uint64_t stateHash;    // Hash del estado después del movimiento humano
+    
+    ConditionalResponse() : sequenceScore(0), stateHash(0) {}
+    ConditionalResponse(Move ai, Move human, Move response, int score, uint64_t hash)
+        : aiMove(ai), humanMove(human), aiResponse(response), sequenceScore(score), stateHash(hash) {}
+};
 
 class GameEngine {
 public:
@@ -80,6 +92,22 @@ private:
     void backgroundCalculationLoop();
     void startBackgroundCalculation();
     Move getBackgroundResult();
+
+	std::vector<ConditionalResponse> conditionalCache;
+    static constexpr int TOP_AI_MOVES = 3;     // Top 3 movimientos IA a considerar
+    static constexpr int TOP_HUMAN_MOVES = 5;  // Top 5 movimientos humanos por cada IA move
+    
+    Move pendingAIDecision;  // NUEVO: La IA no decide hasta ver al humano
+    bool hasPendingDecision = false;
+	Move lastHumanMove;
+    
+    // NUEVO: Métodos para respuestas condicionadas
+    void buildConditionalCache();
+    Move findBestAIMoveAfterHuman(const Move& humanMove);
+    int quickEvaluateUnexpectedMove(const Move& humanMove);
+    std::vector<Move> getTopAIMoves(const GameState& state);
+    std::vector<Move> getTopHumanMovesAfterAI(const GameState& state);
+
 };
 
 #endif

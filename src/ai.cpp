@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:15 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 20:31:41 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,4 +25,17 @@ int AI::getDepthForGamePhase(const GameState& state) {
         return 8;
     else
         return 10;
+}
+
+TranspositionSearch::SearchResult AI::findBestMoveIterative(const GameState& state, int maxDepth) {
+    lastResult = searchEngine.findBestMoveIterative(state, maxDepth);
+    return lastResult;
+}
+
+std::vector<Move> AI::generateOrderedMoves(const GameState& state) {
+    return searchEngine.generateOrderedMoves(state);
+}
+
+int AI::quickEvaluateMove(const GameState& state, const Move& move) {
+    return searchEngine.quickEvaluateMove(state, move);
 }
