@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 17:50:02 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 18:12:46 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,12 @@ Move GameEngine::makeAIMove() {
     if (bestMove.isValid()) {
         RuleEngine::applyMove(state, bestMove);
         
-        // NUEVO: Iniciar construcción de cache condicional para el siguiente turno
-        startBackgroundCalculation();
+        // NUEVO: Solo iniciar background si el juego NO terminó
+        if (!isGameOver()) {
+            startBackgroundCalculation();
+        } else {
+            DEBUG_LOG_AI("Game ended, skipping background calculation");
+        }
     }
     
     hasPendingDecision = false; // Resetear
@@ -79,21 +83,34 @@ void GameEngine::backgroundCalculationLoop() {
         
         if (shouldCalculate) {
             shouldCalculate = false;
+            
+            // NUEVO: Verificar game over antes de iniciar cálculo costoso
+            if (isGameOver()) {
+                DEBUG_LOG_AI("Game over detected in background thread, stopping");
+                break;
+            }
+            
             isCalculating = true;
             
             lock.unlock();
             
-            DEBUG_LOG_AI("Background conditional cache building started...");
-            
-            // NUEVO: Construir cache de respuestas condicionadas
-            buildConditionalCache();
+            // NUEVO: Verificar periódicamente durante el cálculo
+            if (!shouldStop.load() && !isGameOver()) {
+                DEBUG_LOG_AI("Background conditional cache building started...");
+                buildConditionalCache();
+            } else {
+                DEBUG_LOG_AI("Background calculation cancelled - game ended");
+            }
             
             lock.lock();
             
-            if (!shouldStop) {
+            if (!shouldStop && !isGameOver()) {
                 hasBackgroundResult = true;
                 DEBUG_LOG_AI("Background conditional cache completed: " + 
                            std::to_string(conditionalCache.size()) + " combinations cached");
+            } else {
+                hasBackgroundResult = false;
+                DEBUG_LOG_AI("Background result discarded - game ended");
             }
             
             isCalculating = false;
@@ -104,10 +121,24 @@ void GameEngine::backgroundCalculationLoop() {
 void GameEngine::startBackgroundCalculation() {
     std::lock_guard<std::mutex> lock(backgroundMutex);
     
+    // NUEVO: No iniciar si el juego ya terminó
+    if (isGameOver()) {
+        DEBUG_LOG_AI("Game over detected, not starting background calculation");
+        return;
+    }
+    
+    // NUEVO: No iniciar si ya hay cálculo en proceso
+    if (isCalculating.load()) {
+        DEBUG_LOG_AI("Background calculation already in progress, skipping");
+        return;
+    }
+    
     // Cancelar cualquier cálculo previo
     hasBackgroundResult = false;
     shouldCalculate = true;
     backgroundCV.notify_one();
+    
+    DEBUG_LOG_AI("Background calculation initiated");
 }
 
 Move GameEngine::getBackgroundResult() {
