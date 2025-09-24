@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 18:15:12 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 20:01:18 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,6 @@
 #include "../include/debug_analyzer.hpp"
 #include <iostream>
 #include <chrono>
-#include <future>
-#include <thread>
 
 int main()
 {
@@ -131,37 +129,19 @@ int main()
 			}
 			else
 			{
-				// TURNO AI - NUEVO: Non-blocking approach
-				static bool aiThinking = false;
-				static std::future<Move> aiFuture;
+				// TURNO AI - Simplificado sin threading
+				std::cout << "AI pensando..." << std::endl;
+				
+				Move aiMove = game.makeAIMove();
 
-				if (!aiThinking)
+				if (aiMove.isValid())
 				{
-					std::cout << "AI pensando..." << std::endl;
-					aiThinking = true;
-
-					// LANZAR AI EN HILO SEPARADO
-					aiFuture = std::async(std::launch::async, [&game]()
-										  { return game.makeAIMove(); });
-				}
-
-				// Verificar si la AI terminó (non-blocking)
-				if (aiFuture.wait_for(std::chrono::milliseconds(10)) == std::future_status::ready)
-				{
-					Move aiMove = aiFuture.get();
-
-					if (aiMove.isValid())
-					{
-						std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
-                        std::cout << "Tiempo: " << game.getLastAIThinkingTime() << "ms" << std::endl;
-                        std::cout << "Nodos evaluados: " << game.getLastNodesEvaluated() << std::endl;
-                        std::cout << "Cache hits: " << game.getLastCacheHits()
-                                  << " (hit rate: " << (game.getLastCacheHitRate() * 100) << "%)" << std::endl;
-                        std::cout << "Cache size: " << game.getCacheSize() << " entradas" << std::endl;
-                        
-					}
-
-					aiThinking = false; // Reset para próximo turno
+					std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
+					std::cout << "Tiempo: " << game.getLastAIThinkingTime() << "ms" << std::endl;
+					std::cout << "Nodos evaluados: " << game.getLastNodesEvaluated() << std::endl;
+					std::cout << "Cache hits: " << game.getLastCacheHits()
+							  << " (hit rate: " << (game.getLastCacheHitRate() * 100) << "%)" << std::endl;
+					std::cout << "Cache size: " << game.getCacheSize() << " entradas" << std::endl;
 				}
 			}
 

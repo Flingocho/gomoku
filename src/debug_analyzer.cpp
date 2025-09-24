@@ -365,6 +365,31 @@ std::string DebugAnalyzer::findCriticalThreats(const GameState& state) const {
     return threats.str();
 }
 
+std::string DebugAnalyzer::formatBoard(const GameState& state) const {
+    std::ostringstream boardStr;
+    
+    // Encabezado con letras de columnas
+    boardStr << "\n   ";
+    for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+        boardStr << std::setw(2) << char('A' + j) << " ";
+    }
+    boardStr << "\n";
+    
+    // Filas del tablero
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        boardStr << std::setw(2) << (i + 1) << " ";
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            char piece = '.';
+            if (state.board[i][j] == GameState::PLAYER1) piece = 'O';
+            else if (state.board[i][j] == GameState::PLAYER2) piece = 'X';
+            boardStr << piece << "  ";
+        }
+        boardStr << "\n";
+    }
+    
+    return boardStr.str();
+}
+
 void DebugAnalyzer::logToFile(const std::string& message) const {
     if (fileLoggingEnabled && debugFile.is_open()) {
         const_cast<std::ofstream&>(debugFile) << message << std::endl;

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:15 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/24 18:52:26 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ int AI::getDepthForGamePhase(const GameState& state) {
     else if (state.turnCount >= 6 && state.turnCount <= 20)
         return 8;
     else
-        return 10;
+        return 8;
 }
 
 TranspositionSearch::SearchResult AI::findBestMoveIterative(const GameState& state, int maxDepth) {

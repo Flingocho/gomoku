@@ -114,6 +114,7 @@ public:
     void printLastSnapshot() const { lastSnapshot.printToConsole(); }
     void saveSnapshotToFile(const std::string& filename) const { lastSnapshot.saveToFile(filename); }
     void logToFile(const std::string& message) const;
+    std::string formatBoard(const GameState& state) const;
     
     // Centralized logging functions
     void logInfo(const std::string& message) const;

@@ -76,6 +76,17 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMove(const GameSt
     // NUEVO: Incrementar generación para aging-based replacement
     currentGeneration++;
 
+    // DEBUG: Mostrar tablero inicial antes de evaluar
+    if (g_debugAnalyzer) {
+        std::ostringstream debugMsg;
+        debugMsg << "\n====== EVALUANDO POSICIÓN INICIAL ======";
+        debugMsg << "\nTurno: " << state.turnCount << ", Jugador: " << (state.currentPlayer == GameState::PLAYER1 ? "HUMAN (O)" : "AI (X)");
+        debugMsg << "\nCapturas: HUMAN=" << state.captures[0] << " AI=" << state.captures[1];
+        debugMsg << g_debugAnalyzer->formatBoard(state);
+        debugMsg << "========================================\n";
+        g_debugAnalyzer->logToFile(debugMsg.str());
+    }
+
     // Profundidad adaptativa
     int adaptiveDepth = calculateAdaptiveDepth(state, maxDepth);
 
@@ -265,7 +276,9 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 				if (isRootLevel && g_debugAnalyzer) {
 					std::ostringstream debugMsg;
 					debugMsg << "ROOT LEVEL: NEW BEST MOVE " << char('A' + move.y) << (move.x + 1)
-							 << " with score " << eval << "\n";
+							 << " with score " << eval;
+					debugMsg << g_debugAnalyzer->formatBoard(newState);
+					debugMsg << "\n";
 					g_debugAnalyzer->logToFile(debugMsg.str());
 				}
 
@@ -854,11 +867,11 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
 
 int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount) {
     if (pieceCount <= 2) {
-        return 3; // Opening: radio amplio para explorar
+        return 2; // Opening: radio amplio para explorar
     } else if (pieceCount <= 8) {
         return 2; // Early game: radio moderado
     } else {
-        return 1; // Mid/late game: radio enfocado
+        return 2; // Mid/late game: radio enfocado
     }
 }
 

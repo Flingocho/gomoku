@@ -1,5 +1,5 @@
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -pthread
+CXXFLAGS = -Wall -Wextra -Werror
 LIBS = -lsfml-graphics -lsfml-window -lsfml-system
 
 SRCS = src/ai.cpp\
