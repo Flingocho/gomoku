@@ -571,7 +571,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             if (!blocked1 && !blocked2) {
                 score += 50000; // FOUR_OPEN - imparable
             } else {
-                score += 10000; // FOUR_HALF - amenaza forzada
+                score += 25000; // FOUR_HALF - amenaza forzada
             }
         } else if (myTotal == 3) {
             // Verificar si es una amenaza real (no bloqueada)
@@ -579,7 +579,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             bool blocked2 = isBlocked(tempState, move.x, move.y, -dx, -dy, backward + 1, currentPlayer);
             
             if (!blocked1 && !blocked2) {
-                score += 5000; // THREE_OPEN - muy peligroso
+                score += 10000; // THREE_OPEN - muy peligroso
             } else if (!blocked1 || !blocked2) {
                 score += 1500; // THREE_HALF - amenaza
             }
@@ -814,6 +814,9 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
     int searchRadius = getSearchRadiusForGamePhase(pieceCount);
     int opponent = state.getOpponent(state.currentPlayer);
     
+    // NUEVO: Agregar todas las casillas vacías alrededor del último movimiento humano
+    addCandidatesAroundLastHumanMove(candidates, state);
+    
     // NUEVO: Detectar si el oponente tiene amenazas críticas
     bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
     
@@ -835,16 +838,45 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
                 }
             }
             
-            // NUEVO: Si hay amenazas críticas, FORZAR inclusión de movimientos defensivos
+            // AMPLIADO: Lógica mejorada para amenazas críticas
             if (!withinInfluenceRadius && opponentHasThreats) {
-                // Simular movimiento para ver si bloquea amenazas
                 GameState tempState = state;
-                RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, Move(i, j));
                 
-                if (result.success) {
+                // CASO 1: Verificar si este movimiento bloquea amenazas del oponente
+                RuleEngine::MoveResult blockResult = RuleEngine::applyMove(tempState, Move(i, j));
+                if (blockResult.success) {
                     bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
                     if (!stillHasThreats) {
-                        withinInfluenceRadius = true; // FORZAR inclusión - es un bloqueo crítico
+                        withinInfluenceRadius = true; // Es un bloqueo crítico
+                    }
+                }
+                
+                // CASO 2: NUEVO - Verificar si es un movimiento ganador del oponente
+                if (!withinInfluenceRadius) {
+                    GameState opponentTempState = state;
+                    opponentTempState.currentPlayer = opponent; // Simular turno del oponente
+                    
+                    RuleEngine::MoveResult winResult = RuleEngine::applyMove(opponentTempState, Move(i, j));
+                    if (winResult.success && winResult.createsWin) {
+                        withinInfluenceRadius = true; // Es un movimiento ganador del oponente - DEBE ser evaluado
+                    }
+                }
+                
+                // CASO 3: NUEVO - Verificar si crea nuevas amenazas críticas para el oponente
+                if (!withinInfluenceRadius) {
+                    GameState opponentTempState = state;
+                    opponentTempState.currentPlayer = opponent;
+                    
+                    RuleEngine::MoveResult threatResult = RuleEngine::applyMove(opponentTempState, Move(i, j));
+                    if (threatResult.success) {
+                        // Restaurar turno para evaluación correcta
+                        opponentTempState.currentPlayer = state.currentPlayer;
+                        bool createsNewThreats = Evaluator::hasWinningThreats(opponentTempState, opponent);
+                        
+                        // Si el oponente ya tenía amenazas y este movimiento crea más
+                        if (createsNewThreats) {
+                            withinInfluenceRadius = true; // Movimiento que amplía amenazas del oponente
+                        }
                     }
                 }
             }
@@ -855,6 +887,38 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
                     withinInfluenceRadius = true;
                 }
             }
+            
+            // NUEVO: Para debugging - forzar inclusión de movimientos específicos sospechosos
+            // (esto se puede quitar en producción, pero ayuda a debuggear)
+            #ifdef DEBUG_CANDIDATE_GENERATION
+            // Si estamos en una situación de 4 en línea, forzar inclusión de completadores
+            if (!withinInfluenceRadius) {
+                // Verificar si este movimiento está adyacente a secuencias largas
+                bool adjacentToLongSequence = false;
+                int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+                
+                for (int d = 0; d < 4; d++) {
+                    int dx = directions[d][0], dy = directions[d][1];
+                    
+                    // Contar en ambas direcciones para cualquier jugador
+                    for (int player = 1; player <= 2; player++) {
+                        int count = 0;
+                        count += countPiecesInDirection(state, i, j, dx, dy, player);
+                        count += countPiecesInDirection(state, i, j, -dx, -dy, player);
+                        
+                        if (count >= 3) { // Secuencia de 3+ piezas
+                            adjacentToLongSequence = true;
+                            break;
+                        }
+                    }
+                    if (adjacentToLongSequence) break;
+                }
+                
+                if (adjacentToLongSequence) {
+                    withinInfluenceRadius = true;
+                }
+            }
+            #endif
             
             if (withinInfluenceRadius && RuleEngine::isLegalMove(state, Move(i, j))) {
                 candidates.push_back(Move(i, j));
@@ -995,4 +1059,59 @@ int TranspositionSearch::countPiecesInDirection(const GameState& state, int x, i
     }
     
     return count;
+}
+
+void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state) {
+    // Si no hay último movimiento humano válido, no hacer nada
+    if (!state.lastHumanMove.isValid()) {
+        return;
+    }
+    
+    int lastX = state.lastHumanMove.x;
+    int lastY = state.lastHumanMove.y;
+    
+    // Generar todas las casillas vacías en un radio de 2 alrededor del último movimiento humano
+    int radius = 2; // Radio de respuesta defensiva
+    
+    for (int dx = -radius; dx <= radius; dx++) {
+        for (int dy = -radius; dy <= radius; dy++) {
+            if (dx == 0 && dy == 0) continue; // Saltar la posición del último movimiento
+            
+            int newX = lastX + dx;
+            int newY = lastY + dy;
+            
+            // Verificar que esté dentro del tablero y sea una casilla vacía
+            if (state.isValid(newX, newY) && state.isEmpty(newX, newY)) {
+                Move candidate(newX, newY);
+                
+                // Verificar si ya está en la lista de candidatos
+                bool alreadyAdded = false;
+                for (const Move& existing : candidates) {
+                    if (existing.x == newX && existing.y == newY) {
+                        alreadyAdded = true;
+                        break;
+                    }
+                }
+                
+                // Si no está ya agregado y es un movimiento legal, agregarlo
+                if (!alreadyAdded && RuleEngine::isLegalMove(state, candidate)) {
+                    candidates.push_back(candidate);
+                }
+            }
+        }
+    }
+    
+    // Debug log para mostrar cuántos candidatos se agregaron
+    if (g_debugAnalyzer && !candidates.empty()) {
+        std::ostringstream debugMsg;
+        debugMsg << "\n[DEFENSIVE CANDIDATES] Added " << candidates.size() 
+                 << " candidates around last human move " 
+                 << char('A' + lastY) << (lastX + 1) << ":\n";
+        
+        for (const Move& candidate : candidates) {
+            debugMsg << "  - " << char('A' + candidate.y) << (candidate.x + 1) << "\n";
+        }
+        
+        g_debugAnalyzer->logToFile(debugMsg.str());
+    }
 }

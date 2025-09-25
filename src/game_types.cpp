@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:23:56 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@ GameState::GameState() {
             board[i][j] = EMPTY;
         }
     }
+    
+    // Inicializar último movimiento humano como inválido
+    lastHumanMove = Move(-1, -1);
     
     // Calcular hash inicial si el hasher está disponible
     if (hasher) {
@@ -46,6 +49,7 @@ GameState& GameState::operator=(const GameState& other) {
         currentPlayer = other.currentPlayer;
         turnCount = other.turnCount;
         zobristHash = other.zobristHash; // Copiar hash también
+        lastHumanMove = other.lastHumanMove; // Copiar último movimiento humano
     }
     return *this;
 }

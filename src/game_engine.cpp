@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 20:01:18 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,14 @@
 void GameEngine::newGame()
 {
 	state = GameState(); // Reset to initial state
+	lastHumanMove = Move(-1, -1); // También reiniciar el campo local
 }
 
 bool GameEngine::makeHumanMove(const Move& move) {
     if (state.currentPlayer != GameState::PLAYER1) return false;
     
     lastHumanMove = move;
+    state.lastHumanMove = move; // NUEVO: También actualizar en el estado del juego
     
     RuleEngine::MoveResult result = RuleEngine::applyMove(state, move);
     

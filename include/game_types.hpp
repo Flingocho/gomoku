@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:15:50 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/16 19:05:30 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,9 @@ struct GameState {
     
     // NUEVO: Hash Zobrist del estado actual
     uint64_t zobristHash = 0;
+    
+    // NUEVO: Última jugada del humano para generación de candidatos defensivos
+    Move lastHumanMove;
     
     // NUEVO: Referencia al hasher (compartido entre todos los estados)
     static const ZobristHasher* hasher;

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,6 +136,9 @@ private:
 	int calculateInterruptionValue(int interruptionLength);
 	int calculateConnectivityBonus(const GameState &state, const Move &move, int player);
 	int countPiecesInDirection(const GameState &state, int x, int y, int dx, int dy, int player);
+	
+	// NUEVO: Generar candidatos alrededor del último movimiento humano
+	void addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state);
 
 public:
 	/**
