@@ -6,12 +6,13 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 19:09:15 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 22:25:10 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/evaluator.hpp"
 #include "../include/rule_engine.hpp"
+#include <iostream>
 
 // NUEVO: Evaluador principal con información de distancia al mate
 int Evaluator::evaluate(const GameState& state, int maxDepth, int currentDepth) {

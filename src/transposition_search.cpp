@@ -217,149 +217,72 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 	Move currentBestMove;
 	int originalAlpha = alpha;
 
-	if (maximizing)
-	{
-		int maxEval = std::numeric_limits<int>::min();
-		bool isRootLevel = (depth == originalMaxDepth);
+	if (maximizing) {
+        int maxEval = std::numeric_limits<int>::min();
 
-		for (const Move &move : moves)
-		{
-			// CRÍTICO: En nivel raíz, verificar victoria inmediata ANTES de minimax
-			if (isRootLevel) {
-				int quickScore = quickEvaluateMove(state, move);
-				if (quickScore >= 100000) { // Victoria inmediata detectada
-					// Aplicar movimiento para verificar
-					GameState newState = state;
-					RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
-					
-					if (result.success && (result.createsWin || RuleEngine::checkWin(newState, state.currentPlayer))) {
-						// VICTORIA INMEDIATA: Elegir inmediatamente sin más evaluación
-						maxEval = 500000 + (originalMaxDepth - depth + 1);
-						currentBestMove = move;
-						
-						if (g_debugAnalyzer) {
-							std::ostringstream debugMsg;
-							debugMsg << "ROOT LEVEL: IMMEDIATE WIN DETECTED - Move " << char('A' + move.y) << (move.x + 1)
-									 << " with score " << maxEval << " (GAME OVER)\n";
-							g_debugAnalyzer->logToFile(debugMsg.str());
-						}
-						
-						// TERMINAR BÚSQUEDA INMEDIATAMENTE
-						break;
-					}
-				}
-			}
-			
-			GameState newState = state;
-			RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
+        for (const Move &move : moves) {
+            GameState newState = state;
+            RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
+            if (!result.success) continue;
 
-			if (!result.success)
-				continue;
+            // 🔥 CALCULAR SCORE INCREMENTAL DEL MOVIMIENTO
+            int moveScore = quickEvaluateMove(state, move);
 
-			// PASAR originalMaxDepth en recursión
-			int eval = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth);
+            if (moveScore > maxEval) {
+                maxEval = moveScore;
+                currentBestMove = move;
+            }
 
-			// DEBUG: Log movimientos en nivel raíz
-			if (isRootLevel && g_debugAnalyzer) {
-				std::ostringstream debugMsg;
-				debugMsg << "ROOT LEVEL: Move " << char('A' + move.y) << (move.x + 1)
-						 << " evaluated to " << eval;
-				g_debugAnalyzer->logToFile(debugMsg.str());
-			}
+            alpha = std::max(alpha, moveScore);
+            
+            // 🔥 PODA ALFA-BETA CORRECTA
+            if (alpha >= beta) {
+                break; // Beta cutoff
+            }
+            moveScore = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth, nullptr);
+        }
 
-			if (eval > maxEval)
-			{
-				maxEval = eval;
-				currentBestMove = move;
-				
-				// DEBUG: Log cuando cambia el mejor movimiento
-				if (isRootLevel && g_debugAnalyzer) {
-					std::ostringstream debugMsg;
-					debugMsg << "ROOT LEVEL: NEW BEST MOVE " << char('A' + move.y) << (move.x + 1)
-							 << " with score " << eval;
-					debugMsg << g_debugAnalyzer->formatBoard(newState);
-					debugMsg << "\n";
-					g_debugAnalyzer->logToFile(debugMsg.str());
-				}
+        CacheEntry::Type entryType = (maxEval <= originalAlpha) ? CacheEntry::UPPER_BOUND :
+                                    (maxEval >= beta) ? CacheEntry::LOWER_BOUND : CacheEntry::EXACT;
+        storeTransposition(zobristKey, maxEval, depth, currentBestMove, entryType);
 
-				// Cutoff inmediato si superamos beta
-				if (eval >= beta)
-				{
-					break; // Beta cutoff
-				}
+        if (bestMove) *bestMove = currentBestMove;
+        return maxEval;
 
-				alpha = std::max(alpha, eval);
-			}
-		}
+    } else {
+        int minEval = std::numeric_limits<int>::max();
 
-		// Almacenar en transposition table
-		CacheEntry::Type entryType;
-		if (maxEval <= originalAlpha)
-		{
-			entryType = CacheEntry::UPPER_BOUND;
-		}
-		else if (maxEval >= beta)
-		{
-			entryType = CacheEntry::LOWER_BOUND;
-		}
-		else
-		{
-			entryType = CacheEntry::EXACT;
-		}
+        for (const Move &move : moves) {
+            GameState newState = state;
+            RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
+            if (!result.success) continue;
 
-		storeTransposition(zobristKey, maxEval, depth, currentBestMove, entryType);
+            // 🔥 CALCULAR SCORE INCREMENTAL DEL MOVIMIENTO  
+            int moveScore = quickEvaluateMove(state, move);
 
-		if (bestMove)
-			*bestMove = currentBestMove;
-		return maxEval;
-	}
-	else
-	{
-		int minEval = std::numeric_limits<int>::max();
 
-		for (const Move &move : moves)
-		{
-			GameState newState = state;
-			RuleEngine::MoveResult result = RuleEngine::applyMove(newState, move);
+            if (moveScore < minEval) {
+                minEval = moveScore;
+                currentBestMove = move;
+            }
 
-			if (!result.success)
-				continue;
+            beta = std::min(beta, moveScore);
+            
+            // 🔥 PODA ALFA-BETA CORRECTA
+            if (beta <= alpha) {
+                break; // Alpha cutoff
+            }
+            moveScore = minimax(newState, depth - 1, alpha, beta, true, originalMaxDepth, nullptr);
+        }
 
-			// PASAR originalMaxDepth en recursión
-			int eval = minimax(newState, depth - 1, alpha, beta, true, originalMaxDepth);
+        CacheEntry::Type entryType = (minEval <= originalAlpha) ? CacheEntry::UPPER_BOUND :
+                                    (minEval >= beta) ? CacheEntry::LOWER_BOUND : CacheEntry::EXACT;
+        storeTransposition(zobristKey, minEval, depth, currentBestMove, entryType);
 
-			if (eval < minEval)
-			{
-				minEval = eval;
-				currentBestMove = move;
-			}
+        if (bestMove) *bestMove = currentBestMove;
+        return minEval;
+    }
 
-			beta = std::min(beta, eval);
-			if (eval <= alpha)
-				break; // Poda alpha-beta
-		}
-
-		// Almacenar en transposition table
-		CacheEntry::Type entryType;
-		if (minEval <= originalAlpha)
-		{
-			entryType = CacheEntry::UPPER_BOUND;
-		}
-		else if (minEval >= beta)
-		{
-			entryType = CacheEntry::LOWER_BOUND;
-		}
-		else
-		{
-			entryType = CacheEntry::EXACT;
-		}
-
-		storeTransposition(zobristKey, minEval, depth, currentBestMove, entryType);
-
-		if (bestMove)
-			*bestMove = currentBestMove;
-		return minEval;
-	}
 }
 
 bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &entry)
@@ -573,12 +496,34 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         }
         
         // Evaluación defensiva (bloquear amenazas del oponente)
-        if (oppTotal >= 4) {
-            score += 40000; // Bloquear four - crítico
-        } else if (oppTotal >= 3) {
-            score += 8000; // Bloquear three - importante
-        } else if (oppTotal >= 2) {
-            score += 200; // Bloquear desarrollo
+        if (oppTotal >= 5) {
+            return 500000; // Victoria inmediata
+        } else if (oppTotal == 4) {
+            // Verificar si es amenaza libre (extremos disponibles)
+            int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
+            int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
+            
+            bool startFree = state.isValid(startX - dx, startY - dy) && 
+                           state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) && 
+                         state.isEmpty(endX + dx, endY + dy);
+            
+            if (startFree && endFree) score += 50000; // Four abierto
+            else if (startFree || endFree) score += 25000; // Four semicerrado
+        } else if (oppTotal == 3) {
+            // Verificar si es three libre
+            int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
+            int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
+            
+            bool startFree = state.isValid(startX - dx, startY - dy) && 
+                           state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) && 
+                         state.isEmpty(endX + dx, endY + dy);
+            
+            if (startFree && endFree) score += 10000; // Three abierto
+            else if (startFree || endFree) score += 1500; // Three semicerrado
+        } else if (oppTotal == 2) {
+            score += 100; // Desarrollo básico
         }
     }
     
@@ -609,7 +554,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             if (state.getPiece(move.x - dx, move.y - dy) == opponent &&
                 state.getPiece(move.x - 2*dx, move.y - 2*dy) == opponent &&
                 state.getPiece(move.x - 3*dx, move.y - 3*dy) == currentPlayer) {
-                captureScore += 1000;
+                captureScore += 2500;
             }
         }
     }
