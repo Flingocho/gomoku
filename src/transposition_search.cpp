@@ -491,130 +491,199 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& move) {
     int currentPlayer = state.currentPlayer;
     int opponent = state.getOpponent(currentPlayer);
-    
-    // PASO 1: Evaluación ultrarrápida sin copiar estado
-    GameState tempState = state;
-    RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, move);
-    
-    if (!result.success) {
-        return -10000; // Movimiento ilegal
-    }
-    
-    // PASO 2: Verificar condiciones críticas primero (alineado con evaluate())
-    
-    // Victoria inmediata = máxima prioridad (alineado con Evaluator::WIN)
-    if (result.createsWin || RuleEngine::checkWin(tempState, currentPlayer)) {
-        return 500000 + (9 - std::max(std::abs(move.x - 9), std::abs(move.y - 9))); // WIN + bonificación de centrado
-    }
-    
-    // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente
-    bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
-    if (opponentHasThreats) {
-        // Evaluar si este movimiento reduce las amenazas
-        GameState tempState = state;
-        RuleEngine::MoveResult moveResult = RuleEngine::applyMove(tempState, move);
-        
-        if (moveResult.success) {
-            bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
-            
-            if (!stillHasThreats) {
-                return 40000; // SUPERVIVENCIA - neutralizó amenazas
-            } else {
-                return -30000; // PARCIAL - aún hay amenazas
-            }
-        } else {
-            return -50000; // SUICIDIO - movimiento ilegal con amenazas
-        }
-    }
-    
-    // PASO 3: Evaluar capturas (alineado con evaluateCaptures())
     int score = 0;
     
-    // Capturas propias - usar escalas similares a Evaluator
-    int myCaptureValue = result.myCapturedPieces.size() * 1000;
-    if (tempState.captures[currentPlayer - 1] >= 8) myCaptureValue *= 10; // Cerca de ganar por capturas
-    else if (tempState.captures[currentPlayer - 1] >= 6) myCaptureValue *= 5;
-    else if (tempState.captures[currentPlayer - 1] >= 4) myCaptureValue *= 2;
-    score += myCaptureValue;
-    
-    // Capturas del oponente - penalizar
-    int oppCaptureValue = result.opponentCapturedPieces.size() * 1000;
-    if (tempState.captures[opponent - 1] >= 8) oppCaptureValue *= 10;
-    else if (tempState.captures[opponent - 1] >= 6) oppCaptureValue *= 5;
-    else if (tempState.captures[opponent - 1] >= 4) oppCaptureValue *= 2;
-    score -= oppCaptureValue;
-    
-    // PASO 4: Evaluación de amenazas inmediatas (simplificada de evaluateImmediateThreats)
-    
-    // Buscar amenazas de 4 en línea (cuasi-victoria)
-    int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
-    
-    for (int d = 0; d < 4; d++) {
-        int dx = directions[d][0], dy = directions[d][1];
-        
-        // Contar piezas propias en ambas direcciones
-        int forward = countInDirection(tempState, move.x, move.y, dx, dy, currentPlayer);
-        int backward = countInDirection(tempState, move.x, move.y, -dx, -dy, currentPlayer);
-        int myTotal = forward + backward + 1; // +1 por la pieza recién colocada
-        
-        // Contar piezas del oponente (para detectar bloqueos)
-        int oppForward = countInDirection(state, move.x, move.y, dx, dy, opponent);
-        int oppBackward = countInDirection(state, move.x, move.y, -dx, -dy, opponent);
-        int oppTotal = oppForward + oppBackward;
-        
-        // Amenazas propias (alineado con Evaluator::patternToScore)
-        if (myTotal >= 4) {
-            // Verificar si es una amenaza abierta o semicerrada
-            bool blocked1 = isBlocked(tempState, move.x, move.y, dx, dy, forward + 1, currentPlayer);
-            bool blocked2 = isBlocked(tempState, move.x, move.y, -dx, -dy, backward + 1, currentPlayer);
-            
-            if (!blocked1 && !blocked2) {
-                score += 50000; // FOUR_OPEN - imparable
-            } else {
-                score += 25000; // FOUR_HALF - amenaza forzada
-            }
-        } else if (myTotal == 3) {
-            // Verificar si es una amenaza real (no bloqueada)
-            bool blocked1 = isBlocked(tempState, move.x, move.y, dx, dy, forward + 1, currentPlayer);
-            bool blocked2 = isBlocked(tempState, move.x, move.y, -dx, -dy, backward + 1, currentPlayer);
-            
-            if (!blocked1 && !blocked2) {
-                score += 10000; // THREE_OPEN - muy peligroso
-            } else if (!blocked1 || !blocked2) {
-                score += 1500; // THREE_HALF - amenaza
-            }
-        } else if (myTotal == 2) {
-            score += 100; // TWO_OPEN - desarrollo
-        }
-        
-        // Bloquear amenazas del oponente (defensivo) - valores alineados
-        if (oppTotal >= 4) {
-            score += 40000; // Bloquear four - crítico
-        } else if (oppTotal >= 3) {
-            score += 8000; // Bloquear three - importante
-        } else if (oppTotal >= 2) {
-            score += 200; // Bloquear desarrollo - básico
-        }
-    }
-    
-    // PASO 5: Evaluación posicional básica (alineada con analyzePosition simplificado)
-    
-    // Proximidad al centro (tableros favorecen centro)
+    // 1. Centralidad y conectividad básica
     int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
     score += (9 - centerDist) * 20;
     
-    // Conectividad con piezas propias (importante para patrones)
     int connectivity = 0;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
             if (dx == 0 && dy == 0) continue;
             int nx = move.x + dx, ny = move.y + dy;
-            if (state.isValid(nx, ny) && state.getPiece(nx, ny) == currentPlayer) {
-                connectivity += 50; // Bonificación por conexión directa
+            if (state.isValid(nx, ny)) {
+                int piece = state.getPiece(nx, ny);
+                if (piece == currentPlayer) connectivity += 50;
+                else if (piece == opponent) connectivity += 20;
             }
         }
     }
     score += connectivity;
+    
+    // 2. Análisis táctico en 4 direcciones principales
+    int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+    
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0], dy = directions[d][1];
+        
+        // Contar piezas consecutivas propias
+        int myForward = 0, myBackward = 0;
+        int x = move.x + dx, y = move.y + dy;
+        while (myForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer) {
+            myForward++; x += dx; y += dy;
+        }
+        x = move.x - dx; y = move.y - dy;
+        while (myBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer) {
+            myBackward++; x -= dx; y -= dy;
+        }
+        int myTotal = myForward + myBackward + 1;
+        
+        // Contar piezas consecutivas del oponente (para bloqueos)
+        int oppForward = 0, oppBackward = 0;
+        x = move.x + dx; y = move.y + dy;
+        while (oppForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+            oppForward++; x += dx; y += dy;
+        }
+        x = move.x - dx; y = move.y - dy;
+        while (oppBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+            oppBackward++; x -= dx; y -= dy;
+        }
+        int oppTotal = oppForward + oppBackward;
+        
+        // Evaluación de amenazas propias
+        if (myTotal >= 5) {
+            return 500000; // Victoria inmediata
+        } else if (myTotal == 4) {
+            // Verificar si es amenaza libre (extremos disponibles)
+            int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
+            int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
+            
+            bool startFree = state.isValid(startX - dx, startY - dy) && 
+                           state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) && 
+                         state.isEmpty(endX + dx, endY + dy);
+            
+            if (startFree && endFree) score += 50000; // Four abierto
+            else if (startFree || endFree) score += 25000; // Four semicerrado
+        } else if (myTotal == 3) {
+            // Verificar si es three libre
+            int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
+            int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
+            
+            bool startFree = state.isValid(startX - dx, startY - dy) && 
+                           state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) && 
+                         state.isEmpty(endX + dx, endY + dy);
+            
+            if (startFree && endFree) score += 10000; // Three abierto
+            else if (startFree || endFree) score += 1500; // Three semicerrado
+        } else if (myTotal == 2) {
+            score += 100; // Desarrollo básico
+        }
+        
+        // Evaluación defensiva (bloquear amenazas del oponente)
+        if (oppTotal >= 4) {
+            score += 40000; // Bloquear four - crítico
+        } else if (oppTotal >= 3) {
+            score += 8000; // Bloquear three - importante
+        } else if (oppTotal >= 2) {
+            score += 200; // Bloquear desarrollo
+        }
+    }
+    
+    // 3. Evaluación de capturas potenciales (todas las 8 direcciones)
+    int captureDirections[8][2] = {{-1,-1}, {-1,0}, {-1,1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
+    int captureScore = 0;
+    
+    for (int d = 0; d < 8; d++) {
+        int dx = captureDirections[d][0], dy = captureDirections[d][1];
+        
+        // Patrón de captura hacia adelante: NUEVA + OPP + OPP + MIA
+        if (state.isValid(move.x + dx, move.y + dy) &&
+            state.isValid(move.x + 2*dx, move.y + 2*dy) &&
+            state.isValid(move.x + 3*dx, move.y + 3*dy)) {
+            
+            if (state.getPiece(move.x + dx, move.y + dy) == opponent &&
+                state.getPiece(move.x + 2*dx, move.y + 2*dy) == opponent &&
+                state.getPiece(move.x + 3*dx, move.y + 3*dy) == currentPlayer) {
+                captureScore += 1000;
+            }
+        }
+        
+        // Patrón de captura hacia atrás: MIA + OPP + OPP + NUEVA  
+        if (state.isValid(move.x - dx, move.y - dy) &&
+            state.isValid(move.x - 2*dx, move.y - 2*dy) &&
+            state.isValid(move.x - 3*dx, move.y - 3*dy)) {
+            
+            if (state.getPiece(move.x - dx, move.y - dy) == opponent &&
+                state.getPiece(move.x - 2*dx, move.y - 2*dy) == opponent &&
+                state.getPiece(move.x - 3*dx, move.y - 3*dy) == currentPlayer) {
+                captureScore += 1000;
+            }
+        }
+    }
+    
+    // Escalar capturas según situación del juego
+    int myCaptures = state.captures[currentPlayer - 1];
+    if (myCaptures >= 8) captureScore *= 10; // Cerca de ganar por capturas
+    else if (myCaptures >= 6) captureScore *= 5;
+    else if (myCaptures >= 4) captureScore *= 2;
+    
+    score += captureScore;
+    
+    // 4. Evaluación de amenazas críticas del oponente
+    bool opponentHasThreats = false;
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0], dy = directions[d][1];
+        
+        // Buscar patrones peligrosos del oponente alrededor de esta posición
+        for (int offset = -3; offset <= 3; offset++) {
+            if (offset == 0) continue; // Skip la posición del movimiento
+            
+            int checkX = move.x + offset * dx;
+            int checkY = move.y + offset * dy;
+            
+            if (state.isValid(checkX, checkY) && state.getPiece(checkX, checkY) == opponent) {
+                int oppConsecutive = 1;
+                
+                // Contar hacia adelante
+                int x = checkX + dx, y = checkY + dy;
+                while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                    oppConsecutive++; x += dx; y += dy;
+                }
+                
+                // Contar hacia atrás
+                x = checkX - dx; y = checkY - dy;
+                while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                    oppConsecutive++; x -= dx; y -= dy;
+                }
+                
+                if (oppConsecutive >= 3) {
+                    opponentHasThreats = true;
+                    break;
+                }
+            }
+        }
+        if (opponentHasThreats) break;
+    }
+    
+    // Si el oponente tiene amenazas, priorizar movimientos defensivos
+    if (opponentHasThreats) {
+        // Verificar si este movimiento interrumpe alguna amenaza
+        bool blocksThreats = false;
+        for (int d = 0; d < 4; d++) {
+            int dx = directions[d][0], dy = directions[d][1];
+            
+            int oppBefore = 0, oppAfter = 0;
+            int x = move.x - dx, y = move.y - dy;
+            while (oppBefore < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                oppBefore++; x -= dx; y -= dy;
+            }
+            x = move.x + dx; y = move.y + dy;
+            while (oppAfter < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                oppAfter++; x += dx; y += dy;
+            }
+            
+            if (oppBefore + oppAfter >= 2) {
+                blocksThreats = true;
+                break;
+            }
+        }
+        
+        if (blocksThreats) score += 30000; // Bloqueo defensivo crucial
+        else score -= 20000; // Penalizar movimientos que no defienden
+    }
     
     return score;
 }
@@ -791,7 +860,7 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
                   << std::endl;
         
         // Si encontramos mate, podemos parar (opcional)
-        if (std::abs(score) > 90000) {
+        if (std::abs(score) > 200000) {
             std::cout << "Mate detectado en profundidad " << depth 
                       << ", completando búsqueda" << std::endl;
             break;
@@ -935,7 +1004,7 @@ int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount) {
     } else if (pieceCount <= 8) {
         return 2; // Early game: radio moderado
     } else {
-        return 2; // Mid/late game: radio enfocado
+        return 1; // Mid/late game: radio enfocado
     }
 }
 
@@ -1099,19 +1168,5 @@ void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &ca
                 }
             }
         }
-    }
-    
-    // Debug log para mostrar cuántos candidatos se agregaron
-    if (g_debugAnalyzer && !candidates.empty()) {
-        std::ostringstream debugMsg;
-        debugMsg << "\n[DEFENSIVE CANDIDATES] Added " << candidates.size() 
-                 << " candidates around last human move " 
-                 << char('A' + lastY) << (lastX + 1) << ":\n";
-        
-        for (const Move& candidate : candidates) {
-            debugMsg << "  - " << char('A' + candidate.y) << (candidate.x + 1) << "\n";
-        }
-        
-        g_debugAnalyzer->logToFile(debugMsg.str());
     }
 }

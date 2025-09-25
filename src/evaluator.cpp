@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 20:19:08 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 19:09:15 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,7 +297,7 @@ int Evaluator::evaluateImmediateThreats(const GameState& state, int player) {
     
     // 2. CRÍTICO: Si el oponente tiene amenazas de mate en 1
     if (oppHasWinThreats) {
-        threatScore -= 95000; // Muy malo - debo defender
+        threatScore -= 105000; // Muy malo - debo defender
     }
     
     // 3. LÓGICA ORIGINAL: Contar patrones de 4 (como respaldo)
