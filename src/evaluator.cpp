@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 22:25:10 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/25 22:44:10 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,14 +205,14 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
     if (hasGaps && totalPieces >= 3) {
         // Patrones partidos de 4 piezas: -OOO-O- o -OO-OO-
         if (totalPieces == 4) {
-            if (freeEnds == 2) return FOUR_OPEN / 2;    // Amenaza partida fuerte
-            if (freeEnds == 1) return FOUR_HALF / 2;    // Amenaza partida media
+            if (freeEnds == 2) return FOUR_OPEN;    // Amenaza partida fuerte
+            if (freeEnds == 1) return FOUR_HALF;    // Amenaza partida media
         }
         
         // Patrones partidos de 3 piezas: -OO-O- o -O-OO-
         if (totalPieces == 3) {
-            if (freeEnds == 2) return THREE_OPEN / 2;   // Amenaza partida abierta
-            if (freeEnds == 1) return THREE_HALF / 2;   // Amenaza partida semicerrada
+            if (freeEnds == 2) return THREE_OPEN;   // Amenaza partida abierta
+            if (freeEnds == 1) return THREE_HALF;   // Amenaza partida semicerrada
         }
     }
     

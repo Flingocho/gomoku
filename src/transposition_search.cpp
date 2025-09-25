@@ -542,7 +542,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             if (state.getPiece(move.x + dx, move.y + dy) == opponent &&
                 state.getPiece(move.x + 2*dx, move.y + 2*dy) == opponent &&
                 state.getPiece(move.x + 3*dx, move.y + 3*dy) == currentPlayer) {
-                captureScore += 1000;
+                captureScore += 2500;
             }
         }
         
@@ -627,7 +627,7 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         }
         
         if (blocksThreats) score += 30000; // Bloqueo defensivo crucial
-        else score -= 20000; // Penalizar movimientos que no defienden
+        else score -= 30000; // Penalizar movimientos que no defienden
     }
     
     return score;
