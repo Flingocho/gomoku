@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/26 18:50:21 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/26 19:48:20 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,11 +68,10 @@ int Evaluator::evaluateForPlayer(const GameState& state, int player) {
     // NUEVO: Si el debug está activo y es para el jugador correcto, capturar información
     bool captureForThisPlayer = g_evalDebug.active && player == g_evalDebug.currentPlayer;
     
-	score += evaluateImmediateThreats(state, player);
-	
-    // 1. Evaluar patrones de línea (aquí capturamos los patrones)
-    int patternScore = analyzePosition(state, player);
-    score += patternScore;
+    score += evaluateImmediateThreats(state, player);
+    
+    // 1. EVALUACIÓN UNIFICADA: patrones + capturas en una sola pasada
+    score += analyzePosition(state, player);
     
     // NUEVO: Capturar información si está activado
     if (captureForThisPlayer) {
@@ -83,52 +82,116 @@ int Evaluator::evaluateForPlayer(const GameState& state, int player) {
         }
     }
     
-    // 2. Evaluar capturas
-    score += evaluateCaptures(state, player);
+    // ELIMINADO: evaluateCaptures() ya no se llama por separado
     
     return score;
 }
 
 int Evaluator::analyzePosition(const GameState& state, int player) {
     int totalScore = 0;
+    int opponent = state.getOpponent(player);
+    
+    // NUEVA: Variables para capturas acumuladas
+    int captureOpportunities = 0;
+    int captureThreats = 0;
     
     // OPTIMIZACIÓN: Marcar líneas ya evaluadas para evitar duplicados
     bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {false};
     
-    // Una sola pasada por el tablero
+    // UNA SOLA PASADA por el tablero
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            // Solo analizar desde piezas del jugador
-            if (state.board[i][j] != player) continue;
             
-            // Analizar en las 4 direcciones principales desde esta pieza
-            for (int d = 0; d < 4; d++) {
-                // OPTIMIZACIÓN: Saltar si ya evaluamos esta línea
-                if (evaluated[i][j][d]) continue;
-                
-                int dx = MAIN_DIRECTIONS[d][0];
-                int dy = MAIN_DIRECTIONS[d][1];
-                
-                // Solo evaluar si es el inicio de la línea
-                if (isLineStart(state, i, j, dx, dy, player)) {
-                    PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
-                    totalScore += patternToScore(pattern);
+            // ============================================
+            // PARTE 1: EVALUACIÓN DE PATRONES (como antes)
+            // ============================================
+            if (state.board[i][j] == player) {
+                // Analizar patrones en las 4 direcciones principales
+                for (int d = 0; d < 4; d++) {
+                    if (evaluated[i][j][d]) continue;
                     
-                    // OPTIMIZACIÓN: Marcar toda la línea como evaluada
-                    int markX = i, markY = j;
-                    for (int k = 0; k < pattern.consecutiveCount && 
-                                   state.isValid(markX, markY); k++) {
-                        if (markX >= 0 && markX < GameState::BOARD_SIZE && 
-                            markY >= 0 && markY < GameState::BOARD_SIZE) {
-                            evaluated[markX][markY][d] = true;
+                    int dx = MAIN_DIRECTIONS[d][0];
+                    int dy = MAIN_DIRECTIONS[d][1];
+                    
+                    if (isLineStart(state, i, j, dx, dy, player)) {
+                        PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
+                        totalScore += patternToScore(pattern);
+                        
+                        // Marcar toda la línea como evaluada
+                        int markX = i, markY = j;
+                        for (int k = 0; k < pattern.consecutiveCount && 
+                                       state.isValid(markX, markY); k++) {
+                            if (markX >= 0 && markX < GameState::BOARD_SIZE && 
+                                markY >= 0 && markY < GameState::BOARD_SIZE) {
+                                evaluated[markX][markY][d] = true;
+                            }
+                            markX += dx;
+                            markY += dy;
                         }
-                        markX += dx;
-                        markY += dy;
+                    }
+                }
+            }
+            
+            // ============================================
+            // PARTE 2: EVALUACIÓN DE CAPTURAS (NUEVA)
+            // ============================================
+            else if (state.board[i][j] == GameState::EMPTY) {
+                // Solo evaluar capturas en posiciones vacías cercanas a piezas
+                bool nearPiece = false;
+                
+                // Verificación rápida de proximidad (radio 1)
+                for (int di = -1; di <= 1 && !nearPiece; di++) {
+                    for (int dj = -1; dj <= 1 && !nearPiece; dj++) {
+                        if (di == 0 && dj == 0) continue;
+                        int ni = i + di, nj = j + dj;
+                        if (state.isValid(ni, nj) && state.getPiece(ni, nj) != GameState::EMPTY) {
+                            nearPiece = true;
+                        }
+                    }
+                }
+                
+                // Solo evaluar capturas si está cerca de alguna pieza
+                if (nearPiece) {
+                    // Evaluar capturas en las 8 direcciones
+                    for (int d = 0; d < 8; d++) {
+                        int dx = CAPTURE_DIRECTIONS[d][0];
+                        int dy = CAPTURE_DIRECTIONS[d][1];
+                        
+                        // CAPTURA OFENSIVA: patrón NUEVA + OPP + OPP + MIA
+                        if (isValidCapturePattern(state, i, j, dx, dy, player, opponent)) {
+                            captureOpportunities++;
+                        }
+                        
+                        // CAPTURA DEFENSIVA: patrón NUEVA + OPP + OPP + MIA (del oponente)
+                        if (isValidCapturePattern(state, i, j, dx, dy, opponent, player)) {
+                            captureThreats++;
+                        }
                     }
                 }
             }
         }
     }
+    
+    // ============================================
+    // PARTE 3: SCORING DE CAPTURAS EXISTENTES
+    // ============================================
+    int myCaptures = state.captures[player - 1];
+    int oppCaptures = state.captures[opponent - 1];
+    
+    // Bonus/malus por capturas ya realizadas
+    if (myCaptures >= 8) totalScore += 15000;
+    else if (myCaptures >= 6) totalScore += 6000;
+    else if (myCaptures >= 4) totalScore += 2000;
+    else totalScore += myCaptures * 200;
+    
+    if (oppCaptures >= 8) totalScore -= 15000;
+    else if (oppCaptures >= 6) totalScore -= 6000;
+    else if (oppCaptures >= 4) totalScore -= 2000;
+    else totalScore -= oppCaptures * 200;
+    
+    // Bonus por oportunidades de captura
+    totalScore += captureOpportunities * CAPTURE_OPPORTUNITY;
+    totalScore -= captureThreats * CAPTURE_THREAT;
     
     return totalScore;
 }
@@ -314,12 +377,12 @@ int Evaluator::evaluateCaptures(const GameState& state, int player) {
     if (myCaptures >= 8) score += 15000;
     else if (myCaptures >= 6) score += 6000;
     else if (myCaptures >= 4) score += 2000;
-    else score += myCaptures * 200;
+    else score += myCaptures * 1000;
     
     if (oppCaptures >= 8) score -= 15000;
     else if (oppCaptures >= 6) score -= 6000;
     else if (oppCaptures >= 4) score -= 2000;
-    else score -= oppCaptures * 200;
+    else score -= oppCaptures * 1000;
     
     // OPTIMIZACIÓN: Solo evaluar posiciones adyacentes a piezas existentes
     int myCaptureOpportunities = 0;
@@ -469,4 +532,17 @@ int Evaluator::countPatternType(const GameState& state, int player, int consecut
     }
     
     return count;
+}
+
+bool Evaluator::isValidCapturePattern(const GameState& state, int x, int y, 
+                                     int dx, int dy, int attacker, int victim) {
+    // Verificar patrón: NUEVA(x,y) + VICTIM + VICTIM + ATTACKER
+    int pos1X = x + dx, pos1Y = y + dy;
+    int pos2X = x + 2*dx, pos2Y = y + 2*dy;
+    int pos3X = x + 3*dx, pos3Y = y + 3*dy;
+    
+    return state.isValid(pos1X, pos1Y) && state.isValid(pos2X, pos2Y) && state.isValid(pos3X, pos3Y) &&
+           state.getPiece(pos1X, pos1Y) == victim &&
+           state.getPiece(pos2X, pos2Y) == victim &&
+           state.getPiece(pos3X, pos3Y) == attacker;
 }

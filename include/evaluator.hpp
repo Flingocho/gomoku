@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/26 18:21:46 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/26 19:46:32 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,13 @@ private:
 	static bool isLineStart(const GameState &state, int x, int y, int dx, int dy, int player);
 
 	static constexpr int MAIN_DIRECTIONS[4][2] = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
+	static constexpr int CAPTURE_DIRECTIONS[8][2] = {
+        {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, 
+        {0, 1}, {1, -1}, {1, 0}, {1, 1}
+    };
+    
+    static bool isValidCapturePattern(const GameState& state, int x, int y, 
+                                    int dx, int dy, int attacker, int victim);
 };
 
 #endif

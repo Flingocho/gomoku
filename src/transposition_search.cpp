@@ -1183,6 +1183,7 @@ int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount)
 {
 	if (pieceCount > 0)
 		return 1;
+	return 1;
 }
 
 int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
