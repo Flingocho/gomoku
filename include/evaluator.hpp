@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 18:41:20 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/26 18:21:46 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,39 @@
 #define EVALUATOR_HPP
 
 #include "game_types.hpp"
+
+// NUEVO: Estructura simple para capturar debug durante evaluaciones reales
+struct EvaluationDebugCapture {
+    bool active;
+    int currentPlayer;
+    Move currentMove;
+    
+    // Información capturada durante la evaluación real
+    int aiScore;
+    int humanScore;
+    int totalScore;
+    int aiThreeOpen;
+    int aiFourHalf; 
+    int aiFourOpen;
+    int aiTwoOpen;
+    int humanThreeOpen;
+    int humanFourHalf;
+    int humanFourOpen;
+    int humanTwoOpen;
+    
+    EvaluationDebugCapture() : active(false), currentPlayer(0), aiScore(0), humanScore(0), totalScore(0),
+                               aiThreeOpen(0), aiFourHalf(0), aiFourOpen(0), aiTwoOpen(0),
+                               humanThreeOpen(0), humanFourHalf(0), humanFourOpen(0), humanTwoOpen(0) {}
+    
+    void reset() {
+        active = false;
+        aiScore = humanScore = totalScore = 0;
+        aiThreeOpen = aiFourHalf = aiFourOpen = aiTwoOpen = 0;
+        humanThreeOpen = humanFourHalf = humanFourOpen = humanTwoOpen = 0;
+    }
+};
+
+extern EvaluationDebugCapture g_evalDebug;
 
 class Evaluator
 {
@@ -42,6 +75,9 @@ public:
 	// NUEVO: Detección eficiente de amenazas de mate en 1 usando patrones
 	static bool hasWinningThreats(const GameState &state, int player);
 
+	// NUEVO: Función auxiliar para contar patrones específicos (pública para debug)
+	static int countPatternType(const GameState &state, int player, int consecutiveCount, int freeEnds);
+
 private:
 	struct PatternInfo
 	{
@@ -63,9 +99,6 @@ private:
 	static int evaluateCaptures(const GameState &state, int player);
 
 	// NUEVO: Evaluación de amenazas inmediatas
-
-	// NUEVO: Función auxiliar para contar patrones específicos
-	static int countPatternType(const GameState &state, int player, int consecutiveCount, int freeEnds);
 
 	static bool isLineStart(const GameState &state, int x, int y, int dx, int dy, int player);
 

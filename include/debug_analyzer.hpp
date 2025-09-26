@@ -47,6 +47,23 @@ public:
         bool isCriticalThreat;
         std::string explanation;
         
+        // NUEVO: Debug específico de heurística de patrones
+        struct HeuristicDebug {
+            int threeOpenCount;
+            int threeOpenScore;
+            int fourHalfCount;
+            int fourHalfScore;
+            int fourOpenCount;
+            int fourOpenScore;
+            int twoOpenCount;
+            int twoOpenScore;
+            std::string patternDetails;
+            
+            HeuristicDebug() : threeOpenCount(0), threeOpenScore(0), fourHalfCount(0), 
+                             fourHalfScore(0), fourOpenCount(0), fourOpenScore(0),
+                             twoOpenCount(0), twoOpenScore(0) {}
+        } heuristicDebug;
+        
         EvaluationBreakdown(const Move& m = Move()) : 
             move(m), totalScore(0), patternScore(0), captureScore(0),
             threatScore(0), positionScore(0), mateDistance(0),
@@ -104,6 +121,9 @@ public:
     // Evaluación con breakdown
     static EvaluationBreakdown evaluateWithBreakdown(const GameState& state, const Move& move, int player);
     
+    // NUEVO: Análisis detallado de patrones para debug de heurística
+    static void analyzeHeuristicPatterns(const GameState& state, int player, EvaluationBreakdown::HeuristicDebug& debug);
+    
     // Utilidades
     bool shouldDebug(int depth, int score, bool isRootLevel) const;
     void logCriticalPosition(const GameState& state, const std::string& reason);
@@ -115,6 +135,7 @@ public:
     void saveSnapshotToFile(const std::string& filename) const { lastSnapshot.saveToFile(filename); }
     void logToFile(const std::string& message) const;
     std::string formatBoard(const GameState& state) const;
+    std::string formatMove(const Move& move) const;  // NUEVO: Hacer público para debug
     
     // Centralized logging functions
     void logInfo(const std::string& message) const;
@@ -125,7 +146,6 @@ public:
     std::ofstream& getDebugFile() { return debugFile; }
     
 private:
-    std::string formatMove(const Move& move) const;
     std::string formatScore(int score) const;
     std::string analyzeGamePhase(const GameState& state) const;
     std::string findCriticalThreats(const GameState& state) const;

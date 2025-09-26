@@ -6,13 +6,15 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 22:44:10 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/26 18:50:21 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/evaluator.hpp"
 #include "../include/rule_engine.hpp"
 #include <iostream>
+
+EvaluationDebugCapture g_evalDebug;
 
 // NUEVO: Evaluador principal con información de distancia al mate
 int Evaluator::evaluate(const GameState& state, int maxDepth, int currentDepth) {
@@ -34,7 +36,7 @@ int Evaluator::evaluate(const GameState& state, int maxDepth, int currentDepth) 
     int humanScore = evaluateForPlayer(state, GameState::PLAYER1);
     
     return aiScore - humanScore;
-}
+}// NUEVO: Evaluación con captura de debug real del algoritmo
 
 // LEGACY: Mantener la versión anterior para compatibilidad (sin distancia al mate)
 int Evaluator::evaluate(const GameState& state) {
@@ -42,8 +44,20 @@ int Evaluator::evaluate(const GameState& state) {
     if (RuleEngine::checkWin(state, GameState::PLAYER2)) return WIN;
     if (RuleEngine::checkWin(state, GameState::PLAYER1)) return -WIN;
     
+    // NUEVO: Evaluar AI con captura de debug si está activo
+    if (g_evalDebug.active) g_evalDebug.currentPlayer = GameState::PLAYER2;
     int aiScore = evaluateForPlayer(state, GameState::PLAYER2);
+    
+    // NUEVO: Evaluar HUMAN con captura de debug si está activo  
+    if (g_evalDebug.active) g_evalDebug.currentPlayer = GameState::PLAYER1;
     int humanScore = evaluateForPlayer(state, GameState::PLAYER1);
+    
+    // NUEVO: Completar información de debug
+    if (g_evalDebug.active) {
+        g_evalDebug.totalScore = aiScore - humanScore;
+        g_evalDebug.aiScore = aiScore;
+        g_evalDebug.humanScore = humanScore;
+    }
     
     return aiScore - humanScore;
 }
@@ -51,10 +65,23 @@ int Evaluator::evaluate(const GameState& state) {
 int Evaluator::evaluateForPlayer(const GameState& state, int player) {
     int score = 0;
     
+    // NUEVO: Si el debug está activo y es para el jugador correcto, capturar información
+    bool captureForThisPlayer = g_evalDebug.active && player == g_evalDebug.currentPlayer;
+    
 	score += evaluateImmediateThreats(state, player);
 	
-    // 1. Evaluar patrones de línea
-    score += analyzePosition(state, player);
+    // 1. Evaluar patrones de línea (aquí capturamos los patrones)
+    int patternScore = analyzePosition(state, player);
+    score += patternScore;
+    
+    // NUEVO: Capturar información si está activado
+    if (captureForThisPlayer) {
+        if (player == GameState::PLAYER2) { // AI
+            g_evalDebug.aiScore = score;
+        } else { // HUMAN
+            g_evalDebug.humanScore = score;
+        }
+    }
     
     // 2. Evaluar capturas
     score += evaluateCaptures(state, player);
@@ -65,6 +92,9 @@ int Evaluator::evaluateForPlayer(const GameState& state, int player) {
 int Evaluator::analyzePosition(const GameState& state, int player) {
     int totalScore = 0;
     
+    // OPTIMIZACIÓN: Marcar líneas ya evaluadas para evitar duplicados
+    bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {false};
+    
     // Una sola pasada por el tablero
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -73,13 +103,28 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
             
             // Analizar en las 4 direcciones principales desde esta pieza
             for (int d = 0; d < 4; d++) {
+                // OPTIMIZACIÓN: Saltar si ya evaluamos esta línea
+                if (evaluated[i][j][d]) continue;
+                
                 int dx = MAIN_DIRECTIONS[d][0];
                 int dy = MAIN_DIRECTIONS[d][1];
                 
-                // Solo evaluar si es el inicio de la línea (evita duplicados)
+                // Solo evaluar si es el inicio de la línea
                 if (isLineStart(state, i, j, dx, dy, player)) {
                     PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
                     totalScore += patternToScore(pattern);
+                    
+                    // OPTIMIZACIÓN: Marcar toda la línea como evaluada
+                    int markX = i, markY = j;
+                    for (int k = 0; k < pattern.consecutiveCount && 
+                                   state.isValid(markX, markY); k++) {
+                        if (markX >= 0 && markX < GameState::BOARD_SIZE && 
+                            markY >= 0 && markY < GameState::BOARD_SIZE) {
+                            evaluated[markX][markY][d] = true;
+                        }
+                        markX += dx;
+                        markY += dy;
+                    }
                 }
             }
         }
@@ -100,79 +145,49 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
                                              int dx, int dy, int player) {
     PatternInfo info = {0, 0, 0, false, 0, 0};
     
-    // PASO 1: Contar piezas consecutivas desde el inicio (comportamiento original)
+    // OPTIMIZACIÓN: Límite máximo de escaneo para evitar trabajo innecesario
+    const int MAX_SCAN = 6; // Suficiente para detectar patrones de 5 + extremos
+    
+    // PASO 1: Contar piezas consecutivas desde el inicio
     int currentX = x, currentY = y;
-    while (state.isValid(currentX, currentY) && state.getPiece(currentX, currentY) == player) {
+    int scanned = 0;
+    
+    while (scanned < MAX_SCAN && 
+           state.isValid(currentX, currentY) && 
+           state.getPiece(currentX, currentY) == player) {
         info.consecutiveCount++;
         currentX += dx;
         currentY += dy;
+        scanned++;
     }
     
-    // PASO 2: NUEVO - Analizar patrón extendido con gaps (hasta 5 posiciones)
-    const int MAX_PATTERN_LENGTH = 5;
-    int pieces[MAX_PATTERN_LENGTH];
-    int patternLength = 0;
-    
-    // Escanear hacia adelante hasta MAX_PATTERN_LENGTH posiciones
-    currentX = x; currentY = y;
-    for (int i = 0; i < MAX_PATTERN_LENGTH && state.isValid(currentX, currentY); i++) {
-        int piece = state.getPiece(currentX, currentY);
-        pieces[i] = piece;
-        patternLength++;
-        
-        // Si encontramos pieza del oponente, detener
-        if (piece != GameState::EMPTY && piece != player) {
-            break;
-        }
-        
-        currentX += dx;
-        currentY += dy;
+    // OPTIMIZACIÓN: Si ya tenemos 5+, es victoria - no necesitamos más análisis
+    if (info.consecutiveCount >= 5) {
+        info.totalPieces = info.consecutiveCount;
+        info.totalSpan = info.consecutiveCount;
+        info.freeEnds = 2; // Para scoring de victoria
+        return info;
     }
     
-    // Analizar el patrón encontrado
-    info.totalPieces = 0;
-    info.gapCount = 0;
-    info.totalSpan = patternLength;
-    
-    for (int i = 0; i < patternLength; i++) {
-        if (pieces[i] == player) {
-            info.totalPieces++;
-        } else if (pieces[i] == GameState::EMPTY) {
-            // Gap de 1: contar solo si está entre piezas
-            if (i > 0 && i < patternLength - 1) {
-                // Verificar si hay piezas antes y después
-                bool hasPieceBefore = false, hasPieceAfter = false;
-                
-                for (int j = 0; j < i; j++) {
-                    if (pieces[j] == player) { hasPieceBefore = true; break; }
-                }
-                for (int j = i + 1; j < patternLength; j++) {
-                    if (pieces[j] == player) { hasPieceAfter = true; break; }
-                }
-                
-                if (hasPieceBefore && hasPieceAfter) {
-                    info.gapCount++;
-                    info.hasGaps = true;
-                }
-            }
-        }
-    }
-    
-    // PASO 3: Verificar extremos libres
+    // PASO 2: Verificar extremos libres (solo si < 5 consecutivas)
     info.freeEnds = 0;
     
-    // Extremo adelante
-    int frontX = x + dx * patternLength;
-    int frontY = y + dy * patternLength;
+    // Extremo adelante (después de las piezas consecutivas)
+    int frontX = x + dx * info.consecutiveCount;
+    int frontY = y + dy * info.consecutiveCount;
     if (state.isValid(frontX, frontY) && state.isEmpty(frontX, frontY)) {
         info.freeEnds++;
     }
     
-    // Extremo atrás
+    // Extremo atrás (antes del inicio)
     int backX = x - dx, backY = y - dy;
     if (state.isValid(backX, backY) && state.isEmpty(backX, backY)) {
         info.freeEnds++;
     }
+    
+    // PASO 3: Asignar valores para compatibilidad
+    info.totalPieces = info.consecutiveCount;
+    info.totalSpan = info.consecutiveCount;
     
     return info;
 }
@@ -188,16 +203,54 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
     
     // PASO 2: Patrones críticos (consecutivos)
     if (consecutiveCount == 4) {
-        if (freeEnds == 2) return FOUR_OPEN;    // Imparable
-        if (freeEnds == 1) return FOUR_HALF;    // Amenaza forzada
+        if (freeEnds == 2) {
+            // NUEVO: Capturar FOUR_OPEN para debug
+            if (g_evalDebug.active) {
+                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                    g_evalDebug.aiFourOpen++;
+                } else {
+                    g_evalDebug.humanFourOpen++;
+                }
+            }
+            return FOUR_OPEN;    // Imparable
+        }
+        if (freeEnds == 1) {
+            // NUEVO: Capturar FOUR_HALF para debug
+            if (g_evalDebug.active) {
+                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                    g_evalDebug.aiFourHalf++;
+                } else {
+                    g_evalDebug.humanFourHalf++;
+                }
+            }
+            return FOUR_HALF;    // Amenaza forzada
+        }
     }
     
     if (consecutiveCount == 3) {
-        if (freeEnds == 2) return THREE_OPEN;   // Muy peligroso
+        if (freeEnds == 2) {
+            // NUEVO: Capturar THREE_OPEN para debug
+            if (g_evalDebug.active) {
+                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                    g_evalDebug.aiThreeOpen++;
+                } else {
+                    g_evalDebug.humanThreeOpen++;
+                }
+            }
+            return THREE_OPEN;   // Muy peligroso
+        }
         if (freeEnds == 1) return THREE_HALF;   // Amenaza
     }
     
     if (consecutiveCount == 2 && freeEnds == 2) {
+        // NUEVO: Capturar TWO_OPEN para debug
+        if (g_evalDebug.active) {
+            if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                g_evalDebug.aiTwoOpen++;
+            } else {
+                g_evalDebug.humanTwoOpen++;
+            }
+        }
         return TWO_OPEN; // Desarrollo
     }
     
@@ -205,13 +258,43 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
     if (hasGaps && totalPieces >= 3) {
         // Patrones partidos de 4 piezas: -OOO-O- o -OO-OO-
         if (totalPieces == 4) {
-            if (freeEnds == 2) return FOUR_OPEN;    // Amenaza partida fuerte
-            if (freeEnds == 1) return FOUR_HALF;    // Amenaza partida media
+            if (freeEnds == 2) {
+                // NUEVO: Capturar FOUR_OPEN partido para debug
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiFourOpen++;
+                    } else {
+                        g_evalDebug.humanFourOpen++;
+                    }
+                }
+                return FOUR_OPEN;    // Amenaza partida fuerte
+            }
+            if (freeEnds == 1) {
+                // NUEVO: Capturar FOUR_HALF partido para debug
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiFourHalf++;
+                    } else {
+                        g_evalDebug.humanFourHalf++;
+                    }
+                }
+                return FOUR_HALF;    // Amenaza partida media
+            }
         }
         
         // Patrones partidos de 3 piezas: -OO-O- o -O-OO-
         if (totalPieces == 3) {
-            if (freeEnds == 2) return THREE_OPEN;   // Amenaza partida abierta
+            if (freeEnds == 2) {
+                // NUEVO: Capturar THREE_OPEN partido para debug
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiThreeOpen++;
+                    } else {
+                        g_evalDebug.humanThreeOpen++;
+                    }
+                }
+                return THREE_OPEN;   // Amenaza partida abierta
+            }
             if (freeEnds == 1) return THREE_HALF;   // Amenaza partida semicerrada
         }
     }

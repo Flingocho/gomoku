@@ -17,6 +17,9 @@
 #include <sstream>
 #include <algorithm>
 
+// NUEVO: Acceso al sistema de debug del evaluador
+extern EvaluationDebugCapture g_evalDebug;
+
 // Instancia global
 DebugAnalyzer* g_debugAnalyzer = nullptr;
 
@@ -133,9 +136,66 @@ DebugAnalyzer::EvaluationBreakdown DebugAnalyzer::evaluateWithBreakdown(
         return breakdown;
     }
     
-    // 1. Evaluar patrones
+    // 1. NUEVO: Activar captura de debug real del evaluador
+    g_evalDebug.reset();
+    g_evalDebug.active = true;
+    g_evalDebug.currentMove = move;
+    
+    // Evaluar patrones CON CAPTURA DE DEBUG AUTOMÁTICA
     breakdown.patternScore = Evaluator::evaluateForPlayer(tempState, player) - 
                            Evaluator::evaluateForPlayer(tempState, state.getOpponent(player));
+    
+    // NUEVO: Transferir información capturada del evaluador real
+    if (g_evalDebug.active) {
+        // La información capturada incluye tanto AI como Human
+        // Mostraremos la información más relevante según el contexto
+        
+        if (player == GameState::PLAYER2) { // Si estamos analizando movimiento de AI
+            // Mostrar principalmente información de AI
+            breakdown.heuristicDebug.threeOpenCount = g_evalDebug.aiThreeOpen;
+            breakdown.heuristicDebug.fourHalfCount = g_evalDebug.aiFourHalf; 
+            breakdown.heuristicDebug.fourOpenCount = g_evalDebug.aiFourOpen;
+            breakdown.heuristicDebug.twoOpenCount = g_evalDebug.aiTwoOpen;
+            
+            breakdown.heuristicDebug.threeOpenScore = g_evalDebug.aiThreeOpen * Evaluator::THREE_OPEN;
+            breakdown.heuristicDebug.fourHalfScore = g_evalDebug.aiFourHalf * Evaluator::FOUR_HALF;
+            breakdown.heuristicDebug.fourOpenScore = g_evalDebug.aiFourOpen * Evaluator::FOUR_OPEN;
+            breakdown.heuristicDebug.twoOpenScore = g_evalDebug.aiTwoOpen * Evaluator::TWO_OPEN;
+            
+            // Crear descripción detallada
+            std::ostringstream desc;
+            if (g_evalDebug.aiThreeOpen > 0) desc << "AI_3_OPEN:" << g_evalDebug.aiThreeOpen << "(" << breakdown.heuristicDebug.threeOpenScore << ") ";
+            if (g_evalDebug.aiFourHalf > 0) desc << "AI_4_HALF:" << g_evalDebug.aiFourHalf << "(" << breakdown.heuristicDebug.fourHalfScore << ") ";
+            if (g_evalDebug.humanThreeOpen > 0) desc << "HU_3_OPEN:" << g_evalDebug.humanThreeOpen << "(" << g_evalDebug.humanThreeOpen * Evaluator::THREE_OPEN << ") ";
+            if (g_evalDebug.humanFourHalf > 0) desc << "HU_4_HALF:" << g_evalDebug.humanFourHalf << "(" << g_evalDebug.humanFourHalf * Evaluator::FOUR_HALF << ") ";
+            breakdown.heuristicDebug.patternDetails = desc.str();
+            
+        } else { // Si estamos analizando movimiento de HUMAN
+            // Mostrar principalmente información de Human
+            breakdown.heuristicDebug.threeOpenCount = g_evalDebug.humanThreeOpen;
+            breakdown.heuristicDebug.fourHalfCount = g_evalDebug.humanFourHalf;
+            breakdown.heuristicDebug.fourOpenCount = g_evalDebug.humanFourOpen;
+            breakdown.heuristicDebug.twoOpenCount = g_evalDebug.humanTwoOpen;
+            
+            breakdown.heuristicDebug.threeOpenScore = g_evalDebug.humanThreeOpen * Evaluator::THREE_OPEN;
+            breakdown.heuristicDebug.fourHalfScore = g_evalDebug.humanFourHalf * Evaluator::FOUR_HALF;
+            breakdown.heuristicDebug.fourOpenScore = g_evalDebug.humanFourOpen * Evaluator::FOUR_OPEN;
+            breakdown.heuristicDebug.twoOpenScore = g_evalDebug.humanTwoOpen * Evaluator::TWO_OPEN;
+            
+            // Crear descripción detallada
+            std::ostringstream desc;
+            if (g_evalDebug.humanThreeOpen > 0) desc << "HU_3_OPEN:" << g_evalDebug.humanThreeOpen << "(" << breakdown.heuristicDebug.threeOpenScore << ") ";
+            if (g_evalDebug.humanFourHalf > 0) desc << "HU_4_HALF:" << g_evalDebug.humanFourHalf << "(" << breakdown.heuristicDebug.fourHalfScore << ") ";
+            if (g_evalDebug.aiThreeOpen > 0) desc << "AI_3_OPEN:" << g_evalDebug.aiThreeOpen << "(" << g_evalDebug.aiThreeOpen * Evaluator::THREE_OPEN << ") ";
+            if (g_evalDebug.aiFourHalf > 0) desc << "AI_4_HALF:" << g_evalDebug.aiFourHalf << "(" << g_evalDebug.aiFourHalf * Evaluator::FOUR_HALF << ") ";
+            breakdown.heuristicDebug.patternDetails = desc.str();
+        }
+        
+        g_evalDebug.active = false; // Desactivar después del uso
+    }
+                           
+    // LEGACY: Análisis detallado de patrones (ahora como backup)
+    // analyzeHeuristicPatterns(tempState, player, breakdown.heuristicDebug);
     
     // 2. Evaluar capturas
     auto captures = RuleEngine::findCaptures(tempState, move, player);
@@ -186,6 +246,12 @@ DebugAnalyzer::EvaluationBreakdown DebugAnalyzer::evaluateWithBreakdown(
                 << " C:" << breakdown.captureScore 
                 << " T:" << breakdown.threatScore 
                 << " Pos:" << breakdown.positionScore << "]";
+                
+    // NUEVO: Añadir información de patrones específicos si hay algo relevante
+    if (breakdown.heuristicDebug.threeOpenCount > 0 || breakdown.heuristicDebug.fourHalfCount > 0 || 
+        breakdown.heuristicDebug.fourOpenCount > 0) {
+        explanation << " " << breakdown.heuristicDebug.patternDetails;
+    }
     
     breakdown.explanation = explanation.str();
     
@@ -277,6 +343,22 @@ void DebugAnalyzer::printCurrentAnalysis() const {
                         << " Capture:" << b.captureScore
                         << " Threat:" << b.threatScore 
                         << " Position:" << b.positionScore << "\n";
+                        
+            // NUEVO: Debug detallado de heurística SOLO para el movimiento elegido
+            if (analysis.wasChosenAsRoot) {
+                const auto& h = b.heuristicDebug;
+                if (h.threeOpenCount > 0 || h.fourHalfCount > 0 || h.fourOpenCount > 0 || h.twoOpenCount > 0) {
+                    analysisLog << "        ★ HEURISTIC PATTERNS BREAKDOWN:\n";
+                    if (h.fourOpenCount > 0) 
+                        analysisLog << "          └─ FOUR_OPEN: " << h.fourOpenCount << " patterns = " << h.fourOpenScore << " points (valor crítico!)\n";
+                    if (h.fourHalfCount > 0) 
+                        analysisLog << "          └─ FOUR_HALF (4 cerrado): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points (amenaza forzada)\n";
+                    if (h.threeOpenCount > 0) 
+                        analysisLog << "          └─ THREE_OPEN (3 abierto): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points (amenaza fuerte)\n";
+                    if (h.twoOpenCount > 0) 
+                        analysisLog << "          └─ TWO_OPEN: " << h.twoOpenCount << " patterns = " << h.twoOpenScore << " points (desarrollo)\n";
+                }
+            }
         }
         
         // Información extra para el movimiento elegido
@@ -496,12 +578,53 @@ void DebugAnalyzer::GameSnapshot::saveToFile(const std::string& filename) const 
                  << " Capture:" << b.captureScore
                  << " Threat:" << b.threatScore 
                  << " Position:" << b.positionScore << "\n";
+                 
+            // NUEVO: Debug detallado de heurística para el movimiento elegido
+            const auto& h = b.heuristicDebug;
+            if (h.threeOpenCount > 0 || h.fourHalfCount > 0 || h.fourOpenCount > 0 || h.twoOpenCount > 0) {
+                file << "        ★ HEURISTIC BREAKDOWN:\n";
+                if (h.fourOpenCount > 0) 
+                    file << "          - FOUR_OPEN: " << h.fourOpenCount << " patterns = " << h.fourOpenScore << " points\n";
+                if (h.fourHalfCount > 0) 
+                    file << "          - FOUR_HALF (4 cerrado): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points\n";
+                if (h.threeOpenCount > 0) 
+                    file << "          - THREE_OPEN (3 abierto): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points\n";
+                if (h.twoOpenCount > 0) 
+                    file << "          - TWO_OPEN: " << h.twoOpenCount << " patterns = " << h.twoOpenScore << " points\n";
+                if (!h.patternDetails.empty())
+                    file << "          - Details: " << h.patternDetails << "\n";
+            }
         }
         
         count++;
     }
     
     file.close();
+}
+
+// NUEVO: Función para analizar patrones específicos de heurística
+void DebugAnalyzer::analyzeHeuristicPatterns(const GameState& state, int player, EvaluationBreakdown::HeuristicDebug& debug) {
+    // Usar las constantes y funciones del Evaluator
+    debug.threeOpenCount = Evaluator::countPatternType(state, player, 3, 2);
+    debug.threeOpenScore = debug.threeOpenCount * Evaluator::THREE_OPEN;
+    
+    debug.fourHalfCount = Evaluator::countPatternType(state, player, 4, 1);
+    debug.fourHalfScore = debug.fourHalfCount * Evaluator::FOUR_HALF;
+    
+    debug.fourOpenCount = Evaluator::countPatternType(state, player, 4, 2);
+    debug.fourOpenScore = debug.fourOpenCount * Evaluator::FOUR_OPEN;
+    
+    debug.twoOpenCount = Evaluator::countPatternType(state, player, 2, 2);
+    debug.twoOpenScore = debug.twoOpenCount * Evaluator::TWO_OPEN;
+    
+    // Generar detalles de patrones
+    std::ostringstream details;
+    if (debug.fourOpenCount > 0) details << "4OPEN:" << debug.fourOpenCount << " ";
+    if (debug.fourHalfCount > 0) details << "4HALF:" << debug.fourHalfCount << " ";
+    if (debug.threeOpenCount > 0) details << "3OPEN:" << debug.threeOpenCount << " ";
+    if (debug.twoOpenCount > 0) details << "2OPEN:" << debug.twoOpenCount << " ";
+    
+    debug.patternDetails = details.str();
 }
 
 void DebugAnalyzer::GameSnapshot::printToConsole() const {
