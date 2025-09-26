@@ -1181,18 +1181,8 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
 
 int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount)
 {
-	if (pieceCount <= 2)
-	{
-		return 2; // Opening: radio amplio para explorar
-	}
-	else if (pieceCount <= 8)
-	{
-		return 2; // Early game: radio moderado
-	}
-	else
-	{
-		return 1; // Mid/late game: radio enfocado
-	}
+	if (pieceCount > 0)
+		return 1;
 }
 
 int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
@@ -1201,15 +1191,15 @@ int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
 
 	if (pieceCount <= 4)
 	{
-		return 8; // Opening: muy selectivo para evitar explosion combinatoria
+		return 4; // Opening: muy selectivo para evitar explosion combinatoria
 	}
 	else if (pieceCount <= 10)
 	{
-		return 10; // Early game: moderadamente selectivo
+		return 6; // Early game: moderadamente selectivo
 	}
 	else
 	{
-		return 12; // Mid/late game: más opciones disponibles
+		return 8; // Mid/late game: más opciones disponibles
 	}
 }
 
