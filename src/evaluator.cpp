@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/26 19:48:20 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 20:04:36 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,8 +82,6 @@ int Evaluator::evaluateForPlayer(const GameState& state, int player) {
         }
     }
     
-    // ELIMINADO: evaluateCaptures() ya no se llama por separado
-    
     return score;
 }
 
@@ -98,13 +96,11 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     // OPTIMIZACIÓN: Marcar líneas ya evaluadas para evitar duplicados
     bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {false};
     
-    // UNA SOLA PASADA por el tablero
+    // ============================================
+    // PARTE 1: EVALUACIÓN DE PATRONES (sin cambios)
+    // ============================================
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            
-            // ============================================
-            // PARTE 1: EVALUACIÓN DE PATRONES (como antes)
-            // ============================================
             if (state.board[i][j] == player) {
                 // Analizar patrones en las 4 direcciones principales
                 for (int d = 0; d < 4; d++) {
@@ -133,7 +129,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
             }
             
             // ============================================
-            // PARTE 2: EVALUACIÓN DE CAPTURAS (NUEVA)
+            // PARTE 2: EVALUACIÓN DE CAPTURAS (MEJORADA)
             // ============================================
             else if (state.board[i][j] == GameState::EMPTY) {
                 // Solo evaluar capturas en posiciones vacías cercanas a piezas
@@ -152,19 +148,43 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
                 
                 // Solo evaluar capturas si está cerca de alguna pieza
                 if (nearPiece) {
-                    // Evaluar capturas en las 8 direcciones
-                    for (int d = 0; d < 8; d++) {
-                        int dx = CAPTURE_DIRECTIONS[d][0];
-                        int dy = CAPTURE_DIRECTIONS[d][1];
+                    Move testMove(i, j);
+                    
+                    // CAPTURA OFENSIVA MEJORADA
+                    auto myCaptures = RuleEngine::findCaptures(state, testMove, player);
+                    if (!myCaptures.empty()) {
+                        int captureCount = myCaptures.size() / 2;
+                        int currentCaptures = state.captures[player - 1];
+                        int newTotal = currentCaptures + captureCount;
                         
-                        // CAPTURA OFENSIVA: patrón NUEVA + OPP + OPP + MIA
-                        if (isValidCapturePattern(state, i, j, dx, dy, player, opponent)) {
-                            captureOpportunities++;
+                        // SCORING INTELIGENTE basado en resultado final
+                        if (newTotal >= 10) {
+                            captureOpportunities += 50000; // ¡GANA EL JUEGO!
+                        } else if (newTotal >= 8) {
+                            captureOpportunities += 15000; // Muy cerca de ganar
+                        } else if (newTotal >= 6) {
+                            captureOpportunities += 5000;  // Progreso importante
+                        } else {
+                            captureOpportunities += captureCount * CAPTURE_OPPORTUNITY;
                         }
+                    }
+                    
+                    // CAPTURA DEFENSIVA MEJORADA
+                    auto oppCaptures = RuleEngine::findCaptures(state, testMove, opponent);
+                    if (!oppCaptures.empty()) {
+                        int oppCaptureCount = oppCaptures.size() / 2;
+                        int oppCurrentCaptures = state.captures[opponent - 1];
+                        int oppNewTotal = oppCurrentCaptures + oppCaptureCount;
                         
-                        // CAPTURA DEFENSIVA: patrón NUEVA + OPP + OPP + MIA (del oponente)
-                        if (isValidCapturePattern(state, i, j, dx, dy, opponent, player)) {
-                            captureThreats++;
+                        // SCORING DEFENSIVO basado en peligro real
+                        if (oppNewTotal >= 10) {
+                            captureThreats += 60000; // ¡EVITAR A TODA COSTA!
+                        } else if (oppNewTotal >= 8) {
+                            captureThreats += 20000; // Muy peligroso
+                        } else if (oppNewTotal >= 6) {
+                            captureThreats += 8000;  // Peligroso
+                        } else {
+                            captureThreats += oppCaptureCount * CAPTURE_THREAT;
                         }
                     }
                 }
@@ -173,29 +193,29 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     }
     
     // ============================================
-    // PARTE 3: SCORING DE CAPTURAS EXISTENTES
+    // PARTE 3: SCORING DE CAPTURAS EXISTENTES (MEJORADO)
     // ============================================
     int myCaptures = state.captures[player - 1];
     int oppCaptures = state.captures[opponent - 1];
     
-    // Bonus/malus por capturas ya realizadas
-    if (myCaptures >= 8) totalScore += 15000;
-    else if (myCaptures >= 6) totalScore += 6000;
-    else if (myCaptures >= 4) totalScore += 2000;
-    else totalScore += myCaptures * 200;
+    // MEJORADO: Bonus/malus más agresivos por capturas ya realizadas
+    if (myCaptures >= 8) totalScore += 400000;      // Era 15000 - mucho más agresivo
+    else if (myCaptures >= 6) totalScore += 15000; // Era 6000
+    else if (myCaptures >= 4) totalScore += 6000;  // Era 2000
+    else totalScore += myCaptures * 500;           // Era 200
     
-    if (oppCaptures >= 8) totalScore -= 15000;
-    else if (oppCaptures >= 6) totalScore -= 6000;
-    else if (oppCaptures >= 4) totalScore -= 2000;
-    else totalScore -= oppCaptures * 200;
+    // CRÍTICO: Penalización más severa por capturas del oponente
+    if (oppCaptures >= 8) totalScore -= 500000;     // Era -15000 - ¡más defensivo!
+    else if (oppCaptures >= 6) totalScore -= 20000; // Era -6000
+    else if (oppCaptures >= 4) totalScore -= 8000;  // Era -2000
+    else totalScore -= oppCaptures * 800;           // Era -200
     
-    // Bonus por oportunidades de captura
-    totalScore += captureOpportunities * CAPTURE_OPPORTUNITY;
-    totalScore -= captureThreats * CAPTURE_THREAT;
+    // Bonus por oportunidades de captura (usa los valores mejorados)
+    totalScore += captureOpportunities;
+    totalScore -= captureThreats;
     
     return totalScore;
 }
-
 bool Evaluator::isLineStart(const GameState& state, int x, int y, int dx, int dy, int player) {
     // Es inicio si la posición anterior no tiene pieza del mismo jugador
     int prevX = x - dx;
