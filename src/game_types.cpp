@@ -6,13 +6,14 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:23:56 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 19:18:08 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/game_types.hpp"
 #include "../include/zobrist_hasher.hpp"
 #include <iostream>
+#include <cstring>
 
 // Inicialización del hasher estático
 const ZobristHasher* GameState::hasher = nullptr;
@@ -39,11 +40,7 @@ GameState::GameState(const GameState& other) {
 
 GameState& GameState::operator=(const GameState& other) {
     if (this != &other) {
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                board[i][j] = other.board[i][j];
-            }
-        }
+        std::memcpy(board, other.board, sizeof(board));
         captures[0] = other.captures[0];
         captures[1] = other.captures[1];
         currentPlayer = other.currentPlayer;

@@ -383,32 +383,29 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 
 bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &entry)
 {
-	size_t index = zobristKey & tableSizeMask; // O(1) access!
+	size_t index = zobristKey & tableSizeMask;
 	const CacheEntry &candidate = transpositionTable[index];
 
-	// Verificar si hay entrada válida
+	// OPTIMIZACIÓN: Early return si está vacía (caso más común)
 	if (candidate.zobristKey == 0)
 	{
-		return false; // Entrada vacía
+		return false;
 	}
 
-	// Verificar coincidencia exacta de hash
+	// OPTIMIZACIÓN: Verificación exacta
 	if (candidate.zobristKey == zobristKey)
 	{
 		entry = candidate;
 
-		// NUEVO: Actualizar generación para LRU mejorado
+		// OPTIMIZACIÓN: Solo actualizar generación si es diferente
 		if (candidate.generation != currentGeneration)
 		{
-			// Actualizar generación sin cambiar otros datos
 			transpositionTable[index].generation = currentGeneration;
 		}
-
 		return true;
 	}
 
-	// Hash collision detectada - no usar la entrada
-	return false;
+	return false; // Hash collision
 }
 
 void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int depth,
@@ -515,308 +512,306 @@ void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move> &moves, c
 
 void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &state)
 {
+	// OPTIMIZACIÓN: Para pocos movimientos, el orden importa menos
+	if (moves.size() <= 2)
+	{
+		return; // Skip sorting completamente
+	}
+
+	// OPTIMIZACIÓN: Para movimientos medianos, sorting parcial
+	if (moves.size() <= 5)
+	{
+		// Insertion sort más rápido para arrays pequeños
+		for (size_t i = 1; i < moves.size(); ++i)
+		{
+			Move key = moves[i];
+			int keyScore = quickEvaluateMove(state, key);
+
+			size_t j = i;
+			while (j > 0 && quickEvaluateMove(state, moves[j - 1]) < keyScore)
+			{
+				moves[j] = moves[j - 1];
+				--j;
+			}
+			moves[j] = key;
+		}
+		return;
+	}
+
+	// Para arrays grandes, usar std::sort normal
 	std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b)
 			  { return quickEvaluateMove(state, a) > quickEvaluateMove(state, b); });
 }
 
-int TranspositionSearch::quickEvaluateMove(const GameState &state, const Move &move)
-{
-	int currentPlayer = state.currentPlayer;
-	int opponent = state.getOpponent(currentPlayer);
-	int score = 0;
+int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& move) {
+    // OPTIMIZACIÓN: Arrays estáticos para evitar reconstruir en cada llamada
+    static constexpr int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    static constexpr int captureDirections[8][2] = {
+        {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, 
+        {0, 1}, {1, -1}, {1, 0}, {1, 1}
+    };
 
-	// 1. Centralidad y conectividad básica
-	int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
-	score += (9 - centerDist) * 20;
+    int currentPlayer = state.currentPlayer;
+    int opponent = state.getOpponent(currentPlayer);
+    int score = 0;
 
-	int connectivity = 0;
-	for (int dx = -1; dx <= 1; dx++)
-	{
-		for (int dy = -1; dy <= 1; dy++)
-		{
-			if (dx == 0 && dy == 0)
-				continue;
-			int nx = move.x + dx, ny = move.y + dy;
-			if (state.isValid(nx, ny))
-			{
-				int piece = state.getPiece(nx, ny);
-				if (piece == currentPlayer)
-					connectivity += 50;
-				else if (piece == opponent)
-					connectivity += 20;
-			}
-		}
-	}
-	score += connectivity;
+    // 1. OPTIMIZACIÓN: Centralidad y conectividad básica calculadas una sola vez
+    int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
+    score += (9 - centerDist) * 20;
 
-	// 2. Análisis táctico en 4 direcciones principales
-	int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    int connectivity = 0;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0)
+                continue;
+            int nx = move.x + dx, ny = move.y + dy;
+            if (state.isValid(nx, ny)) {
+                int piece = state.getPiece(nx, ny);
+                if (piece == currentPlayer)
+                    connectivity += 50;
+                else if (piece == opponent)
+                    connectivity += 20;
+            }
+        }
+    }
+    score += connectivity;
 
-	for (int d = 0; d < 4; d++)
-	{
-		int dx = directions[d][0], dy = directions[d][1];
+    // 2. Análisis táctico en 4 direcciones principales
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0], dy = directions[d][1];
 
-		// Contar piezas consecutivas propias
-		int myForward = 0, myBackward = 0;
-		int x = move.x + dx, y = move.y + dy;
-		while (myForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer)
-		{
-			myForward++;
-			x += dx;
-			y += dy;
-		}
-		x = move.x - dx;
-		y = move.y - dy;
-		while (myBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer)
-		{
-			myBackward++;
-			x -= dx;
-			y -= dy;
-		}
-		int myTotal = myForward + myBackward + 1;
+        // Contar piezas consecutivas propias
+        int myForward = 0, myBackward = 0;
+        int x = move.x + dx, y = move.y + dy;
+        while (myForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer) {
+            myForward++;
+            x += dx;
+            y += dy;
+        }
+        x = move.x - dx;
+        y = move.y - dy;
+        while (myBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == currentPlayer) {
+            myBackward++;
+            x -= dx;
+            y -= dy;
+        }
+        int myTotal = myForward + myBackward + 1;
 
-		// Contar piezas consecutivas del oponente (para bloqueos)
-		int oppForward = 0, oppBackward = 0;
-		x = move.x + dx;
-		y = move.y + dy;
-		while (oppForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-		{
-			oppForward++;
-			x += dx;
-			y += dy;
-		}
-		x = move.x - dx;
-		y = move.y - dy;
-		while (oppBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-		{
-			oppBackward++;
-			x -= dx;
-			y -= dy;
-		}
-		int oppTotal = oppForward + oppBackward;
+        // Contar piezas consecutivas del oponente (para bloqueos)
+        int oppForward = 0, oppBackward = 0;
+        x = move.x + dx;
+        y = move.y + dy;
+        while (oppForward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+            oppForward++;
+            x += dx;
+            y += dy;
+        }
+        x = move.x - dx;
+        y = move.y - dy;
+        while (oppBackward < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+            oppBackward++;
+            x -= dx;
+            y -= dy;
+        }
+        int oppTotal = oppForward + oppBackward;
 
-		// Evaluación de amenazas propias
-		if (myTotal >= 5)
-		{
-			return 500000; // Victoria inmediata
-		}
-		else if (myTotal == 4)
-		{
-			// Verificar si es amenaza libre (extremos disponibles)
-			int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
-			int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
+        // Evaluación de amenazas propias
+        if (myTotal >= 5) {
+            return 500000; // Victoria inmediata
+        }
+        else if (myTotal == 4) {
+            // Verificar si es amenaza libre (extremos disponibles)
+            int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
+            int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
 
-			bool startFree = state.isValid(startX - dx, startY - dy) &&
-							 state.isEmpty(startX - dx, startY - dy);
-			bool endFree = state.isValid(endX + dx, endY + dy) &&
-						   state.isEmpty(endX + dx, endY + dy);
+            bool startFree = state.isValid(startX - dx, startY - dy) &&
+                             state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) &&
+                           state.isEmpty(endX + dx, endY + dy);
 
-			if (startFree && endFree)
-				score += 50000; // Four abierto
-			else if (startFree || endFree)
-				score += 25000; // Four semicerrado
-		}
-		else if (myTotal == 3)
-		{
-			// Verificar si es three libre
-			int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
-			int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
+            if (startFree && endFree)
+                score += 50000; // Four abierto
+            else if (startFree || endFree)
+                score += 25000; // Four semicerrado
+        }
+        else if (myTotal == 3) {
+            // Verificar si es three libre
+            int startX = move.x - myBackward * dx, startY = move.y - myBackward * dy;
+            int endX = move.x + myForward * dx, endY = move.y + myForward * dy;
 
-			bool startFree = state.isValid(startX - dx, startY - dy) &&
-							 state.isEmpty(startX - dx, startY - dy);
-			bool endFree = state.isValid(endX + dx, endY + dy) &&
-						   state.isEmpty(endX + dx, endY + dy);
+            bool startFree = state.isValid(startX - dx, startY - dy) &&
+                             state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) &&
+                           state.isEmpty(endX + dx, endY + dy);
 
-			if (startFree && endFree)
-				score += 10000; // Three abierto
-			else if (startFree || endFree)
-				score += 1500; // Three semicerrado
-		}
-		else if (myTotal == 2)
-		{
-			score += 100; // Desarrollo básico
-		}
+            if (startFree && endFree)
+                score += 10000; // Three abierto
+            else if (startFree || endFree)
+                score += 1500; // Three semicerrado
+        }
+        else if (myTotal == 2) {
+            score += 100; // Desarrollo básico
+        }
 
-		// Evaluación defensiva (bloquear amenazas del oponente)
-		if (oppTotal >= 5)
-		{
-			return 500000; // Victoria inmediata
-		}
-		else if (oppTotal == 4)
-		{
-			// Verificar si es amenaza libre (extremos disponibles)
-			int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
-			int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
+        // Evaluación defensiva (bloquear amenazas del oponente)
+        if (oppTotal >= 5) {
+            return 500000; // Victoria inmediata
+        }
+        else if (oppTotal == 4) {
+            // Verificar si es amenaza libre (extremos disponibles)
+            int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
+            int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
 
-			bool startFree = state.isValid(startX - dx, startY - dy) &&
-							 state.isEmpty(startX - dx, startY - dy);
-			bool endFree = state.isValid(endX + dx, endY + dy) &&
-						   state.isEmpty(endX + dx, endY + dy);
+            bool startFree = state.isValid(startX - dx, startY - dy) &&
+                             state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) &&
+                           state.isEmpty(endX + dx, endY + dy);
 
-			if (startFree && endFree)
-				score += 50000; // Four abierto
-			else if (startFree || endFree)
-				score += 25000; // Four semicerrado
-		}
-		else if (oppTotal == 3)
-		{
-			// Verificar si es three libre
-			int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
-			int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
+            if (startFree && endFree)
+                score += 50000; // Four abierto
+            else if (startFree || endFree)
+                score += 25000; // Four semicerrado
+        }
+        else if (oppTotal == 3) {
+            // Verificar si es three libre
+            int startX = move.x - oppBackward * dx, startY = move.y - oppBackward * dy;
+            int endX = move.x + oppForward * dx, endY = move.y + oppForward * dy;
 
-			bool startFree = state.isValid(startX - dx, startY - dy) &&
-							 state.isEmpty(startX - dx, startY - dy);
-			bool endFree = state.isValid(endX + dx, endY + dy) &&
-						   state.isEmpty(endX + dx, endY + dy);
+            bool startFree = state.isValid(startX - dx, startY - dy) &&
+                             state.isEmpty(startX - dx, startY - dy);
+            bool endFree = state.isValid(endX + dx, endY + dy) &&
+                           state.isEmpty(endX + dx, endY + dy);
 
-			if (startFree && endFree)
-				score += 10000; // Three abierto
-			else if (startFree || endFree)
-				score += 1500; // Three semicerrado
-		}
-		else if (oppTotal == 2)
-		{
-			score += 100; // Desarrollo básico
-		}
-	}
+            if (startFree && endFree)
+                score += 10000; // Three abierto
+            else if (startFree || endFree)
+                score += 1500; // Three semicerrado
+        }
+        else if (oppTotal == 2) {
+            score += 100; // Desarrollo básico
+        }
+    }
 
-	// 3. Evaluación de capturas potenciales (todas las 8 direcciones)
-	int captureDirections[8][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-	int captureScore = 0;
+    // 3. Evaluación de capturas potenciales (todas las 8 direcciones)
+    int captureScore = 0;
 
-	for (int d = 0; d < 8; d++)
-	{
-		int dx = captureDirections[d][0], dy = captureDirections[d][1];
+    for (int d = 0; d < 8; d++) {
+        int dx = captureDirections[d][0], dy = captureDirections[d][1];
 
-		// Patrón de captura hacia adelante: NUEVA + OPP + OPP + MIA
-		if (state.isValid(move.x + dx, move.y + dy) &&
-			state.isValid(move.x + 2 * dx, move.y + 2 * dy) &&
-			state.isValid(move.x + 3 * dx, move.y + 3 * dy))
-		{
+        // Patrón de captura hacia adelante: NUEVA + OPP + OPP + MIA
+        if (state.isValid(move.x + dx, move.y + dy) &&
+            state.isValid(move.x + 2 * dx, move.y + 2 * dy) &&
+            state.isValid(move.x + 3 * dx, move.y + 3 * dy)) {
 
-			if (state.getPiece(move.x + dx, move.y + dy) == opponent &&
-				state.getPiece(move.x + 2 * dx, move.y + 2 * dy) == opponent &&
-				state.getPiece(move.x + 3 * dx, move.y + 3 * dy) == currentPlayer)
-			{
-				captureScore += 2500;
-			}
-		}
+            if (state.getPiece(move.x + dx, move.y + dy) == opponent &&
+                state.getPiece(move.x + 2 * dx, move.y + 2 * dy) == opponent &&
+                state.getPiece(move.x + 3 * dx, move.y + 3 * dy) == currentPlayer) {
+                captureScore += 2500;
+            }
+        }
 
-		// Patrón de captura hacia atrás: MIA + OPP + OPP + NUEVA
-		if (state.isValid(move.x - dx, move.y - dy) &&
-			state.isValid(move.x - 2 * dx, move.y - 2 * dy) &&
-			state.isValid(move.x - 3 * dx, move.y - 3 * dy))
-		{
+        // Patrón de captura hacia atrás: MIA + OPP + OPP + NUEVA
+        if (state.isValid(move.x - dx, move.y - dy) &&
+            state.isValid(move.x - 2 * dx, move.y - 2 * dy) &&
+            state.isValid(move.x - 3 * dx, move.y - 3 * dy)) {
 
-			if (state.getPiece(move.x - dx, move.y - dy) == opponent &&
-				state.getPiece(move.x - 2 * dx, move.y - 2 * dy) == opponent &&
-				state.getPiece(move.x - 3 * dx, move.y - 3 * dy) == currentPlayer)
-			{
-				captureScore += 2500;
-			}
-		}
-	}
+            if (state.getPiece(move.x - dx, move.y - dy) == opponent &&
+                state.getPiece(move.x - 2 * dx, move.y - 2 * dy) == opponent &&
+                state.getPiece(move.x - 3 * dx, move.y - 3 * dy) == currentPlayer) {
+                captureScore += 2500;
+            }
+        }
+    }
 
-	// Escalar capturas según situación del juego
-	int myCaptures = state.captures[currentPlayer - 1];
-	if (myCaptures >= 8)
-		captureScore *= 10; // Cerca de ganar por capturas
-	else if (myCaptures >= 6)
-		captureScore *= 5;
-	else if (myCaptures >= 4)
-		captureScore *= 2;
+    // OPTIMIZACIÓN: Escalar capturas según situación del juego (calculado una vez)
+    int myCaptures = state.captures[currentPlayer - 1];
+    if (myCaptures >= 8)
+        captureScore *= 10; // Cerca de ganar por capturas
+    else if (myCaptures >= 6)
+        captureScore *= 5;
+    else if (myCaptures >= 4)
+        captureScore *= 2;
 
-	score += captureScore;
+    score += captureScore;
 
-	// 4. Evaluación de amenazas críticas del oponente
-	bool opponentHasThreats = false;
-	for (int d = 0; d < 4; d++)
-	{
-		int dx = directions[d][0], dy = directions[d][1];
+    // 4. Evaluación de amenazas críticas del oponente
+    bool opponentHasThreats = false;
+    for (int d = 0; d < 4; d++) {
+        int dx = directions[d][0], dy = directions[d][1];
 
-		// Buscar patrones peligrosos del oponente alrededor de esta posición
-		for (int offset = -3; offset <= 3; offset++)
-		{
-			if (offset == 0)
-				continue; // Skip la posición del movimiento
+        // Buscar patrones peligrosos del oponente alrededor de esta posición
+        for (int offset = -3; offset <= 3; offset++) {
+            if (offset == 0)
+                continue; // Skip la posición del movimiento
 
-			int checkX = move.x + offset * dx;
-			int checkY = move.y + offset * dy;
+            int checkX = move.x + offset * dx;
+            int checkY = move.y + offset * dy;
 
-			if (state.isValid(checkX, checkY) && state.getPiece(checkX, checkY) == opponent)
-			{
-				int oppConsecutive = 1;
+            if (state.isValid(checkX, checkY) && state.getPiece(checkX, checkY) == opponent) {
+                int oppConsecutive = 1;
 
-				// Contar hacia adelante
-				int x = checkX + dx, y = checkY + dy;
-				while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-				{
-					oppConsecutive++;
-					x += dx;
-					y += dy;
-				}
+                // Contar hacia adelante
+                int x = checkX + dx, y = checkY + dy;
+                while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                    oppConsecutive++;
+                    x += dx;
+                    y += dy;
+                }
 
-				// Contar hacia atrás
-				x = checkX - dx;
-				y = checkY - dy;
-				while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-				{
-					oppConsecutive++;
-					x -= dx;
-					y -= dy;
-				}
+                // Contar hacia atrás
+                x = checkX - dx;
+                y = checkY - dy;
+                while (oppConsecutive < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                    oppConsecutive++;
+                    x -= dx;
+                    y -= dy;
+                }
 
-				if (oppConsecutive >= 3)
-				{
-					opponentHasThreats = true;
-					break;
-				}
-			}
-		}
-		if (opponentHasThreats)
-			break;
-	}
+                if (oppConsecutive >= 3) {
+                    opponentHasThreats = true;
+                    break;
+                }
+            }
+        }
+        if (opponentHasThreats)
+            break;
+    }
 
-	// Si el oponente tiene amenazas, priorizar movimientos defensivos
-	if (opponentHasThreats)
-	{
-		// Verificar si este movimiento interrumpe alguna amenaza
-		bool blocksThreats = false;
-		for (int d = 0; d < 4; d++)
-		{
-			int dx = directions[d][0], dy = directions[d][1];
+    // Si el oponente tiene amenazas, priorizar movimientos defensivos
+    if (opponentHasThreats) {
+        // Verificar si este movimiento interrumpe alguna amenaza
+        bool blocksThreats = false;
+        for (int d = 0; d < 4; d++) {
+            int dx = directions[d][0], dy = directions[d][1];
 
-			int oppBefore = 0, oppAfter = 0;
-			int x = move.x - dx, y = move.y - dy;
-			while (oppBefore < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-			{
-				oppBefore++;
-				x -= dx;
-				y -= dy;
-			}
-			x = move.x + dx;
-			y = move.y + dy;
-			while (oppAfter < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent)
-			{
-				oppAfter++;
-				x += dx;
-				y += dy;
-			}
+            int oppBefore = 0, oppAfter = 0;
+            int x = move.x - dx, y = move.y - dy;
+            while (oppBefore < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                oppBefore++;
+                x -= dx;
+                y -= dy;
+            }
+            x = move.x + dx;
+            y = move.y + dy;
+            while (oppAfter < 4 && state.isValid(x, y) && state.getPiece(x, y) == opponent) {
+                oppAfter++;
+                x += dx;
+                y += dy;
+            }
 
-			if (oppBefore + oppAfter >= 2)
-			{
-				blocksThreats = true;
-				break;
-			}
-		}
+            if (oppBefore + oppAfter >= 2) {
+                blocksThreats = true;
+                break;
+            }
+        }
 
-		if (blocksThreats)
-			score += 30000; // Bloqueo defensivo crucial
-		else
-			score -= 30000; // Penalizar movimientos que no defienden
-	}
+        if (blocksThreats)
+            score += 30000; // Bloqueo defensivo crucial
+        else
+            score -= 30000; // Penalizar movimientos que no defienden
+    }
 
-	return score;
+    return score;
 }
 
 // Función auxiliar para verificar si una línea está bloqueada
@@ -1023,7 +1018,6 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
 	return bestResult;
 }
 
-// En transposition_search.cpp:
 std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const GameState &state)
 {
 	std::vector<Move> candidates;
@@ -1032,11 +1026,11 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
 	int searchRadius = getSearchRadiusForGamePhase(pieceCount);
 	int opponent = state.getOpponent(state.currentPlayer);
 
+	// OPTIMIZACIÓN: Calcular una sola vez al inicio
+	bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
+
 	// NUEVO: Agregar todas las casillas vacías alrededor del último movimiento humano
 	addCandidatesAroundLastHumanMove(candidates, state);
-
-	// NUEVO: Detectar si el oponente tiene amenazas críticas
-	bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
 
 	for (int i = 0; i < GameState::BOARD_SIZE; i++)
 	{
@@ -1318,19 +1312,29 @@ int TranspositionSearch::calculateConnectivityBonus(const GameState &state, cons
 int TranspositionSearch::countPiecesInDirection(const GameState &state, int x, int y,
 												int dx, int dy, int player)
 {
-	int count = 0;
+	// OPTIMIZACIÓN: Unroll manual para casos comunes (1-4 piezas)
 	x += dx;
 	y += dy;
 
-	// Limitar conteo a 4 (suficiente para todas las evaluaciones tácticas)
-	while (count < 4 && state.isValid(x, y) && state.getPiece(x, y) == player)
-	{
-		count++;
-		x += dx;
-		y += dy;
-	}
+	if (!state.isValid(x, y) || state.getPiece(x, y) != player)
+		return 0;
 
-	return count;
+	x += dx;
+	y += dy;
+	if (!state.isValid(x, y) || state.getPiece(x, y) != player)
+		return 1;
+
+	x += dx;
+	y += dy;
+	if (!state.isValid(x, y) || state.getPiece(x, y) != player)
+		return 2;
+
+	x += dx;
+	y += dy;
+	if (!state.isValid(x, y) || state.getPiece(x, y) != player)
+		return 3;
+
+	return 4; // Máximo que necesitamos
 }
 
 void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state)
