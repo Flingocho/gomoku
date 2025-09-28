@@ -1,5 +1,7 @@
 /* ************************************************************************** */
-/*                                                                            */
+/*     void clearUserMove() { moveReady = false; }
+	void refreshSelectedMenuOption() { selectedMenuOption = -1; }
+    void setLastAiMove(const Move& move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA                                                                         */
 /*                                                        :::      ::::::::   */
 /*   gui_renderer.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
@@ -17,6 +19,7 @@
 #include "game_types.hpp"
 #include <string>
 #include <chrono>
+#include <vector>  // NUEVO: Para vector de tiempos de IA
 
 class GuiRenderer {
 public:
@@ -46,6 +49,7 @@ private:
     Move pendingMove; // Para capturar clicks del usuario
     bool moveReady;
     Move hoverPosition;  // NUEVO: Para hover en el tablero
+    Move lastAiMove;     // NUEVO: Última ficha colocada por la IA
     
     // Visual constants
     static constexpr int WINDOW_WIDTH = 1000;
@@ -83,6 +87,12 @@ public:
     Move getUserMove(); // Non-blocking, returns pending move
     void clearUserMove() { moveReady = false; }
 	void refreshSelectedMenuOption() { selectedMenuOption = -1; }
+    void setLastAiMove(const Move& move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA
+    
+    // NUEVO: Métodos para estadísticas de tiempo de IA
+    void addAiTime(int timeMs);           // Añadir un nuevo tiempo de IA
+    float getAverageAiTime() const;       // Obtener tiempo promedio
+    void resetAiStats();                  // Reiniciar estadísticas
     
 private:
     // Internal rendering methods
@@ -116,6 +126,11 @@ private:
     void handleMouseMove(int x, int y);
     
     // Member variables for hover position
+    
+    // NUEVO: Variables para estadísticas de tiempo de IA
+    std::vector<int> aiTimes;  // Almacenar todos los tiempos de IA
+    int totalAiTime;           // Suma total de tiempos
+    int aiMoveCount;           // Número de movimientos de IA realizados
 };
 
 #endif

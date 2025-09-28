@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 20:01:18 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 19:07:49 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,12 +67,14 @@ int main()
 			{
 				std::cout << "Iniciando juego vs AI" << std::endl;
 				game.newGame();
+				renderer.resetAiStats(); // NUEVO: Reiniciar estadísticas de IA
 				renderer.setState(GuiRenderer::PLAYING);
 			}
 			else if (choice == GuiRenderer::VS_HUMAN)
 			{
 				std::cout << "Iniciando juego vs Humano (hotseat)" << std::endl;
 				game.newGame();
+				renderer.resetAiStats(); // NUEVO: Reiniciar estadísticas de IA
 				renderer.setState(GuiRenderer::PLAYING);
 			}
 			else if (choice == GuiRenderer::QUIT)
@@ -136,6 +138,8 @@ int main()
 
 				if (aiMove.isValid())
 				{
+					renderer.setLastAiMove(aiMove); // NUEVO: Informar al GUI sobre la última jugada de la IA
+					renderer.addAiTime(game.getLastAIThinkingTime()); // NUEVO: Añadir tiempo a las estadísticas
 					std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
 					std::cout << "Tiempo: " << game.getLastAIThinkingTime() << "ms" << std::endl;
 					std::cout << "Nodos evaluados: " << game.getLastNodesEvaluated() << std::endl;

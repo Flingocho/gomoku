@@ -6,13 +6,15 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 17:17:26 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 19:07:49 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/gui_renderer.hpp"
 #include <iostream>
 #include <sstream>  // NUEVO: Para stringstream en drawGameInfo
+#include <cmath>    // NUEVO: Para sin() en el efecto pulsante
+#include <vector>   // NUEVO: Para vector de tiempos de IA
 
 GuiRenderer::GuiRenderer() 
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Gomoku AI"),
@@ -21,14 +23,17 @@ GuiRenderer::GuiRenderer()
       hoveredMenuOption(-1),
       moveReady(false),
       hoverPosition(-1, -1),    // NUEVO: Inicializar hover position
+      lastAiMove(-1, -1),       // NUEVO: Última ficha de la IA
       backgroundColor(sf::Color(40, 44, 52)),     // Dark blue-gray
       boardLineColor(sf::Color(139, 69, 19)),     // Saddle brown
-      player1Color(sf::Color::Blue),              // Human - Blue
+      player1Color(sf::Color(30, 144, 255)),     // Human - Dodger Blue (más legible)
       player2Color(sf::Color::Red),               // AI - Red  
-      hoverColor(sf::Color(255, 255, 255, 100))   // Transparent white
+      hoverColor(sf::Color(255, 255, 255, 100)),   // Transparent white
+      totalAiTime(0),                             // NUEVO: Inicializar estadísticas
+      aiMoveCount(0)
 {
     // Cargar fuente personalizada
-    if (!font.loadFromFile("fonts/street_drips.ttf")) {
+    if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
         // Si no encuentra archivo, continuar sin fuente personalizada
         std::cout << "Warning: No se pudo cargar fuente fonts/street_drips.ttf, usando por defecto" << std::endl;
         // SFML puede funcionar sin fuente explícita
@@ -142,23 +147,23 @@ void GuiRenderer::renderMenu() {
     
     // CORREGIDO: Usar hoveredMenuOption para efectos visuales
     bool vsAiHover = (hoveredMenuOption == 0);
-    drawButton("🤖 Jugar vs IA", buttonX, 250, buttonWidth, buttonHeight, vsAiHover);
+    drawButton("Jugar vs IA", buttonX, 250, buttonWidth, buttonHeight, vsAiHover);
     
     bool vsHumanHover = (hoveredMenuOption == 1);
-    drawButton("👥 Jugar vs Humano", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
+    drawButton("Jugar vs Humano", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
     
     bool quitHover = (hoveredMenuOption == 2);
-    drawButton("❌ Salir", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, quitHover);
+    drawButton("Salir", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, quitHover);
     
     // 3. Información adicional
-    drawText("Características:", 50, 500, 20, sf::Color::Yellow);
-    drawText("• Zobrist Hashing para máximo rendimiento", 70, 530, 16, sf::Color::White);
-    drawText("• Búsqueda Minimax con poda Alpha-Beta", 70, 550, 16, sf::Color::White);
-    drawText("• Profundidad adaptativa hasta 10 niveles", 70, 570, 16, sf::Color::White);
-    drawText("• Reglas completas: capturas + double-three", 70, 590, 16, sf::Color::White);
+    drawText("Caracteristicas:", 50, 500, 20, sf::Color::Yellow);
+    drawText("- Zobrist Hashing para maximo rendimiento", 70, 530, 16, sf::Color::White);
+    drawText("- Busqueda Minimax con poda Alpha-Beta", 70, 550, 16, sf::Color::White);
+    drawText("- Profundidad adaptativa hasta 10 niveles", 70, 570, 16, sf::Color::White);
+    drawText("- Reglas completas: capturas + double-three", 70, 590, 16, sf::Color::White);
     
     // 4. Controles
-    drawText("Usa el ratón para seleccionar", WINDOW_WIDTH/2 - 100, 650, 16, sf::Color(150, 150, 150));
+    drawText("Usa el raton para seleccionar", WINDOW_WIDTH/2 - 100, 650, 16, sf::Color(150, 150, 150));
     drawText("ESC = Salir", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
 }
 
@@ -428,8 +433,8 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 
                 // Color del highlight según el tipo de pieza
                 if (piece == GameState::PLAYER1) {
-                    // Azul más claro para highlight
-                    pieceHighlight.setFillColor(sf::Color(100, 149, 237)); // Cornflower blue
+                    // Azul más claro para highlight (más legible)
+                    pieceHighlight.setFillColor(sf::Color(135, 206, 250)); // Light sky blue
                 } else {
                     // Rojo más claro para highlight  
                     pieceHighlight.setFillColor(sf::Color(255, 99, 71)); // Tomato
@@ -442,6 +447,23 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 pieceShine.setPosition(pos.x - pieceRadius + 5, pos.y - pieceRadius + 5);
                 pieceShine.setFillColor(sf::Color(255, 255, 255, 180)); // Blanco semi-transparente
                 window.draw(pieceShine);
+                
+                // NUEVO: Resaltado especial para la última ficha de la IA
+                if (piece == GameState::PLAYER2 && lastAiMove.x == i && lastAiMove.y == j) {
+                    // Anillo pulsante alrededor de la última ficha de la IA
+                    sf::CircleShape lastMoveRing(pieceRadius + 4);
+                    lastMoveRing.setPosition(pos.x - pieceRadius - 4, pos.y - pieceRadius - 4);
+                    lastMoveRing.setFillColor(sf::Color::Transparent);
+                    lastMoveRing.setOutlineThickness(2);
+                    
+                    // Efecto pulsante usando el tiempo
+                    static sf::Clock pulseClock;
+                    float pulseTime = pulseClock.getElapsedTime().asSeconds();
+                    float alpha = (sin(pulseTime * 3.0f) + 1.0f) * 0.3f + 0.4f; // Oscila entre 0.4 y 1.0
+                    lastMoveRing.setOutlineColor(sf::Color(255, 255, 0, (sf::Uint8)(alpha * 255))); // Amarillo pulsante
+                    
+                    window.draw(lastMoveRing);
+                }
             }
         }
     }
@@ -595,18 +617,34 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText("IA STATS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
         yOffset += lineHeight + 5;
         
-        // Tiempo de pensamiento
-        std::string timeStr = "Tiempo: " + std::to_string(aiTimeMs) + "ms";
+        // Tiempo de pensamiento actual
+        std::string timeStr = "Ultimo: " + std::to_string(aiTimeMs) + "ms";
         sf::Color timeColor = sf::Color::White;
         if (aiTimeMs < 100) timeColor = sf::Color::Green;
         else if (aiTimeMs > 1000) timeColor = sf::Color::Red;
         drawText(timeStr, panelX + 15, yOffset, 14, timeColor);
         yOffset += lineHeight;
         
-        // Indicador de rendimiento
+        // NUEVO: Tiempo promedio de la IA
+        if (aiMoveCount > 0) {
+            float avgTime = getAverageAiTime();
+            std::string avgTimeStr = "Media: " + std::to_string(static_cast<int>(avgTime)) + "ms";
+            sf::Color avgColor = sf::Color::White;
+            if (avgTime < 100) avgColor = sf::Color::Green;
+            else if (avgTime > 1000) avgColor = sf::Color::Red;
+            drawText(avgTimeStr, panelX + 15, yOffset, 14, avgColor);
+            yOffset += lineHeight;
+            
+            // Mostrar número de movimientos evaluados
+            std::string movesStr = "Movs: " + std::to_string(aiMoveCount);
+            drawText(movesStr, panelX + 15, yOffset, 12, sf::Color(180, 180, 180));
+            yOffset += lineHeight;
+        }
+        
+        // Indicador de rendimiento (basado en último tiempo)
         std::string perfStr;
-        if (aiTimeMs < 50) perfStr = "Ultrarrápida";
-        else if (aiTimeMs < 200) perfStr = "Rápida"; 
+        if (aiTimeMs < 50) perfStr = "Ultrarrapida";
+        else if (aiTimeMs < 200) perfStr = "Rapida"; 
         else if (aiTimeMs < 500) perfStr = "Normal";
         else perfStr = "Pensando...";
         
@@ -693,7 +731,7 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     
     // 2. Panel central del game over
     int panelWidth = 400;
-    int panelHeight = 350;  // Más alto para mostrar más info
+    int panelHeight = 380;  // AUMENTADO: Más alto para nueva información de estadísticas
     int panelX = WINDOW_WIDTH/2 - panelWidth/2;
     int panelY = WINDOW_HEIGHT/2 - panelHeight/2;
     
@@ -741,10 +779,10 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     // 5. Mostrar resultado
     if (player1Wins) {
         drawText("¡GANASTE!", panelX + panelWidth/2 - 70, panelY + 70, 28, sf::Color::Green);
-        drawText("🎉 ¡Felicidades! 🎉", panelX + panelWidth/2 - 80, panelY + 105, 18, sf::Color::Yellow);
+        drawText("¡Felicidades!", panelX + panelWidth/2 - 80, panelY + 105, 18, sf::Color::Yellow);
     } else if (player2Wins) {
         drawText("IA GANA", panelX + panelWidth/2 - 50, panelY + 70, 28, sf::Color::Red);
-        drawText("🤖 La máquina triunfa", panelX + panelWidth/2 - 85, panelY + 105, 18, sf::Color(200, 100, 100));
+        drawText("La máquina triunfa", panelX + panelWidth/2 - 85, panelY + 105, 18, sf::Color(200, 100, 100));
     }
     
     // 6. Mostrar razón de victoria
@@ -761,6 +799,32 @@ void GuiRenderer::renderGameOver(const GameState& state) {
                               ", IA: " + std::to_string(state.captures[1]);
     drawText(capturesText, panelX + 20, panelY + 210, 14, sf::Color::White);
     
+    // NUEVO: Mostrar estadísticas de tiempo de IA si hay datos
+    if (aiMoveCount > 0) {
+        float avgTime = getAverageAiTime();
+        std::string aiStatsText = "IA - Movs: " + std::to_string(aiMoveCount) + 
+                                 ", Media: " + std::to_string(static_cast<int>(avgTime)) + "ms";
+        drawText(aiStatsText, panelX + 20, panelY + 230, 14, sf::Color::White);
+        
+        // Clasificación del rendimiento promedio
+        std::string perfClassText;
+        sf::Color perfColor;
+        if (avgTime < 100) {
+            perfClassText = "Rendimiento: Excelente";
+            perfColor = sf::Color::Green;
+        } else if (avgTime < 300) {
+            perfClassText = "Rendimiento: Bueno";
+            perfColor = sf::Color::Yellow;
+        } else if (avgTime < 1000) {
+            perfClassText = "Rendimiento: Normal";
+            perfColor = sf::Color::White;
+        } else {
+            perfClassText = "Rendimiento: Lento";
+            perfColor = sf::Color::Red;
+        }
+        drawText(perfClassText, panelX + 20, panelY + 250, 12, perfColor);
+    }
+    
     // 8. Botones de acción
     int buttonWidth = 120;
     int buttonHeight = 40;
@@ -772,7 +836,7 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     drawButton("Nuevo Juego", button1X, buttonY, buttonWidth, buttonHeight, false);
     
     // Botón "Menú"
-    drawButton("Menú", button2X, buttonY, buttonWidth, buttonHeight, false);
+    drawButton("Menu", button2X, buttonY, buttonWidth, buttonHeight, false);
     
     // 9. Instrucciones
     drawText("Click en un botón o presiona ESC", panelX + panelWidth/2 - 120, 
@@ -844,7 +908,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
         y >= buttonY && y <= buttonY + buttonHeight) {
         setState(MENU);
         selectedMenuOption = -1; // Reset
-        std::cout << "Volviendo al menú" << std::endl;
+        std::cout << "Volviendo al menu" << std::endl;
         return;
     }
     
@@ -857,4 +921,27 @@ char GuiRenderer::getPieceSymbol(int piece) const {
         case GameState::PLAYER2: return 'X';
         default: return '.';
     }
+}
+
+// ===============================================
+// AI STATS METHODS - NUEVO
+// ===============================================
+
+void GuiRenderer::addAiTime(int timeMs) {
+    if (timeMs > 0) {
+        aiTimes.push_back(timeMs);
+        totalAiTime += timeMs;
+        aiMoveCount++;
+    }
+}
+
+float GuiRenderer::getAverageAiTime() const {
+    if (aiMoveCount == 0) return 0.0f;
+    return static_cast<float>(totalAiTime) / static_cast<float>(aiMoveCount);
+}
+
+void GuiRenderer::resetAiStats() {
+    aiTimes.clear();
+    totalAiTime = 0;
+    aiMoveCount = 0;
 }
