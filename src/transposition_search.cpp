@@ -152,14 +152,6 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 						", Cache hits: " + std::to_string(cacheHits));
 	}
 
-	if (originalMaxDepth >= 7 && depth >= originalMaxDepth - 2)
-	{
-		std::cout << "MINIMAX: depth=" << depth << "/" << originalMaxDepth
-				  << " nodes=" << nodesEvaluated
-				  << " zobrist=" << std::hex << state.getZobristHash() << std::dec
-				  << std::endl;
-	}
-
 	// ZOBRIST: Verificar transposition table PRIMERO
 	uint64_t zobristKey = state.getZobristHash();
 	CacheEntry entry;
@@ -188,7 +180,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 		}
 
 		// Usar movimiento del cache para ordering si estamos en nivel raíz
-		if (entry.bestMove.isValid() && depth == originalMaxDepth)
+		if (entry.bestMove.isValid())
 		{
 			previousBestMove = entry.bestMove;
 		}
@@ -289,6 +281,10 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			entryType = CacheEntry::LOWER_BOUND;
 		}
 
+		if (!currentBestMove.isValid() && !moves.empty())
+		{
+			currentBestMove = moves[0]; // Al menos el primer movimiento evaluado
+		}
 		storeTransposition(zobristKey, maxEval, depth, currentBestMove, entryType);
 
 		if (bestMove && depth == originalMaxDepth)
@@ -370,7 +366,10 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 		{
 			entryType = CacheEntry::LOWER_BOUND;
 		}
-
+		if (!currentBestMove.isValid() && !moves.empty())
+		{
+			currentBestMove = moves[0]; // Al menos el primer movimiento evaluado
+		}
 		storeTransposition(zobristKey, minEval, depth, currentBestMove, entryType);
 
 		if (bestMove && depth == originalMaxDepth)
@@ -396,10 +395,6 @@ bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &e
 	// Verificar coincidencia exacta de hash
 	if (candidate.zobristKey == zobristKey)
 	{
-		if (candidate.depth >= 7) {
-            std::cout << "CACHE HIT: key=" << std::hex << zobristKey << std::dec
-                      << " depth=" << candidate.depth << std::endl;
-        }
 		entry = candidate;
 
 		// NUEVO: Actualizar generación para LRU mejorado
