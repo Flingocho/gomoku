@@ -475,17 +475,14 @@ std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState &sta
 	// NUEVO: Determinar límite de candidatos según fase del juego
 	int maxCandidates = getMaxCandidatesForGamePhase(state);
 
-	// NUEVO: Ordenar candidatos con evaluación geométrica rápida
-	orderMovesByGeometricValue(candidates, state);
+	// Aplicar move ordering con mejor movimiento de iteración anterior
+	orderMovesWithPreviousBest(candidates, state);
 
 	// NUEVO: Limitar a los mejores candidatos
 	if (candidates.size() > (size_t)maxCandidates)
 	{
 		candidates.resize(maxCandidates);
 	}
-
-	// Aplicar move ordering con mejor movimiento de iteración anterior
-	orderMovesWithPreviousBest(candidates, state);
 
 	return candidates;
 }
@@ -1192,11 +1189,11 @@ int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
 
 	if (pieceCount <= 4)
 	{
-		return 4; // Opening: muy selectivo para evitar explosion combinatoria
+		return 3; // Opening: muy selectivo para evitar explosion combinatoria
 	}
 	else if (pieceCount <= 10)
 	{
-		return 6; // Early game: moderadamente selectivo
+		return 5; // Early game: moderadamente selectivo
 	}
 	else
 	{

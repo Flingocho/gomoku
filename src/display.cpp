@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:21 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 18:25:37 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 02:42:47 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ void Display::clearScreen() {
     #ifdef _WIN32
         system("cls");
     #else
-        system("clear");
+        if (!system("clear"))
+			return;
     #endif
 }
 
