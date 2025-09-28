@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 19:10:37 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/28 23:41:08 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,6 +139,24 @@ private:
 	
 	// NUEVO: Generar candidatos alrededor del último movimiento humano
 	void addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state);
+
+	int quickCategorizeMove(const GameState& state, const Move& move);
+    
+    // Funciones auxiliares de verificación rápida
+    bool wouldCreateFiveInRow(const GameState& state, const Move& move, int player);
+    bool createsFourInRow(const GameState& state, const Move& move, int player);
+    bool createsThreeInRow(const GameState& state, const Move& move, int player);
+    bool hasImmediateCapture(const GameState& state, const Move& move, int player);
+    bool isNearExistingPieces(const GameState& state, const Move& move);
+    
+    // Funciones para verificar bloqueos
+    bool blocksOpponentWin(const GameState& state, const Move& move, int opponent);
+    bool blocksOpponentFour(const GameState& state, const Move& move, int opponent);
+    bool blocksOpponentThree(const GameState& state, const Move& move, int opponent);
+    
+    // Función auxiliar para contar en dirección
+    int countConsecutiveInDirection(const GameState& state, int x, int y, 
+                                   int dx, int dy, int player, int maxCount = 5);
 
 public:
 	/**
