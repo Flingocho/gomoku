@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 16:10:28 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 16:41:43 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,13 +199,13 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     int oppCaptures = state.captures[opponent - 1];
     
     // MEJORADO: Bonus/malus más agresivos por capturas ya realizadas
-    if (myCaptures >= 8) totalScore += 400000;      // Era 15000 - mucho más agresivo
+    if (myCaptures >= 8) totalScore += 200000;      // Era 15000 - mucho más agresivo
     else if (myCaptures >= 6) totalScore += 15000; // Era 6000
     else if (myCaptures >= 4) totalScore += 6000;  // Era 2000
     else totalScore += myCaptures * 500;           // Era 200
     
     // CRÍTICO: Penalización más severa por capturas del oponente
-    if (oppCaptures >= 8) totalScore -= 500000;     // Era -15000 - ¡más defensivo!
+    if (oppCaptures >= 8) totalScore -= 300000;     // Era -15000 - ¡más defensivo!
     else if (oppCaptures >= 6) totalScore -= 20000; // Era -6000
     else if (oppCaptures >= 4) totalScore -= 8000;  // Era -2000
     else totalScore -= oppCaptures * 800;           // Era -200

@@ -198,6 +198,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 
 	// Generar y ordenar movimientos
 	std::vector<Move> moves = generateOrderedMoves(state);
+
 	if (moves.empty())
 	{
 		int score = Evaluator::evaluate(state, originalMaxDepth, originalMaxDepth - depth);
@@ -1140,11 +1141,11 @@ int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
 	}
 	else if (pieceCount <= 10)
 	{
-		return 5; // Early game: moderadamente selectivo
+		return 4; // Early game: moderadamente selectivo
 	}
 	else
 	{
-		return 8; // Mid/late game: más opciones disponibles
+		return 5; // Mid/late game: más opciones disponibles
 	}
 }
 
