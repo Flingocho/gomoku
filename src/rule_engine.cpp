@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 17:48:57 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:51:10 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ bool RuleEngine::checkWin(const GameState &state, int player)
                         }
                         
                         // NUEVA VERIFICACIÓN 2: ¿Estoy en peligro de perder por captura?
-                        if (state.captures[player - 1] >= 8) {
+                        if (state.captures[opponent - 1] >= 8) {
                             // Tengo 4+ pares capturados en mi contra
                             // ¿El oponente puede capturar uno más?
                             if (opponentCanCaptureNextTurn(state, opponent)) {
