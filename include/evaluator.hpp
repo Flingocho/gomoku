@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/28 19:54:31 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 18:01:43 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ public:
 	static constexpr int THREE_HALF = 1500;
 	static constexpr int TWO_OPEN = 100;
 	static constexpr int CAPTURE_OPPORTUNITY = 5000;   // Era 2000
-	static constexpr int CAPTURE_THREAT = 2000;		   // Era 500
+	static constexpr int CAPTURE_THREAT = 6000;		   // Era 500
 	static constexpr int CAPTURE_WIN = 500000;		   // NUEVO: Captura que gana
 	static constexpr int CAPTURE_PREVENT_LOSS = 400000; // NUEVO: Prevenir derrota
 

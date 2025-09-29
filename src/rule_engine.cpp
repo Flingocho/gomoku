@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 20:33:48 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:48:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,25 +89,49 @@ bool RuleEngine::isLegalMove(const GameState &state, const Move &move)
 
 bool RuleEngine::checkWin(const GameState &state, int player)
 {
-	// Victoria por capturas (10 piezas = 5 pares)
-	if (state.captures[player - 1] >= 10)
-		return true;
+    int opponent = state.getOpponent(player);
+    
+    // 1. Victoria por capturas (esta no cambia)
+    if (state.captures[player - 1] >= 10)
+        return true;
 
-	// Victoria por 5 en línea
-	for (int i = 0; i < GameState::BOARD_SIZE; i++)
-	{
-		for (int j = 0; j < GameState::BOARD_SIZE; j++)
-		{
-			if (state.board[i][j] == player)
-			{
-				Move pos(i, j);
-				if (checkLineWin(state, pos, player))
-					return true;
-			}
-		}
-	}
+    // 2. Victoria por 5 en línea (AHORA CON VERIFICACIÓN)
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (state.board[i][j] == player) {
+                Move pos(i, j);
+                
+                // Buscar línea de 5 en cada dirección
+                for (int d = 0; d < 4; d++) {
+                    int dx = MAIN_DIRECTIONS[d][0];
+                    int dy = MAIN_DIRECTIONS[d][1];
+                    
+                    if (checkLineWinInDirection(state, pos, dx, dy, player)) {
+                        // ✅ Encontramos 5 en línea
+                        
+                        // NUEVA VERIFICACIÓN 1: ¿Oponente puede romperla?
+                        if (canBreakLineByCapture(state, pos, dx, dy, player)) {
+                            continue;  // No es victoria todavía
+                        }
+                        
+                        // NUEVA VERIFICACIÓN 2: ¿Estoy en peligro de perder por captura?
+                        if (state.captures[player - 1] >= 8) {
+                            // Tengo 4+ pares capturados en mi contra
+                            // ¿El oponente puede capturar uno más?
+                            if (opponentCanCaptureNextTurn(state, opponent)) {
+                                return false;  // No gano, el oponente puede ganar por captura
+                            }
+                        }
+                        
+                        // Si llegamos aquí, es victoria legítima
+                        return true;
+                    }
+                }
+            }
+        }
+    }
 
-	return false;
+    return false;
 }
 
 RuleEngine::CaptureInfo RuleEngine::findAllCaptures(const GameState &state, const Move &move, int player)
@@ -334,4 +358,110 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 				   state.isEmpty(end.x + dx, end.y + dy);
 
 	return startFree && endFree; // Ambos extremos deben estar libres para ser "free-three"
+}
+
+bool RuleEngine::canBreakLineByCapture(
+    const GameState &state, 
+    const Move &lineStart,  // Primera ficha de la línea de 5
+    int dx, int dy,         // Dirección de la línea
+    int winningPlayer
+) {
+    int opponent = state.getOpponent(winningPlayer);
+    
+    // Revisar cada par consecutivo en la línea de 5
+    // En una línea de 5 hay 4 pares posibles: (0,1), (1,2), (2,3), (3,4)
+    for (int i = 0; i < 4; i++) {
+        Move pos1(lineStart.x + i*dx, lineStart.y + i*dy);
+        Move pos2(lineStart.x + (i+1)*dx, lineStart.y + (i+1)*dy);
+        
+        // Para capturar este par, el oponente necesita flanquearlo:
+        // Patrón de captura: OPP-PAIR-PAIR-OPP
+        
+        // Opción 1: Puede jugar ANTES del par
+        Move before(pos1.x - dx, pos1.y - dy);
+        Move beforeBefore(before.x - dx, before.y - dy);
+        
+        if (state.isValid(before.x, before.y) && state.isEmpty(before.x, before.y) &&
+            state.isValid(beforeBefore.x, beforeBefore.y) && 
+            state.getPiece(beforeBefore.x, beforeBefore.y) == opponent) {
+            // El oponente puede jugar en "before" y tiene ficha en "beforeBefore"
+            // Esto formaría: OPP-NUEVA-PAR1-PAR2
+            // Falta verificar que tenga otra ficha DESPUÉS del par
+            Move after(pos2.x + dx, pos2.y + dy);
+            if (state.isValid(after.x, after.y) && 
+                state.getPiece(after.x, after.y) == opponent) {
+                return true;  // Patrón completo: OPP-NUEVA-PAR-PAR-OPP
+            }
+        }
+        
+        // Opción 2: Puede jugar DESPUÉS del par
+        Move after(pos2.x + dx, pos2.y + dy);
+        Move afterAfter(after.x + dx, after.y + dy);
+        
+        if (state.isValid(after.x, after.y) && state.isEmpty(after.x, after.y) &&
+            state.isValid(afterAfter.x, afterAfter.y) && 
+            state.getPiece(afterAfter.x, afterAfter.y) == opponent) {
+            // El oponente puede jugar en "after" y tiene ficha en "afterAfter"
+            // Esto formaría: PAR1-PAR2-NUEVA-OPP
+            // Falta verificar que tenga otra ficha ANTES del par
+            Move before(pos1.x - dx, pos1.y - dy);
+            if (state.isValid(before.x, before.y) && 
+                state.getPiece(before.x, before.y) == opponent) {
+                return true;  // Patrón completo: OPP-PAR-PAR-NUEVA-OPP
+            }
+        }
+    }
+    
+    return false;  // No puede romper la línea
+}
+
+bool RuleEngine::opponentCanCaptureNextTurn(
+    const GameState &state, 
+    int opponent
+) {
+    // Probar cada casilla vacía
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (state.isEmpty(i, j)) {
+                Move testMove(i, j);
+                
+                // ¿Este movimiento crea capturas?
+                auto captures = findCaptures(state, testMove, opponent);
+                if (!captures.empty()) {
+                    return true;  // Sí puede capturar en su próximo turno
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+bool RuleEngine::checkLineWinInDirection(const GameState &state, const Move &start, 
+                                         int dx, int dy, int player)
+{
+    // Verificar si desde 'start' hay exactamente 5 o más en línea en dirección (dx, dy)
+    
+    // IMPORTANTE: Solo contar si 'start' es realmente el inicio de la línea
+    // (para evitar contar la misma línea múltiples veces)
+    
+    // Verificar que no hay pieza del mismo jugador ANTES de start
+    Move before(start.x - dx, start.y - dy);
+    if (state.isValid(before.x, before.y) && state.getPiece(before.x, before.y) == player) {
+        return false;  // No es el inicio real de la línea
+    }
+    
+    // Contar cuántas fichas consecutivas hay desde start
+    int count = 1;  // La ficha en 'start'
+    Move current(start.x + dx, start.y + dy);
+    
+    while (state.isValid(current.x, current.y) && 
+           state.getPiece(current.x, current.y) == player) {
+        count++;
+        current.x += dx;
+        current.y += dy;
+    }
+    
+    // ¿Hay 5 o más?
+    return (count >= 5);
 }

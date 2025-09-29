@@ -520,7 +520,7 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 	}
 
 	// OPTIMIZACIÓN: Para movimientos medianos, sorting parcial
-	if (moves.size() <= 5)
+	if (moves.size() <= 4)
 	{
 		// Insertion sort más rápido para arrays pequeños
 		for (size_t i = 1; i < moves.size(); ++i)
@@ -954,7 +954,7 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
 				  << std::endl;
 
 		// Si encontramos mate, podemos parar (opcional)
-		if (std::abs(score) > 200000)
+		if (std::abs(score) > 300000)
 		{
 			std::cout << "Mate detectado en profundidad " << depth
 					  << ", completando búsqueda" << std::endl;

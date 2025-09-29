@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 16:41:43 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 18:21:19 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
                         
                         // SCORING INTELIGENTE basado en resultado final
                         if (newTotal >= 10) {
-                            captureOpportunities += 50000; // ¡GANA EL JUEGO!
+                            captureOpportunities += 70000; // ¡GANA EL JUEGO!
                         } else if (newTotal >= 8) {
                             captureOpportunities += 15000; // Muy cerca de ganar
                         } else if (newTotal >= 6) {
@@ -178,7 +178,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
                         
                         // SCORING DEFENSIVO basado en peligro real
                         if (oppNewTotal >= 10) {
-                            captureThreats += 60000; // ¡EVITAR A TODA COSTA!
+                            captureThreats += 80000; // ¡EVITAR A TODA COSTA!
                         } else if (oppNewTotal >= 8) {
                             captureThreats += 20000; // Muy peligroso
                         } else if (oppNewTotal >= 6) {

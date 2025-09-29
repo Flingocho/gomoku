@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 16:16:54 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:41:06 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,20 @@ private:
 
 	static constexpr int DIRECTIONS[8][2] = {
 		{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+	static constexpr int MAIN_DIRECTIONS[4][2] = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
+
+	static bool canBreakLineByCapture(const GameState &state,
+									  const Move &lineStart,
+									  int dx, int dy,
+									  int winningPlayer);
+
+	static bool opponentCanCaptureNextTurn(const GameState &state, int opponent);
+
+	// En rule_engine.hpp, en la sección private:
+	static bool checkLineWinInDirection(const GameState &state,
+										const Move &start,
+										int dx, int dy,
+										int player);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 17:35:54 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,4 +68,3 @@ int GameEngine::getWinner() const
 		return GameState::PLAYER2;
 	return 0; // No winner
 }
-
