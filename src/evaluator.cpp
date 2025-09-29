@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/28 20:04:36 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 16:10:28 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     int captureThreats = 0;
     
     // OPTIMIZACIÓN: Marcar líneas ya evaluadas para evitar duplicados
-    bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {false};
+    bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {{{false}}};
     
     // ============================================
     // PARTE 1: EVALUACIÓN DE PATRONES (sin cambios)

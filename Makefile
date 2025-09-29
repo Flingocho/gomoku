@@ -1,6 +1,8 @@
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -O3
-LIBS = -lsfml-graphics -lsfml-window -lsfml-system
+SFML_HOME := $(HOME)/sfml-2.5.1
+INCLUDES := -I$(SFML_HOME)/include
+LIBS := -L$(SFML_HOME)/lib -lsfml-graphics -lsfml-window -lsfml-system
+CXXFLAGS := -Wall -Wextra -Werror -O3 -std=c++17 $(INCLUDES)
 
 SRCS = src/ai.cpp\
 		src/display.cpp\
