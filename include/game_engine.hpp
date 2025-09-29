@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:22:22 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 20:01:18 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:55:40 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,14 @@ struct ConditionalResponse {
         : aiMove(ai), humanMove(human), aiResponse(response), sequenceScore(score), stateHash(hash) {}
 };
 
+enum class GameMode {
+    VS_AI,
+    VS_HUMAN_SUGGESTED
+};
+
 class GameEngine {
 public:
-    GameEngine() : ai(10) {}
+    GameEngine() : ai(10), currentMode(GameMode::VS_AI) {}
     
     ~GameEngine() = default;
 
@@ -58,6 +63,8 @@ public:
     size_t getCacheSize() const { return ai.getCacheSize(); }
     
     void clearAICache() { ai.clearCache(); }
+	void setGameMode(GameMode mode) { currentMode = mode; }
+    GameMode getGameMode() const { return currentMode; }
     
 private:
     GameState state;
@@ -65,6 +72,7 @@ private:
     int lastAITime = 0;
     
     Move lastHumanMove;
+	GameMode currentMode;
 };
 
 #endif

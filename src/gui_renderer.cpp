@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/28 19:07:49 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 20:13:38 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,9 @@ GuiRenderer::GuiRenderer()
       player2Color(sf::Color::Red),               // AI - Red  
       hoverColor(sf::Color(255, 255, 255, 100)),   // Transparent white
       totalAiTime(0),                             // NUEVO: Inicializar estadísticas
-      aiMoveCount(0)
+      aiMoveCount(0),
+	  currentSuggestion(-1, -1),     // NUEVO
+      showSuggestion(false)
 {
     // Cargar fuente personalizada
     if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
@@ -241,6 +243,7 @@ Move GuiRenderer::getUserMove() {
 void GuiRenderer::renderGame(const GameState& state, int aiTimeMs) {
     drawBoard();
     drawPieces(state);
+	drawSuggestionIndicator();
     drawHoverIndicator(); // NUEVO: Mostrar hover antes de la info
     drawGameInfo(state, aiTimeMs);
 }
@@ -579,11 +582,37 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     yOffset += lineHeight;
     
     // Jugador actual
-    std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Humano (O)" : "IA (X)";
+    std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Jugador 1 (O)" : "Jugador 2 (X)";
     sf::Color playerColor = (state.currentPlayer == GameState::PLAYER1) ? player1Color : player2Color;
     drawText("Jugador:", panelX + 10, yOffset, 16, sf::Color::White);
     drawText(currentPlayerStr, panelX + 10, yOffset + lineHeight, 16, playerColor);
     yOffset += lineHeight * 2 + 10;
+    
+    // NUEVO: Mostrar sugerencia si está activa
+    if (showSuggestion && currentSuggestion.isValid()) {
+        // Separador
+        sf::RectangleShape separator(sf::Vector2f(panelWidth - 20, 2));
+        separator.setPosition(panelX + 10, yOffset);
+        separator.setFillColor(sf::Color(100, 100, 100));
+        window.draw(separator);
+        yOffset += 20;
+        
+        // Título de sugerencia con icono
+        drawText("SUGERENCIA IA:", panelX + 10, yOffset, 16, sf::Color(255, 215, 0));
+        yOffset += lineHeight + 5;
+        
+        // Coordenada sugerida
+        std::string suggestionText = "Mover a: ";
+        suggestionText += char('A' + currentSuggestion.y);
+        suggestionText += std::to_string(currentSuggestion.x + 1);
+        
+        drawText(suggestionText, panelX + 15, yOffset, 16, sf::Color::White);
+        yOffset += lineHeight;
+        
+        // Nota informativa
+        drawText("(Puedes ignorarla)", panelX + 15, yOffset, 11, sf::Color(150, 150, 150));
+        yOffset += lineHeight + 10;
+    }
     
     // 4. Separador
     sf::RectangleShape separator(sf::Vector2f(panelWidth - 20, 2));
@@ -625,7 +654,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText(timeStr, panelX + 15, yOffset, 14, timeColor);
         yOffset += lineHeight;
         
-        // NUEVO: Tiempo promedio de la IA
+        // Tiempo promedio de la IA
         if (aiMoveCount > 0) {
             float avgTime = getAverageAiTime();
             std::string avgTimeStr = "Media: " + std::to_string(static_cast<int>(avgTime)) + "ms";
@@ -664,7 +693,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     
     drawText("• Click en celda para mover", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
-    drawText("• ESC para volver al menú", panelX + 15, yOffset, 12, sf::Color::White);
+    drawText("• ESC para volver al menu", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
     
     // 8. Hash del estado (para debug)
@@ -674,7 +703,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += lineHeight;
         
         std::stringstream hashStr;
-        hashStr << "Hash: 0x" << std::hex << (state.getZobristHash() & 0xFFFF); // Solo últimos 4 dígitos
+        hashStr << "Hash: 0x" << std::hex << (state.getZobristHash() & 0xFFFF);
         drawText(hashStr.str(), panelX + 15, yOffset, 10, sf::Color(80, 80, 80));
     }
 }
@@ -944,4 +973,45 @@ void GuiRenderer::resetAiStats() {
     aiTimes.clear();
     totalAiTime = 0;
     aiMoveCount = 0;
+}
+
+void GuiRenderer::drawSuggestionIndicator() {
+    // Solo mostrar si hay una sugerencia válida
+    if (!showSuggestion || !currentSuggestion.isValid()) return;
+    
+    sf::Vector2i pos = boardPositionToPixel(currentSuggestion.x, currentSuggestion.y);
+    int cellSize = CELL_SIZE - 4;
+    
+    // 1. Fondo de la celda con color distintivo (amarillo/dorado)
+    sf::RectangleShape suggestionBg(sf::Vector2f(cellSize, cellSize));
+    suggestionBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
+    suggestionBg.setFillColor(sf::Color(255, 215, 0, 80)); // Dorado semi-transparente
+    window.draw(suggestionBg);
+    
+    // 2. Borde pulsante más grueso
+    sf::RectangleShape suggestionBorder(sf::Vector2f(cellSize, cellSize));
+    suggestionBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
+    suggestionBorder.setFillColor(sf::Color::Transparent);
+    suggestionBorder.setOutlineThickness(3);
+    
+    // Efecto pulsante usando el tiempo
+    static sf::Clock pulseClock;
+    float pulseTime = pulseClock.getElapsedTime().asSeconds();
+    float alpha = (sin(pulseTime * 4.0f) + 1.0f) * 0.4f + 0.2f; // Oscila entre 0.2 y 1.0
+    suggestionBorder.setOutlineColor(sf::Color(255, 215, 0, (sf::Uint8)(alpha * 255))); // Dorado pulsante
+    window.draw(suggestionBorder);
+    
+    // 3. Icono de bombilla en el centro
+    sf::CircleShape bulbOuter(8);
+    bulbOuter.setPosition(pos.x - 8, pos.y - 8);
+    bulbOuter.setFillColor(sf::Color(255, 255, 0, 200)); // Amarillo brillante
+    window.draw(bulbOuter);
+    
+    sf::CircleShape bulbInner(5);
+    bulbInner.setPosition(pos.x - 5, pos.y - 5);
+    bulbInner.setFillColor(sf::Color(255, 255, 255, 250)); // Blanco brillante (centro)
+    window.draw(bulbInner);
+    
+    // 4. Texto "?" en el centro
+    drawText("?", pos.x - 5, pos.y - 8, 14, sf::Color(50, 50, 50));
 }

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 17:35:54 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 19:56:20 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,13 @@ void GameEngine::newGame()
 }
 
 bool GameEngine::makeHumanMove(const Move& move) {
-    if (state.currentPlayer != GameState::PLAYER1) return false;
+    // En modo VS_HUMAN_SUGGESTED, ambos jugadores son humanos
+    if (currentMode == GameMode::VS_AI && state.currentPlayer != GameState::PLAYER1) {
+        return false;
+    }
     
     lastHumanMove = move;
-    state.lastHumanMove = move; // NUEVO: También actualizar en el estado del juego
+    state.lastHumanMove = move;
     
     RuleEngine::MoveResult result = RuleEngine::applyMove(state, move);
     
