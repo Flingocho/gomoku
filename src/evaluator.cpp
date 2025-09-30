@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/30 18:22:54 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/29 18:21:19 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {{{false}}};
     
     // ============================================
-    // PARTE 1: EVALUACIÓN DE PATRONES Y DETECCIÓN DE VULNERABILIDADES
+    // PARTE 1: EVALUACIÓN DE PATRONES (sin cambios)
     // ============================================
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -112,12 +112,6 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
                     if (isLineStart(state, i, j, dx, dy, player)) {
                         PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
                         totalScore += patternToScore(pattern);
-                        
-                        // NUEVO: Detectar patrones vulnerables defensivamente
-                        if (pattern.hasVulnerablePair) {
-                            // Penalizar según la importancia en la heurística establecida
-                            captureThreats += CAPTURE_THREAT;
-                        }
                         
                         // Marcar toda la línea como evaluada
                         int markX = i, markY = j;
@@ -174,36 +168,49 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
                             captureOpportunities += captureCount * CAPTURE_OPPORTUNITY;
                         }
                     }
+                    
+                    // CAPTURA DEFENSIVA MEJORADA
+                    auto oppCaptures = RuleEngine::findCaptures(state, testMove, opponent);
+                    if (!oppCaptures.empty()) {
+                        int oppCaptureCount = oppCaptures.size() / 2;
+                        int oppCurrentCaptures = state.captures[opponent - 1];
+                        int oppNewTotal = oppCurrentCaptures + oppCaptureCount;
+                        
+                        // SCORING DEFENSIVO basado en peligro real
+                        if (oppNewTotal >= 10) {
+                            captureThreats += 80000; // ¡EVITAR A TODA COSTA!
+                        } else if (oppNewTotal >= 8) {
+                            captureThreats += 20000; // Muy peligroso
+                        } else if (oppNewTotal >= 6) {
+                            captureThreats += 8000;  // Peligroso
+                        } else {
+                            captureThreats += oppCaptureCount * CAPTURE_THREAT;
+                        }
+                    }
                 }
             }
         }
     }
     
     // ============================================
-    // PARTE 3: BONUS CONDICIONALES (SOLO SI HAY OPORTUNIDADES/AMENAZAS)
+    // PARTE 3: SCORING DE CAPTURAS EXISTENTES (MEJORADO)
     // ============================================
     int myCaptures = state.captures[player - 1];
     int oppCaptures = state.captures[opponent - 1];
     
-    // NUEVO: Solo aplicar bonus si hay actividad de capturas (oportunidades o amenazas)
-    bool hasActivityCaptures = (captureOpportunities > 0 || captureThreats > 0 || 
-                               myCaptures > 0 || oppCaptures > 0);
+    // MEJORADO: Bonus/malus más agresivos por capturas ya realizadas
+    if (myCaptures >= 8) totalScore += 200000;      // Era 15000 - mucho más agresivo
+    else if (myCaptures >= 6) totalScore += 15000; // Era 6000
+    else if (myCaptures >= 4) totalScore += 6000;  // Era 2000
+    else totalScore += myCaptures * 500;           // Era 200
     
-    if (hasActivityCaptures) {
-        // MEJORADO: Bonus/malus más agresivos por capturas ya realizadas
-        if (myCaptures >= 8) totalScore += 200000;      
-        else if (myCaptures >= 6) totalScore += 15000; 
-        else if (myCaptures >= 4) totalScore += 6000;  
-        else if (myCaptures > 0) totalScore += myCaptures * 500;
-        
-        // CRÍTICO: Penalización más severa por capturas del oponente
-        if (oppCaptures >= 8) totalScore -= 300000;     
-        else if (oppCaptures >= 6) totalScore -= 20000; 
-        else if (oppCaptures >= 4) totalScore -= 8000;  
-        else if (oppCaptures > 0) totalScore -= oppCaptures * 800;
-    }
+    // CRÍTICO: Penalización más severa por capturas del oponente
+    if (oppCaptures >= 8) totalScore -= 300000;     // Era -15000 - ¡más defensivo!
+    else if (oppCaptures >= 6) totalScore -= 20000; // Era -6000
+    else if (oppCaptures >= 4) totalScore -= 8000;  // Era -2000
+    else totalScore -= oppCaptures * 800;           // Era -200
     
-    // Aplicar oportunidades y amenazas detectadas
+    // Bonus por oportunidades de captura (usa los valores mejorados)
     totalScore += captureOpportunities;
     totalScore -= captureThreats;
     
@@ -219,7 +226,7 @@ bool Evaluator::isLineStart(const GameState& state, int x, int y, int dx, int dy
 
 Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int y, 
                                              int dx, int dy, int player) {
-    PatternInfo info = {0, 0, 0, false, 0, 0, 0};
+    PatternInfo info = {0, 0, 0, false, 0, 0};
     
     // OPTIMIZACIÓN: Límite máximo de escaneo para evitar trabajo innecesario
     const int MAX_SCAN = 6; // Suficiente para detectar patrones de 5 + extremos
@@ -247,7 +254,6 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
     
     // PASO 2: Verificar extremos libres (solo si < 5 consecutivas)
     info.freeEnds = 0;
-	int enemyEnds = 0;
     
     // Extremo adelante (después de las piezas consecutivas)
     int frontX = x + dx * info.consecutiveCount;
@@ -255,27 +261,16 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
     if (state.isValid(frontX, frontY) && state.isEmpty(frontX, frontY)) {
         info.freeEnds++;
     }
-    else if (state.isValid(frontX, frontY) && state.getPiece(frontX, frontY) == state.getOpponent(player)) {
-        enemyEnds++;
-    }
-
+    
     // Extremo atrás (antes del inicio)
     int backX = x - dx, backY = y - dy;
     if (state.isValid(backX, backY) && state.isEmpty(backX, backY)) {
         info.freeEnds++;
     }
-    else if (state.isValid(backX, backY) && state.getPiece(backX, backY) == state.getOpponent(player)) {
-        enemyEnds++;
-    }
+    
     // PASO 3: Asignar valores para compatibilidad
     info.totalPieces = info.consecutiveCount;
     info.totalSpan = info.consecutiveCount;
-    
-    // NUEVO: Detectar patrón vulnerable OXX- (oponente + 2 nuestras + espacio libre)
-    // o también -XXO (espacio libre + 2 nuestras + oponente)
-    if (info.consecutiveCount == 2 && info.freeEnds == 1 && enemyEnds == 1) {
-        info.hasVulnerablePair = true;
-    }
     
     return info;
 }

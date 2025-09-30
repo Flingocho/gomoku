@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 23:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/30 17:36:04 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/23 15:28:03 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,70 +104,27 @@ ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
     int newCaptures) const {
     
     ZobristKey newHash = currentHash;
-    int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
     
     // 1. Colocar nueva pieza
     newHash ^= zobristTable[move.x][move.y][player];
     
-    // 2. Remover piezas capturadas (del oponente)
+    // 2. Remover piezas capturadas
+    int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
     for (const Move& captured : capturedPieces) {
         newHash ^= zobristTable[captured.x][captured.y][opponent];
     }
     
-    // 3. Cambiar turno
+    // 3. Cambiar turno (siempre alternamos)
     newHash ^= turnHash;
     
-    // 4. Actualizar capturas del jugador
-    int playerIndex = player - 1;
+    // 4. Actualizar hash de capturas
+    int playerIndex = player - 1; // PLAYER1=0, PLAYER2=1
+    
+    // Quitar hash de capturas anteriores
     newHash ^= captureHashes[playerIndex][oldCaptures];
+    
+    // Agregar hash de capturas nuevas
     newHash ^= captureHashes[playerIndex][newCaptures];
-    
-    return newHash;
-}
-
-ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
-    ZobristKey currentHash,
-    const Move& move,
-    int player,
-    const std::vector<Move>& myCapturedPieces,
-    const std::vector<Move>& opponentCapturedPieces,
-    int oldMyCaptures,
-    int newMyCaptures,
-    int oldOppCaptures,
-    int newOppCaptures) const {
-    
-    ZobristKey newHash = currentHash;
-    int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
-    
-    // 1. Colocar nueva pieza
-    newHash ^= zobristTable[move.x][move.y][player];
-    
-    // 2. Remover capturas propias (piezas del oponente que YO capturo)
-    for (const Move& captured : myCapturedPieces) {
-        newHash ^= zobristTable[captured.x][captured.y][opponent];
-    }
-    
-    // 3. Remover capturas del oponente (mis piezas que ÉL captura)
-    // AHORA ESTO SIEMPRE ESTARÁ VACÍO, pero el código funciona igual
-    for (const Move& captured : opponentCapturedPieces) {
-        newHash ^= zobristTable[captured.x][captured.y][player];
-    }
-    
-    // 4. Cambiar turno
-    newHash ^= turnHash;
-    
-    // 5. Actualizar capturas propias
-    int playerIndex = player - 1;
-    newHash ^= captureHashes[playerIndex][oldMyCaptures];
-    newHash ^= captureHashes[playerIndex][newMyCaptures];
-    
-    // 6. Actualizar capturas del oponente
-    // AHORA oldOppCaptures == newOppCaptures siempre, pero verificamos por si acaso
-    int opponentIndex = opponent - 1;
-    if (oldOppCaptures != newOppCaptures) {
-        newHash ^= captureHashes[opponentIndex][oldOppCaptures];
-        newHash ^= captureHashes[opponentIndex][newOppCaptures];
-    }
     
     return newHash;
 }
@@ -194,4 +151,50 @@ ZobristHasher::ZobristKey ZobristHasher::getPieceHash(int x, int y, int piece) c
     }
     
     return zobristTable[x][y][piece];
+}
+
+// En zobrist_hasher.cpp:
+ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
+    ZobristKey currentHash,
+    const Move& move,
+    int player,
+    const std::vector<Move>& myCapturedPieces,
+    const std::vector<Move>& opponentCapturedPieces,
+    int oldMyCaptures,
+    int newMyCaptures,
+    int oldOppCaptures,
+    int newOppCaptures) const {
+    
+    ZobristKey newHash = currentHash;
+    int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
+    
+    // 1. Colocar nueva pieza
+    newHash ^= zobristTable[move.x][move.y][player];
+    
+    // 2. Remover capturas propias (piezas del oponente)
+    for (const Move& captured : myCapturedPieces) {
+        newHash ^= zobristTable[captured.x][captured.y][opponent];
+    }
+    
+    // 3. Remover capturas del oponente (mis piezas)
+    for (const Move& captured : opponentCapturedPieces) {
+        newHash ^= zobristTable[captured.x][captured.y][player];
+    }
+    
+    // 4. Cambiar turno
+    newHash ^= turnHash;
+    
+    // 5. Actualizar capturas propias
+    int playerIndex = player - 1;
+    newHash ^= captureHashes[playerIndex][oldMyCaptures];
+    newHash ^= captureHashes[playerIndex][newMyCaptures];
+    
+    // 6. Actualizar capturas del oponente
+    int opponentIndex = opponent - 1;
+    if (oldOppCaptures != newOppCaptures) {
+        newHash ^= captureHashes[opponentIndex][oldOppCaptures];
+        newHash ^= captureHashes[opponentIndex][newOppCaptures];
+    }
+    
+    return newHash;
 }

@@ -586,7 +586,7 @@ int TranspositionSearch::quickCategorizeMove(const GameState& state, const Move&
     
     // 7. ¿Captura piezas? (MENOR prioridad que amenazas)
     if (hasImmediateCapture(state, move, currentPlayer)) {
-        score += 2000;
+        score += 1000;
     }
     
     // 8. Conectividad básica (igual que antes pero más simple)
