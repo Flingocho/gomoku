@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 20:13:38 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 17:11:21 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,19 +32,22 @@ GuiRenderer::GuiRenderer()
       totalAiTime(0),                             // NUEVO: Inicializar estadísticas
       aiMoveCount(0),
 	  currentSuggestion(-1, -1),     // NUEVO
-      showSuggestion(false)
+      showSuggestion(false),
+	  errorMessage(""),              // NUEVO: Inicializar sistema de errores
+	  showError(false),
+	  invalidMovePosition(-1, -1)
 {
     // Cargar fuente personalizada
     if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
         // Si no encuentra archivo, continuar sin fuente personalizada
-        std::cout << "Warning: No se pudo cargar fuente fonts/street_drips.ttf, usando por defecto" << std::endl;
+        std::cout << "Warning: Could not load font fonts/street_drips.ttf, using default" << std::endl;
         // SFML puede funcionar sin fuente explícita
     } else {
-        std::cout << "✓ Fuente personalizada cargada: fonts/street_drips.ttf" << std::endl;
+        std::cout << "✓ Custom font loaded: fonts/street_drips.ttf" << std::endl;
     }
     
     window.setFramerateLimit(60);
-    std::cout << "GUI Renderer inicializado: " << WINDOW_WIDTH << "x" << WINDOW_HEIGHT << std::endl;
+    std::cout << "GUI Renderer initialized: " << WINDOW_WIDTH << "x" << WINDOW_HEIGHT << std::endl;
 }
 
 GuiRenderer::~GuiRenderer() {
@@ -139,7 +142,7 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
 void GuiRenderer::renderMenu() {
     // 1. Título principal
     drawText("=== GOMOKU AI ===", WINDOW_WIDTH/2 - 120, 100, 36, sf::Color::White);
-    drawText("5 en línea con IA avanzada", WINDOW_WIDTH/2 - 100, 150, 18, sf::Color(200, 200, 200));
+    drawText("5 in a row with advanced AI", WINDOW_WIDTH/2 - 100, 150, 18, sf::Color(200, 200, 200));
     
     // 2. Botones del menú (centrados)
     int buttonWidth = 250;
@@ -149,24 +152,24 @@ void GuiRenderer::renderMenu() {
     
     // CORREGIDO: Usar hoveredMenuOption para efectos visuales
     bool vsAiHover = (hoveredMenuOption == 0);
-    drawButton("Jugar vs IA", buttonX, 250, buttonWidth, buttonHeight, vsAiHover);
+    drawButton("Play vs AI", buttonX, 250, buttonWidth, buttonHeight, vsAiHover);
     
     bool vsHumanHover = (hoveredMenuOption == 1);
-    drawButton("Jugar vs Humano", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
+    drawButton("Play vs Human", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
     
     bool quitHover = (hoveredMenuOption == 2);
-    drawButton("Salir", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, quitHover);
+    drawButton("Exit", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, quitHover);
     
     // 3. Información adicional
-    drawText("Caracteristicas:", 50, 500, 20, sf::Color::Yellow);
-    drawText("- Zobrist Hashing para maximo rendimiento", 70, 530, 16, sf::Color::White);
-    drawText("- Busqueda Minimax con poda Alpha-Beta", 70, 550, 16, sf::Color::White);
-    drawText("- Profundidad adaptativa hasta 10 niveles", 70, 570, 16, sf::Color::White);
-    drawText("- Reglas completas: capturas + double-three", 70, 590, 16, sf::Color::White);
+    drawText("Features:", 50, 500, 20, sf::Color::Yellow);
+    drawText("- Zobrist Hashing for maximum performance", 70, 530, 16, sf::Color::White);
+    drawText("- Minimax search with Alpha-Beta pruning", 70, 550, 16, sf::Color::White);
+    drawText("- Adaptive depth up to 10 levels", 70, 570, 16, sf::Color::White);
+    drawText("- Complete rules: captures + double-three", 70, 590, 16, sf::Color::White);
     
     // 4. Controles
-    drawText("Usa el raton para seleccionar", WINDOW_WIDTH/2 - 100, 650, 16, sf::Color(150, 150, 150));
-    drawText("ESC = Salir", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
+    drawText("Use mouse to select", WINDOW_WIDTH/2 - 100, 650, 16, sf::Color(150, 150, 150));
+    drawText("ESC = Exit", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
 }
 
 void GuiRenderer::handleMenuClick(int x, int y) {
@@ -244,6 +247,7 @@ void GuiRenderer::renderGame(const GameState& state, int aiTimeMs) {
     drawBoard();
     drawPieces(state);
 	drawSuggestionIndicator();
+	drawInvalidMoveIndicator(); // NUEVO: Mostrar indicador de movimiento inválido
     drawHoverIndicator(); // NUEVO: Mostrar hover antes de la info
     drawGameInfo(state, aiTimeMs);
 }
@@ -571,22 +575,50 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     window.draw(panelBg);
     
     // 2. Título del panel
-    drawText("=== ESTADO ===", panelX + 10, panelY + 10, 18, sf::Color::Yellow);
+    drawText("=== STATUS ===", panelX + 10, panelY + 10, 18, sf::Color::Yellow);
     
     int yOffset = panelY + 50;
     int lineHeight = 25;
     
     // 3. Información básica del juego
-    std::string turnInfo = "Turno: " + std::to_string(state.turnCount);
+    std::string turnInfo = "Turn: " + std::to_string(state.turnCount);
     drawText(turnInfo, panelX + 10, yOffset, 16, sf::Color::White);
     yOffset += lineHeight;
     
     // Jugador actual
-    std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Jugador 1 (O)" : "Jugador 2 (X)";
+    std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Player 1 (O)" : "Player 2 (X)";
     sf::Color playerColor = (state.currentPlayer == GameState::PLAYER1) ? player1Color : player2Color;
-    drawText("Jugador:", panelX + 10, yOffset, 16, sf::Color::White);
+    drawText("Player:", panelX + 10, yOffset, 16, sf::Color::White);
     drawText(currentPlayerStr, panelX + 10, yOffset + lineHeight, 16, playerColor);
     yOffset += lineHeight * 2 + 10;
+    
+    // NUEVO: Mostrar mensaje de error si está activo
+    if (showError && errorTimer.getElapsedTime().asSeconds() < 3.0f) {
+        // Fondo rojo para el mensaje de error
+        sf::RectangleShape errorBg(sf::Vector2f(panelWidth - 20, 30));
+        errorBg.setPosition(panelX + 10, yOffset - 5);
+        errorBg.setFillColor(sf::Color(150, 0, 0, 100)); // Rojo semi-transparente
+        errorBg.setOutlineThickness(1);
+        errorBg.setOutlineColor(sf::Color::Red);
+        window.draw(errorBg);
+        
+        // Texto del error con efecto pulsante
+        float pulseTime = errorTimer.getElapsedTime().asSeconds();
+        float alpha = (sin(pulseTime * 6.0f) + 1.0f) * 0.3f + 0.7f; // Oscila entre 0.7 y 1.0
+        sf::Color errorColor(255, 100, 100, (sf::Uint8)(alpha * 255));
+        
+        drawText("! " + errorMessage, panelX + 15, yOffset, 14, errorColor);
+        
+        // Coordenada del movimiento inválido si está disponible
+        if (invalidMovePosition.isValid()) {
+            std::string posText = "Position: ";
+            posText += char('A' + invalidMovePosition.y);
+            posText += std::to_string(invalidMovePosition.x + 1);
+            drawText(posText, panelX + 15, yOffset + 15, 12, sf::Color(200, 150, 150));
+        }
+        
+        yOffset += 40;
+    }
     
     // NUEVO: Mostrar sugerencia si está activa
     if (showSuggestion && currentSuggestion.isValid()) {
@@ -598,11 +630,11 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += 20;
         
         // Título de sugerencia con icono
-        drawText("SUGERENCIA IA:", panelX + 10, yOffset, 16, sf::Color(255, 215, 0));
+        drawText("AI SUGGESTION:", panelX + 10, yOffset, 16, sf::Color(255, 215, 0));
         yOffset += lineHeight + 5;
         
         // Coordenada sugerida
-        std::string suggestionText = "Mover a: ";
+        std::string suggestionText = "Move to: ";
         suggestionText += char('A' + currentSuggestion.y);
         suggestionText += std::to_string(currentSuggestion.x + 1);
         
@@ -610,7 +642,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += lineHeight;
         
         // Nota informativa
-        drawText("(Puedes ignorarla)", panelX + 15, yOffset, 11, sf::Color(150, 150, 150));
+        drawText("(You can ignore it)", panelX + 15, yOffset, 11, sf::Color(150, 150, 150));
         yOffset += lineHeight + 10;
     }
     
@@ -622,32 +654,32 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     yOffset += 20;
     
     // 5. Capturas
-    drawText("CAPTURAS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
+    drawText("CAPTURES:", panelX + 10, yOffset, 16, sf::Color::Yellow);
     yOffset += lineHeight + 5;
     
     // Capturas del humano
-    std::string humanCaptures = "Tu: " + std::to_string(state.captures[0]) + "/10";
+    std::string humanCaptures = "You: " + std::to_string(state.captures[0]) + "/10";
     drawText(humanCaptures, panelX + 15, yOffset, 14, player1Color);
     if (state.captures[0] >= 8) {
-        drawText("¡Cerca!", panelX + 120, yOffset, 14, sf::Color::Red);
+        drawText("Close!", panelX + 120, yOffset, 14, sf::Color::Red);
     }
     yOffset += lineHeight;
     
     // Capturas de la IA
-    std::string aiCaptures = "IA: " + std::to_string(state.captures[1]) + "/10";
+    std::string aiCaptures = "AI: " + std::to_string(state.captures[1]) + "/10";
     drawText(aiCaptures, panelX + 15, yOffset, 14, player2Color);
     if (state.captures[1] >= 8) {
-        drawText("¡Peligro!", panelX + 120, yOffset, 14, sf::Color::Red);
+        drawText("Danger!", panelX + 120, yOffset, 14, sf::Color::Red);
     }
     yOffset += lineHeight + 15;
     
     // 6. Estadísticas de la IA (si disponibles)
     if (aiTimeMs > 0) {
-        drawText("IA STATS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
+        drawText("AI STATS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
         yOffset += lineHeight + 5;
         
         // Tiempo de pensamiento actual
-        std::string timeStr = "Ultimo: " + std::to_string(aiTimeMs) + "ms";
+        std::string timeStr = "Last: " + std::to_string(aiTimeMs) + "ms";
         sf::Color timeColor = sf::Color::White;
         if (aiTimeMs < 100) timeColor = sf::Color::Green;
         else if (aiTimeMs > 1000) timeColor = sf::Color::Red;
@@ -657,7 +689,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         // Tiempo promedio de la IA
         if (aiMoveCount > 0) {
             float avgTime = getAverageAiTime();
-            std::string avgTimeStr = "Media: " + std::to_string(static_cast<int>(avgTime)) + "ms";
+            std::string avgTimeStr = "Avg: " + std::to_string(static_cast<int>(avgTime)) + "ms";
             sf::Color avgColor = sf::Color::White;
             if (avgTime < 100) avgColor = sf::Color::Green;
             else if (avgTime > 1000) avgColor = sf::Color::Red;
@@ -665,17 +697,17 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
             yOffset += lineHeight;
             
             // Mostrar número de movimientos evaluados
-            std::string movesStr = "Movs: " + std::to_string(aiMoveCount);
+            std::string movesStr = "Moves: " + std::to_string(aiMoveCount);
             drawText(movesStr, panelX + 15, yOffset, 12, sf::Color(180, 180, 180));
             yOffset += lineHeight;
         }
         
         // Indicador de rendimiento (basado en último tiempo)
         std::string perfStr;
-        if (aiTimeMs < 50) perfStr = "Ultrarrapida";
-        else if (aiTimeMs < 200) perfStr = "Rapida"; 
+        if (aiTimeMs < 50) perfStr = "Ultra Fast";
+        else if (aiTimeMs < 200) perfStr = "Fast"; 
         else if (aiTimeMs < 500) perfStr = "Normal";
-        else perfStr = "Pensando...";
+        else perfStr = "Thinking...";
         
         drawText(perfStr, panelX + 15, yOffset, 12, sf::Color(150, 150, 150));
         yOffset += lineHeight + 10;
@@ -688,12 +720,12 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     window.draw(separator2);
     yOffset += 20;
     
-    drawText("CONTROLES:", panelX + 10, yOffset, 16, sf::Color::Yellow);
+    drawText("CONTROLS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
     yOffset += lineHeight + 5;
     
-    drawText("• Click en celda para mover", panelX + 15, yOffset, 12, sf::Color::White);
+    drawText("- Click cell to move", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
-    drawText("• ESC para volver al menu", panelX + 15, yOffset, 12, sf::Color::White);
+    drawText("- ESC to return to menu", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
     
     // 8. Hash del estado (para debug)
@@ -788,10 +820,10 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     // Verificar capturas
     if (state.captures[0] >= 10) {
         player1Wins = true;
-        winReason = "por capturas";
+        winReason = "by captures";
     } else if (state.captures[1] >= 10) {
         player2Wins = true;
-        winReason = "por capturas";
+        winReason = "by captures";
     }
     // Si no hay victoria por capturas, debe ser por alineación
     // (el game engine ya verificó que hay victoria)
@@ -802,53 +834,53 @@ void GuiRenderer::renderGameOver(const GameState& state) {
         } else {
             player1Wins = true; // El humano ganó en su último turno
         }
-        winReason = "por 5 en línea";
+        winReason = "by 5 in a row";
     }
     
     // 5. Mostrar resultado
     if (player1Wins) {
-        drawText("¡GANASTE!", panelX + panelWidth/2 - 70, panelY + 70, 28, sf::Color::Green);
-        drawText("¡Felicidades!", panelX + panelWidth/2 - 80, panelY + 105, 18, sf::Color::Yellow);
+        drawText("YOU WIN!", panelX + panelWidth/2 - 70, panelY + 70, 28, sf::Color::Green);
+        drawText("Congratulations!", panelX + panelWidth/2 - 80, panelY + 105, 18, sf::Color::Yellow);
     } else if (player2Wins) {
-        drawText("IA GANA", panelX + panelWidth/2 - 50, panelY + 70, 28, sf::Color::Red);
-        drawText("La máquina triunfa", panelX + panelWidth/2 - 85, panelY + 105, 18, sf::Color(200, 100, 100));
+        drawText("AI WINS", panelX + panelWidth/2 - 50, panelY + 70, 28, sf::Color::Red);
+        drawText("The machine triumphs", panelX + panelWidth/2 - 85, panelY + 105, 18, sf::Color(200, 100, 100));
     }
     
     // 6. Mostrar razón de victoria
-    std::string reasonText = "Victoria " + winReason;
+    std::string reasonText = "Victory " + winReason;
     drawText(reasonText, panelX + panelWidth/2 - 60, panelY + 135, 16, sf::Color::White);
     
     // 7. Estadísticas finales
-    drawText("Estadísticas finales:", panelX + panelWidth/2 - 80, panelY + 165, 16, sf::Color::Yellow);
+    drawText("Final statistics:", panelX + panelWidth/2 - 80, panelY + 165, 16, sf::Color::Yellow);
     
-    std::string turnosText = "Turnos jugados: " + std::to_string(state.turnCount);
+    std::string turnosText = "Turns played: " + std::to_string(state.turnCount);
     drawText(turnosText, panelX + 20, panelY + 190, 14, sf::Color::White);
     
-    std::string capturesText = "Capturas - Tú: " + std::to_string(state.captures[0]) + 
-                              ", IA: " + std::to_string(state.captures[1]);
+    std::string capturesText = "Captures - You: " + std::to_string(state.captures[0]) + 
+                              ", AI: " + std::to_string(state.captures[1]);
     drawText(capturesText, panelX + 20, panelY + 210, 14, sf::Color::White);
     
     // NUEVO: Mostrar estadísticas de tiempo de IA si hay datos
     if (aiMoveCount > 0) {
         float avgTime = getAverageAiTime();
-        std::string aiStatsText = "IA - Movs: " + std::to_string(aiMoveCount) + 
-                                 ", Media: " + std::to_string(static_cast<int>(avgTime)) + "ms";
+        std::string aiStatsText = "AI - Moves: " + std::to_string(aiMoveCount) + 
+                                 ", Avg: " + std::to_string(static_cast<int>(avgTime)) + "ms";
         drawText(aiStatsText, panelX + 20, panelY + 230, 14, sf::Color::White);
         
         // Clasificación del rendimiento promedio
         std::string perfClassText;
         sf::Color perfColor;
         if (avgTime < 100) {
-            perfClassText = "Rendimiento: Excelente";
+            perfClassText = "Performance: Excellent";
             perfColor = sf::Color::Green;
         } else if (avgTime < 300) {
-            perfClassText = "Rendimiento: Bueno";
+            perfClassText = "Performance: Good";
             perfColor = sf::Color::Yellow;
         } else if (avgTime < 1000) {
-            perfClassText = "Rendimiento: Normal";
+            perfClassText = "Performance: Normal";
             perfColor = sf::Color::White;
         } else {
-            perfClassText = "Rendimiento: Lento";
+            perfClassText = "Performance: Slow";
             perfColor = sf::Color::Red;
         }
         drawText(perfClassText, panelX + 20, panelY + 250, 12, perfColor);
@@ -862,13 +894,13 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     int buttonY = panelY + panelHeight - 80;
     
     // Botón "Nuevo Juego"
-    drawButton("Nuevo Juego", button1X, buttonY, buttonWidth, buttonHeight, false);
+    drawButton("New Game", button1X, buttonY, buttonWidth, buttonHeight, false);
     
     // Botón "Menú"
     drawButton("Menu", button2X, buttonY, buttonWidth, buttonHeight, false);
     
     // 9. Instrucciones
-    drawText("Click en un botón o presiona ESC", panelX + panelWidth/2 - 120, 
+    drawText("Click a button or press ESC", panelX + panelWidth/2 - 120, 
              panelY + panelHeight + 20, 14, sf::Color(150, 150, 150));
 }
 
@@ -1014,4 +1046,51 @@ void GuiRenderer::drawSuggestionIndicator() {
     
     // 4. Texto "?" en el centro
     drawText("?", pos.x - 5, pos.y - 8, 14, sf::Color(50, 50, 50));
+}
+
+// NUEVO: Método para mostrar error de movimiento inválido
+void GuiRenderer::showInvalidMoveError(const Move& move) {
+    errorMessage = "Invalid move!";
+    invalidMovePosition = move;
+    showError = true;
+    errorTimer.restart();
+}
+
+// NUEVO: Método para limpiar error de movimiento inválido
+void GuiRenderer::clearInvalidMoveError() {
+    showError = false;
+    errorMessage = "";
+    invalidMovePosition = Move(-1, -1);
+}
+
+// NUEVO: Método para dibujar indicador de movimiento inválido en el tablero
+void GuiRenderer::drawInvalidMoveIndicator() {
+    // Solo mostrar si hay un error activo y han pasado menos de 2 segundos
+    if (!showError || errorTimer.getElapsedTime().asSeconds() > 2.0f) {
+        if (showError) clearInvalidMoveError(); // Auto-limpiar después de 2 segundos
+        return;
+    }
+    
+    if (!invalidMovePosition.isValid()) return;
+    
+    sf::Vector2i pos = boardPositionToPixel(invalidMovePosition.x, invalidMovePosition.y);
+    int cellSize = CELL_SIZE - 4;
+    
+    // 1. Fondo rojo pulsante
+    sf::RectangleShape errorBg(sf::Vector2f(cellSize, cellSize));
+    errorBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
+    
+    // Efecto pulsante rojo usando el tiempo
+    float pulseTime = errorTimer.getElapsedTime().asSeconds();
+    float alpha = (sin(pulseTime * 8.0f) + 1.0f) * 0.3f + 0.1f; // Oscila más rápido
+    errorBg.setFillColor(sf::Color(255, 0, 0, (sf::Uint8)(alpha * 255))); // Rojo pulsante
+    window.draw(errorBg);
+    
+    // 2. Borde rojo grueso
+    sf::RectangleShape errorBorder(sf::Vector2f(cellSize, cellSize));
+    errorBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
+    errorBorder.setFillColor(sf::Color::Transparent);
+    errorBorder.setOutlineThickness(4);
+    errorBorder.setOutlineColor(sf::Color(255, 0, 0, 200)); // Rojo sólido
+    window.draw(errorBorder);
 }

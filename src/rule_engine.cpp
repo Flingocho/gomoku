@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 19:51:10 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 16:35:56 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,42 +322,88 @@ std::vector<Move> RuleEngine::findFreeThrees(const GameState &state, const Move 
 bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 							 int dx, int dy, int player)
 {
-	// Contar piezas consecutivas en esta dirección
-	int totalCount = 1; // La pieza actual
-	totalCount += countInDirection(state, move, dx, dy, player);
-	totalCount += countInDirection(state, move, -dx, -dy, player);
-
-	if (totalCount != 3)
-		return false; // No es exactamente 3
-
-	// Verificar que al menos un extremo está libre
-	// Encontrar los extremos reales
-	Move start = move;
-	Move end = move;
-
-	// Buscar inicio real
-	while (state.isValid(start.x - dx, start.y - dy) &&
-		   state.getPiece(start.x - dx, start.y - dy) == player)
+	// Un free-three es cualquier patrón de 3 fichas en una ventana de 5 posiciones
+	// donde ambos extremos están libres y se puede formar una amenaza de 4
+	
+	// Buscar todas las ventanas de 5 posiciones que contengan el movimiento
+	for (int offset = -4; offset <= 0; offset++)
 	{
-		start.x -= dx;
-		start.y -= dy;
+		Move windowStart(move.x + offset * dx, move.y + offset * dy);
+		
+		// Verificar que la ventana de 5 está dentro del tablero
+		bool validWindow = true;
+		for (int i = 0; i < 5; i++)
+		{
+			Move pos(windowStart.x + i * dx, windowStart.y + i * dy);
+			if (!state.isValid(pos.x, pos.y))
+			{
+				validWindow = false;
+				break;
+			}
+		}
+		
+		if (!validWindow) continue;
+		
+		// Verificar que el movimiento está dentro de esta ventana
+		bool moveInWindow = false;
+		for (int i = 0; i < 5; i++)
+		{
+			Move pos(windowStart.x + i * dx, windowStart.y + i * dy);
+			if (pos.x == move.x && pos.y == move.y)
+			{
+				moveInWindow = true;
+				break;
+			}
+		}
+		
+		if (!moveInWindow) continue;
+		
+		// Contar fichas del jugador en esta ventana (incluyendo el nuevo movimiento)
+		int playerPieces = 0;
+		int opponentPieces = 0;
+		int emptySpaces = 0;
+		
+		for (int i = 0; i < 5; i++)
+		{
+			Move pos(windowStart.x + i * dx, windowStart.y + i * dy);
+			
+			if (pos.x == move.x && pos.y == move.y)
+			{
+				playerPieces++; // El movimiento cuenta como ficha del jugador
+			}
+			else
+			{
+				int piece = state.getPiece(pos.x, pos.y);
+				if (piece == player)
+					playerPieces++;
+				else if (piece == state.getOpponent(player))
+					opponentPieces++;
+				else
+					emptySpaces++;
+			}
+		}
+		
+		// Para ser free-three: exactamente 3 fichas del jugador, 0 del oponente, 2 vacías
+		if (playerPieces == 3 && opponentPieces == 0 && emptySpaces == 2)
+		{
+			// Verificar que los extremos están libres
+			Move leftExtreme(windowStart.x - dx, windowStart.y - dy);
+			Move rightExtreme(windowStart.x + 5 * dx, windowStart.y + 5 * dy);
+			
+			bool leftFree = state.isValid(leftExtreme.x, leftExtreme.y) && 
+							state.isEmpty(leftExtreme.x, leftExtreme.y);
+			bool rightFree = state.isValid(rightExtreme.x, rightExtreme.y) && 
+							 state.isEmpty(rightExtreme.x, rightExtreme.y);
+			
+			// Al menos uno de los extremos debe estar libre para ser "free"
+			if (leftFree && rightFree)
+			{
+				return true;
+			}
+		}
 	}
-
-	// Buscar final real
-	while (state.isValid(end.x + dx, end.y + dy) &&
-		   state.getPiece(end.x + dx, end.y + dy) == player)
-	{
-		end.x += dx;
-		end.y += dy;
-	}
-
-	// Verificar extremos libres
-	bool startFree = state.isValid(start.x - dx, start.y - dy) &&
-					 state.isEmpty(start.x - dx, start.y - dy);
-	bool endFree = state.isValid(end.x + dx, end.y + dy) &&
-				   state.isEmpty(end.x + dx, end.y + dy);
-
-	return startFree && endFree; // Ambos extremos deben estar libres para ser "free-three"
+	
+	return false;
 }
 
 bool RuleEngine::canBreakLineByCapture(

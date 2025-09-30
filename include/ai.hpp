@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/21 16:35:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/24 17:45:06 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 17:10:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,14 @@ public:
     void setDepth(int newDepth) { depth = newDepth; }
     int getDepth() const { return depth; }
     
-    // Obtener estadísticas de la última búsqueda
+    // Get statistics from last search
     int getLastNodesEvaluated() const { return lastResult.nodesEvaluated; }
     int getLastScore() const { return lastResult.score; }
     int getLastCacheHits() const { return lastResult.cacheHits; }
     float getLastCacheHitRate() const { return lastResult.cacheHitRate; }
     size_t getCacheSize() const { return searchEngine.getCacheSize(); }
     
-    // Gestión de cache
+    // Cache management
     void clearCache() { searchEngine.clearCache(); }
     
     // Funciones adicionales para game_engine

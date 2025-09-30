@@ -93,7 +93,7 @@ public:
 	void setLastAiMove(const Move &move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA
 
 	// NUEVO: Métodos para estadísticas de tiempo de IA
-	void addAiTime(int timeMs);		// Añadir un nuevo tiempo de IA
+	    void addAiTime(int timeMs);     // Add a new AI time
 	float getAverageAiTime() const; // Obtener tiempo promedio
 	void resetAiStats();			// Reiniciar estadísticas
 
@@ -110,13 +110,15 @@ public:
 		showSuggestion = false;
 	}
 
+	// NUEVO: Métodos para manejar errores de movimiento
+	void showInvalidMoveError(const Move& move);
+	void clearInvalidMoveError();
+
 private:
 	// Internal rendering methods
 	void renderMenu();
 	void renderGame(const GameState &state, int aiTimeMs);
-	void renderGameOver(const GameState &state); // CORREGIDO: Recibir state para mostrar ganador
-
-	// Board rendering
+    void renderGameOver(const GameState &state); // FIXED: Receive state to show winner	// Board rendering
 	void drawBoard();
 	void drawPieces(const GameState &state);
 	void drawHoverIndicator();
@@ -128,6 +130,7 @@ private:
 	void drawText(const std::string &text, int x, int y, int size = 24,
 				  sf::Color color = sf::Color::White);
 	void drawGameInfo(const GameState &state, int aiTimeMs);
+	void drawInvalidMoveIndicator(); // NUEVO: Para mostrar error en el tablero
 
 	// Utility functions
 	sf::Vector2i boardPositionToPixel(int boardX, int boardY) const;
@@ -144,13 +147,19 @@ private:
 
 	// Member variables for hover position
 
-	// NUEVO: Variables para estadísticas de tiempo de IA
+	    // NEW: Variables for AI time statistics
 	std::vector<int> aiTimes; // Almacenar todos los tiempos de IA
 	int totalAiTime;		  // Suma total de tiempos
 	int aiMoveCount;		  // Número de movimientos de IA realizados
 
 	Move currentSuggestion;
     bool showSuggestion;
+	
+	    // NEW: Variables for handling invalid move errors
+	std::string errorMessage;
+	sf::Clock errorTimer;
+	bool showError;
+	Move invalidMovePosition;
 };
 
 #endif

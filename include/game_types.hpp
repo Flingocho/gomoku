@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:15:50 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/25 18:34:24 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 17:10:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,22 +61,22 @@ struct GameState {
     void SetDepth(int ndepth) { depth = ndepth; };
     int getOpponent(int player) const;
     
-    // NUEVO: Métodos para manejo de hash
+    // NEW: Methods for hash management
     /**
-     * Inicializa el hasher estático (llamar una vez al inicio del programa)
+     * Initializes the static hasher (call once at program start)
      */
     static void initializeHasher();
     
     /**
-     * Actualiza el hash después de aplicar un movimiento
-     * DEBE llamarse después de modificar el estado del tablero
+     * Updates the hash after applying a move
+     * MUST be called after modifying board state
      */
     void updateHashAfterMove(const Move& move, int player, 
                            const std::vector<Move>& capturedPieces,
                            int oldCaptures);
     
     /**
-     * Recalcula el hash completo desde cero (solo para verificación/debug)
+     * Recalculates the complete hash from scratch (only for verification/debug)
      */
     void recalculateHash();
     

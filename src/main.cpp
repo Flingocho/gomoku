@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 19:58:44 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 17:10:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,29 +21,29 @@
 int main()
 {
     // TERMINAL: Solo debug/info - mantiene funcionalidad actual
-    std::cout << "=== GOMOKU AI CON ZOBRIST HASHING ===" << std::endl;
-    std::cout << "Inicializando optimizaciones..." << std::endl;
+    std::cout << "=== GOMOKU AI WITH ZOBRIST HASHING ===" << std::endl;
+    std::cout << "Initializing optimizations..." << std::endl;
 
     // Inicialización del sistema (igual que antes)
     GameState::initializeHasher();
-    std::cout << "✓ Zobrist hasher inicializado" << std::endl;
+    std::cout << "✓ Zobrist hasher initialized" << std::endl;
 
     g_debugAnalyzer = new DebugAnalyzer(DebugAnalyzer::DEBUG_HEURISTIC);
     g_debugAnalyzer->enableFileLogging("gomoku_debug.log");
-    std::cout << "✓ Inicializando sistema de debug..." << std::endl;
+    std::cout << "✓ Initializing debug system..." << std::endl;
 
     GameEngine game;
-    std::cout << "✓ Motor de juego inicializado" << std::endl;
+    std::cout << "✓ Game engine initialized" << std::endl;
 
     GuiRenderer renderer;
-    std::cout << "✓ Interfaz gráfica inicializada" << std::endl;
+    std::cout << "✓ Graphical interface initialized" << std::endl;
 
-    std::cout << "\n=== OPTIMIZACIONES ACTIVAS ===" << std::endl;
-    std::cout << "• Zobrist Hashing: ACTIVADO (Hash incremental O(1))" << std::endl;
-    std::cout << "• Transposition Table: ACTIVADO (64MB cache)" << std::endl;
-    std::cout << "• Move Ordering: ACTIVADO (Ordenamiento inteligente)" << std::endl;
-    std::cout << "• Alpha-Beta Pruning: ACTIVADO (Poda agresiva)" << std::endl;
-    std::cout << "Esperando mejora de ~50-100x en velocidad..." << std::endl;
+    std::cout << "\n=== ACTIVE OPTIMIZATIONS ===" << std::endl;
+    std::cout << "• Zobrist Hashing: ENABLED (Incremental O(1) Hash)" << std::endl;
+    std::cout << "• Transposition Table: ENABLED (64MB cache)" << std::endl;
+    std::cout << "• Move Ordering: ENABLED (Smart ordering)" << std::endl;
+    std::cout << "• Alpha-Beta Pruning: ENABLED (Aggressive pruning)" << std::endl;
+    std::cout << "Expecting ~50-100x speed improvement..." << std::endl;
     std::cout << "========================================\n" << std::endl;
 
     // Variables para modo hotseat
@@ -66,7 +66,7 @@ int main()
 
             if (choice == GuiRenderer::VS_AI)
             {
-                std::cout << "Iniciando juego vs AI" << std::endl;
+                std::cout << "Starting game vs AI" << std::endl;
                 game.setGameMode(GameMode::VS_AI);
                 game.newGame();
                 renderer.resetAiStats();
@@ -76,7 +76,7 @@ int main()
             }
             else if (choice == GuiRenderer::VS_HUMAN)
             {
-                std::cout << "Iniciando juego vs Humano (hotseat con sugerencias)" << std::endl;
+                std::cout << "Starting game vs Human (hotseat with suggestions)" << std::endl;
                 game.setGameMode(GameMode::VS_HUMAN_SUGGESTED);
                 game.newGame();
                 renderer.resetAiStats();
@@ -118,7 +118,7 @@ int main()
 
                     if (waitingForMove)
                     {
-                        std::cout << "Esperando movimiento del jugador..." << std::endl;
+                        std::cout << "Waiting for player move..." << std::endl;
                         waitingForMove = false;
                     }
 
@@ -130,11 +130,12 @@ int main()
                         {
                             if (!game.makeHumanMove(humanMove))
                             {
-                                std::cout << "❌ Movimiento inválido" << std::endl;
+                                std::cout << "❌ Invalid move" << std::endl;
+                                renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
                             }
                             else
                             {
-                                std::cout << "✓ Jugador movió: "
+                                std::cout << "✓ Player moved: "
                                           << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
                                 waitingForMove = true;
                             }
@@ -144,7 +145,7 @@ int main()
                 else
                 {
                     // Turno AI
-                    std::cout << "AI pensando..." << std::endl;
+                    std::cout << "AI thinking..." << std::endl;
                     
                     Move aiMove = game.makeAIMove();
 
@@ -152,12 +153,12 @@ int main()
                     {
                         renderer.setLastAiMove(aiMove);
                         renderer.addAiTime(game.getLastAIThinkingTime());
-                        std::cout << "AI jugó: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
-                        std::cout << "Tiempo: " << game.getLastAIThinkingTime() << "ms" << std::endl;
-                        std::cout << "Nodos evaluados: " << game.getLastNodesEvaluated() << std::endl;
+                        std::cout << "AI played: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
+                        std::cout << "Time: " << game.getLastAIThinkingTime() << "ms" << std::endl;
+                        std::cout << "Nodes evaluated: " << game.getLastNodesEvaluated() << std::endl;
                         std::cout << "Cache hits: " << game.getLastCacheHits()
                                   << " (hit rate: " << (game.getLastCacheHitRate() * 100) << "%)" << std::endl;
-                        std::cout << "Cache size: " << game.getCacheSize() << " entradas" << std::endl;
+                        std::cout << "Cache size: " << game.getCacheSize() << " entries" << std::endl;
                     }
                 }
             }
@@ -171,8 +172,8 @@ int main()
                 if (!suggestionCalculated)
                 {
                     std::string playerName = (state.currentPlayer == GameState::PLAYER1) ? 
-                                            "Jugador 1 (O)" : "Jugador 2 (X)";
-                    std::cout << "💡 Calculando sugerencia para " << playerName << "..." << std::endl;
+                                            "Player 1 (O)" : "Player 2 (X)";
+                    std::cout << "💡 Calculating suggestion for " << playerName << "..." << std::endl;
                     
                     auto startTime = std::chrono::high_resolution_clock::now();
                     currentSuggestion = SuggestionEngine::getSuggestion(state);
@@ -183,10 +184,10 @@ int main()
                     
                     if (currentSuggestion.isValid())
                     {
-                        std::cout << "💡 Sugerencia: " 
+                        std::cout << "💡 Suggestion: " 
                                   << char('A' + currentSuggestion.y) 
                                   << (currentSuggestion.x + 1)
-                                  << " (calculado en " << suggestionTime << "ms)" << std::endl;
+                                  << " (calculated in " << suggestionTime << "ms)" << std::endl;
                         
                         renderer.setSuggestion(currentSuggestion);
                     }
@@ -204,15 +205,16 @@ int main()
                         // Guardar el jugador ANTES de aplicar el movimiento
                         int playerWhoMoved = state.currentPlayer;
                         std::string playerName = (playerWhoMoved == GameState::PLAYER1) ? 
-                                                "Jugador 1 (O)" : "Jugador 2 (X)";
+                                                "Player 1 (O)" : "Player 2 (X)";
                         
                         if (!game.makeHumanMove(humanMove))
                         {
-                            std::cout << "❌ Movimiento inválido" << std::endl;
+                            std::cout << "❌ Invalid move" << std::endl;
+                            renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
                         }
                         else
                         {
-                            std::cout << "✓ " << playerName << " movió: "
+                            std::cout << "✓ " << playerName << " moved: "
                                       << char('A' + humanMove.y) << (humanMove.x + 1);
                             
                             // Indicar si siguió la sugerencia
@@ -220,7 +222,7 @@ int main()
                                 humanMove.x == currentSuggestion.x && 
                                 humanMove.y == currentSuggestion.y)
                             {
-                                std::cout << " ✨ (siguió la sugerencia)";
+                                std::cout << " ✨ (followed suggestion)";
                             }
                             std::cout << std::endl;
                             
@@ -249,12 +251,12 @@ int main()
     }
 
     // Cleanup
-    std::cout << "\n=== CERRANDO APLICACIÓN ===" << std::endl;
+    std::cout << "\n=== CLOSING APPLICATION ===" << std::endl;
     if (game.isGameOver())
     {
-        std::cout << "Estadísticas finales:" << std::endl;
-        std::cout << "Cache size final: " << game.getCacheSize() << " entradas" << std::endl;
-        std::cout << "Hash final: 0x" << std::hex << game.getState().getZobristHash() << std::dec << std::endl;
+        std::cout << "Final statistics:" << std::endl;
+        std::cout << "Final cache size: " << game.getCacheSize() << " entries" << std::endl;
+        std::cout << "Final hash: 0x" << std::hex << game.getState().getZobristHash() << std::dec << std::endl;
     }
 
     if (g_debugAnalyzer)
@@ -263,6 +265,6 @@ int main()
         g_debugAnalyzer = nullptr;
     }
 
-    std::cout << "¡Gracias por jugar!" << std::endl;
+    std::cout << "Thanks for playing!" << std::endl;
     return 0;
 }

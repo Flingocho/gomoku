@@ -1,4 +1,5 @@
-/* ************************************************************************** */
+/* ******************************************************		int value = depth * 100;  // Depth is more important
+		if (type == EXACT) value += 50;  // Exact nodes are more valuable****************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   transposition_search.hpp                           :+:      :+:    :+:   */
@@ -63,10 +64,10 @@ private:
 	};
 
 	/**
-	 * Transposition Table optimizada con Zobrist
-	 * - Tamaño potencia de 2 para usar & en lugar de %
-	 * - Verificación de colisiones con clave completa
-	 * - Replacement strategy mejorada
+	 * Zobrist-optimized Transposition Table
+	 * - Size power of 2 to use & instead of %
+	 * - Collision verification with complete key
+	 * - Improved replacement strategy
 	 */
 	std::vector<CacheEntry> transpositionTable;
 	size_t tableSizeMask; // Para index = zobristKey & tableSizeMask
@@ -77,7 +78,7 @@ private:
 	Move previousBestMove;
 
 	/**
-	 * Calcula profundidad adaptativa basada en fase del juego
+	 * Calculates adaptive depth based on game phase
 	 */
 	int calculateAdaptiveDepth(const GameState &state, int requestedDepth);
 
@@ -101,17 +102,17 @@ private:
 
 	/**
 	 * Busca entrada en transposition table
-	 * @param zobristKey: Clave Zobrist del estado
-	 * @param entry: [out] Entrada encontrada
-	 * @return true si encontró entrada válida
+	 * @param zobristKey: State Zobrist key
+	 * @param entry: [out] Found entry
+	 * @return true if found valid entry
 	 */
 	bool lookupTransposition(uint64_t zobristKey, CacheEntry &entry);
 
 	/**
-	 * Almacena entrada en transposition table
-	 * @param zobristKey: Clave Zobrist del estado
-	 * @param score: Puntuación del estado
-	 * @param depth: Profundidad de búsqueda
+	 * Store entry in transposition table
+	 * @param zobristKey: State Zobrist key
+	 * @param score: State score
+	 * @param depth: Search depth
 	 * @param bestMove: Mejor movimiento encontrado
 	 * @param type: Tipo de nodo (EXACT, LOWER_BOUND, UPPER_BOUND)
 	 */
