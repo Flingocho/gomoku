@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:51 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 17:41:06 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 19:12:57 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,9 @@ private:
 	static std::vector<Move> findFreeThrees(const GameState &state, const Move &move, int player);
 	static bool isFreeThree(const GameState &state, const Move &start,
 							int dx, int dy, int player);
+	static bool isValidFreeThreePattern(const int windowState[5], int player);
+	static bool canFormThreat(const int pattern[5], int player);
+	static bool hasFourConsecutive(const int pattern[5], int player);
 
 	static constexpr int DIRECTIONS[8][2] = {
 		{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
