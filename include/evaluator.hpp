@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 18:01:43 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 20:09:40 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ extern EvaluationDebugCapture g_evalDebug;
 class Evaluator
 {
 public:
-	static constexpr int WIN = 500000;
+	static constexpr int WIN = 600000;
 	static constexpr int FOUR_OPEN = 50000;
 	static constexpr int FOUR_HALF = 25000;
 	static constexpr int THREE_OPEN = 10000;

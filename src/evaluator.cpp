@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 18:21:19 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/09/30 20:30:05 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,15 +199,15 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     int oppCaptures = state.captures[opponent - 1];
     
     // MEJORADO: Bonus/malus más agresivos por capturas ya realizadas
-    if (myCaptures >= 8) totalScore += 200000;      // Era 15000 - mucho más agresivo
-    else if (myCaptures >= 6) totalScore += 15000; // Era 6000
-    else if (myCaptures >= 4) totalScore += 6000;  // Era 2000
+    if (myCaptures >= 8 && captureOpportunities > 0) totalScore += 200000;      // Era 15000 - mucho más agresivo
+    else if (myCaptures >= 6 && captureOpportunities > 0) totalScore += 15000; // Era 6000
+    else if (myCaptures >= 4 && captureOpportunities > 0) totalScore += 6000;  // Era 2000
     else totalScore += myCaptures * 500;           // Era 200
     
     // CRÍTICO: Penalización más severa por capturas del oponente
-    if (oppCaptures >= 8) totalScore -= 300000;     // Era -15000 - ¡más defensivo!
-    else if (oppCaptures >= 6) totalScore -= 20000; // Era -6000
-    else if (oppCaptures >= 4) totalScore -= 8000;  // Era -2000
+    if (oppCaptures >= 8 && captureThreats > 0) totalScore -= 300000;     // Era -15000 - ¡más defensivo!
+    else if (oppCaptures >= 6 && captureThreats > 0) totalScore -= 20000; // Era -6000
+    else if (oppCaptures >= 4 && captureThreats > 0) totalScore -= 8000;  // Era -2000
     else totalScore -= oppCaptures * 800;           // Era -200
     
     // Bonus por oportunidades de captura (usa los valores mejorados)
@@ -228,49 +228,87 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState& state, int x, int
                                              int dx, int dy, int player) {
     PatternInfo info = {0, 0, 0, false, 0, 0};
     
-    // OPTIMIZACIÓN: Límite máximo de escaneo para evitar trabajo innecesario
-    const int MAX_SCAN = 6; // Suficiente para detectar patrones de 5 + extremos
+    // PASO 1: Análisis extendido - escanear hasta 6 posiciones para detectar gaps
+    const int MAX_SCAN = 6;
+    int sequence[MAX_SCAN];
+    int actualPositions = 0;
     
-    // PASO 1: Contar piezas consecutivas desde el inicio
-    int currentX = x, currentY = y;
-    int scanned = 0;
-    
-    while (scanned < MAX_SCAN && 
-           state.isValid(currentX, currentY) && 
-           state.getPiece(currentX, currentY) == player) {
-        info.consecutiveCount++;
-        currentX += dx;
-        currentY += dy;
-        scanned++;
+    // Llenar el array con el contenido de las 6 posiciones
+    for (int i = 0; i < MAX_SCAN; i++) {
+        int checkX = x + i * dx;
+        int checkY = y + i * dy;
+        
+        if (!state.isValid(checkX, checkY)) {
+            break;
+        }
+        
+        sequence[i] = state.getPiece(checkX, checkY);
+        actualPositions = i + 1;
     }
     
-    // OPTIMIZACIÓN: Si ya tenemos 5+, es victoria - no necesitamos más análisis
+    // PASO 2: Analizar patrones consecutivos desde el inicio
+    int consecutiveFromStart = 0;
+    while (consecutiveFromStart < actualPositions && 
+           sequence[consecutiveFromStart] == player) {
+        consecutiveFromStart++;
+    }
+    
+    info.consecutiveCount = consecutiveFromStart;
+    
+    // PASO 3: Si tenemos 5+ consecutivas, es victoria inmediata
     if (info.consecutiveCount >= 5) {
         info.totalPieces = info.consecutiveCount;
         info.totalSpan = info.consecutiveCount;
-        info.freeEnds = 2; // Para scoring de victoria
+        info.freeEnds = 2;
         return info;
     }
     
-    // PASO 2: Verificar extremos libres (solo si < 5 consecutivas)
-    info.freeEnds = 0;
+    // PASO 4: Análisis de patrones con gaps (X-XXX, XX-XX, etc.)
+    int totalPieces = 0;
+    int gapCount = 0;
+    int lastPiecePos = -1;
     
-    // Extremo adelante (después de las piezas consecutivas)
-    int frontX = x + dx * info.consecutiveCount;
-    int frontY = y + dy * info.consecutiveCount;
-    if (state.isValid(frontX, frontY) && state.isEmpty(frontX, frontY)) {
-        info.freeEnds++;
+    // Contar piezas totales y gaps en los primeros 5-6 espacios
+    for (int i = 0; i < actualPositions && i < 6; i++) {
+        if (sequence[i] == player) {
+            totalPieces++;
+            lastPiecePos = i;
+        } else if (sequence[i] != GameState::EMPTY) {
+            // Si hay una pieza del oponente, cortar el análisis aquí
+            break;
+        } else if (totalPieces > 0) {
+            // Es un gap (espacio vacío después de encontrar piezas)
+            gapCount++;
+        }
     }
     
-    // Extremo atrás (antes del inicio)
+    // PASO 5: Determinar el span total (desde primera hasta última pieza)
+    int totalSpan = lastPiecePos + 1;
+    
+    // PASO 6: Detectar si tiene gaps significativos
+    bool hasGaps = (gapCount > 0 && totalPieces > info.consecutiveCount);
+    
+    // PASO 7: Calcular extremos libres
+    info.freeEnds = 0;
+    
+    // Verificar extremo trasero (antes del inicio)
     int backX = x - dx, backY = y - dy;
     if (state.isValid(backX, backY) && state.isEmpty(backX, backY)) {
         info.freeEnds++;
     }
     
-    // PASO 3: Asignar valores para compatibilidad
-    info.totalPieces = info.consecutiveCount;
-    info.totalSpan = info.consecutiveCount;
+    // Verificar extremo delantero (después del último elemento analizado)
+    int frontX = x + totalSpan * dx;
+    int frontY = y + totalSpan * dy;
+    if (state.isValid(frontX, frontY) && state.isEmpty(frontX, frontY)) {
+        info.freeEnds++;
+    }
+    
+    // PASO 8: Asignar valores finales
+    info.totalPieces = totalPieces;
+    info.totalSpan = totalSpan;
+    info.hasGaps = hasGaps;
+    info.gapCount = gapCount;
     
     return info;
 }
@@ -281,68 +319,19 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
     int freeEnds = pattern.freeEnds;
     bool hasGaps = pattern.hasGaps;
     
-    // PASO 1: Patrones de victoria (consecutivos)
+    // PASO 1: Patrones de victoria (5+ piezas consecutivas o con gaps válidos)
     if (consecutiveCount >= 5) return WIN;
     
-    // PASO 2: Patrones críticos (consecutivos)
-    if (consecutiveCount == 4) {
-        if (freeEnds == 2) {
-            // NUEVO: Capturar FOUR_OPEN para debug
-            if (g_evalDebug.active) {
-                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
-                    g_evalDebug.aiFourOpen++;
-                } else {
-                    g_evalDebug.humanFourOpen++;
-                }
-            }
-            return FOUR_OPEN;    // Imparable
-        }
-        if (freeEnds == 1) {
-            // NUEVO: Capturar FOUR_HALF para debug
-            if (g_evalDebug.active) {
-                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
-                    g_evalDebug.aiFourHalf++;
-                } else {
-                    g_evalDebug.humanFourHalf++;
-                }
-            }
-            return FOUR_HALF;    // Amenaza forzada
-        }
+    // NUEVO: Victoria con gaps - X-XXXX, XX-XXX, etc.
+    if (totalPieces >= 5 && hasGaps && freeEnds >= 1) {
+        return WIN; // También es victoria
     }
     
-    if (consecutiveCount == 3) {
-        if (freeEnds == 2) {
-            // NUEVO: Capturar THREE_OPEN para debug
-            if (g_evalDebug.active) {
-                if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
-                    g_evalDebug.aiThreeOpen++;
-                } else {
-                    g_evalDebug.humanThreeOpen++;
-                }
-            }
-            return THREE_OPEN;   // Muy peligroso
-        }
-        if (freeEnds == 1) return THREE_HALF;   // Amenaza
-    }
-    
-    if (consecutiveCount == 2 && freeEnds == 2) {
-        // NUEVO: Capturar TWO_OPEN para debug
-        if (g_evalDebug.active) {
-            if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
-                g_evalDebug.aiTwoOpen++;
-            } else {
-                g_evalDebug.humanTwoOpen++;
-            }
-        }
-        return TWO_OPEN; // Desarrollo
-    }
-    
-    // PASO 3: NUEVO - Patrones con gaps (menos valiosos pero importantes)
-    if (hasGaps && totalPieces >= 3) {
-        // Patrones partidos de 4 piezas: -OOO-O- o -OO-OO-
-        if (totalPieces == 4) {
+    // PASO 2: Patrones críticos de 4 piezas
+    if (totalPieces == 4) {
+        // Caso 1: 4 consecutivas (XXXX)
+        if (consecutiveCount == 4) {
             if (freeEnds == 2) {
-                // NUEVO: Capturar FOUR_OPEN partido para debug
                 if (g_evalDebug.active) {
                     if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
                         g_evalDebug.aiFourOpen++;
@@ -350,10 +339,9 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
                         g_evalDebug.humanFourOpen++;
                     }
                 }
-                return FOUR_OPEN;    // Amenaza partida fuerte
+                return FOUR_OPEN;    // Imparable
             }
             if (freeEnds == 1) {
-                // NUEVO: Capturar FOUR_HALF partido para debug
                 if (g_evalDebug.active) {
                     if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
                         g_evalDebug.aiFourHalf++;
@@ -361,14 +349,39 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
                         g_evalDebug.humanFourHalf++;
                     }
                 }
-                return FOUR_HALF;    // Amenaza partida media
+                return FOUR_HALF;    // Amenaza forzada
             }
         }
-        
-        // Patrones partidos de 3 piezas: -OO-O- o -O-OO-
-        if (totalPieces == 3) {
+        // Caso 2: 4 con gaps (X-XXX, XX-XX, XXX-X)
+        else if (hasGaps) {
             if (freeEnds == 2) {
-                // NUEVO: Capturar THREE_OPEN partido para debug
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiFourOpen++;
+                    } else {
+                        g_evalDebug.humanFourOpen++;
+                    }
+                }
+                return FOUR_OPEN;    // ¡CRÍTICO! X-XXX es imparable
+            }
+            if (freeEnds == 1) {
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiFourHalf++;
+                    } else {
+                        g_evalDebug.humanFourHalf++;
+                    }
+                }
+                return FOUR_HALF;    // Amenaza fuerte
+            }
+        }
+    }
+    
+    // PASO 3: Patrones de 3 piezas
+    if (totalPieces == 3) {
+        // Caso 1: 3 consecutivas (XXX)
+        if (consecutiveCount == 3) {
+            if (freeEnds == 2) {
                 if (g_evalDebug.active) {
                     if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
                         g_evalDebug.aiThreeOpen++;
@@ -376,10 +389,36 @@ int Evaluator::patternToScore(const PatternInfo& pattern) {
                         g_evalDebug.humanThreeOpen++;
                     }
                 }
-                return THREE_OPEN;   // Amenaza partida abierta
+                return THREE_OPEN;   // Muy peligroso
             }
-            if (freeEnds == 1) return THREE_HALF;   // Amenaza partida semicerrada
+            if (freeEnds == 1) return THREE_HALF;   // Amenaza
         }
+        // Caso 2: 3 con gaps (X-XX, XX-X)
+        else if (hasGaps) {
+            if (freeEnds == 2) {
+                if (g_evalDebug.active) {
+                    if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                        g_evalDebug.aiThreeOpen++;
+                    } else {
+                        g_evalDebug.humanThreeOpen++;
+                    }
+                }
+                return THREE_OPEN;   // También peligroso
+            }
+            if (freeEnds == 1) return THREE_HALF;   // Amenaza partida
+        }
+    }
+    
+    // PASO 4: Patrones de 2 piezas (desarrollo)
+    if (totalPieces == 2 && freeEnds == 2) {
+        if (g_evalDebug.active) {
+            if (g_evalDebug.currentPlayer == GameState::PLAYER2) {
+                g_evalDebug.aiTwoOpen++;
+            } else {
+                g_evalDebug.humanTwoOpen++;
+            }
+        }
+        return TWO_OPEN; // Desarrollo (XX o X-X)
     }
     
     return 0;
