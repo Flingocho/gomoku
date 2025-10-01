@@ -465,18 +465,6 @@ std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState &sta
 	// NUEVO: Generar candidatos con filtrado adaptativo por fase de juego
 	std::vector<Move> candidates = generateCandidatesAdaptiveRadius(state);
 
-	// NUEVO: Determinar límite de candidatos según fase del juego
-	int maxCandidates = getMaxCandidatesForGamePhase(state);
-
-	// Aplicar move ordering con mejor movimiento de iteración anterior
-	orderMovesWithPreviousBest(candidates, state);
-
-	// NUEVO: Limitar a los mejores candidatos
-	if (candidates.size() > (size_t)maxCandidates)
-	{
-		candidates.resize(maxCandidates);
-	}
-
 	return candidates;
 }
 
@@ -1017,149 +1005,62 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
 
 std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const GameState &state)
 {
-	std::vector<Move> candidates;
-
-	int pieceCount = state.turnCount;
-	int searchRadius = getSearchRadiusForGamePhase(pieceCount);
-	int opponent = state.getOpponent(state.currentPlayer);
-
-	// OPTIMIZACIÓN: Calcular una sola vez al inicio
-	bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
-
-	// NUEVO: Agregar todas las casillas vacías alrededor del último movimiento humano
-	addCandidatesAroundLastHumanMove(candidates, state);
-
-	for (int i = 0; i < GameState::BOARD_SIZE; i++)
-	{
-		for (int j = 0; j < GameState::BOARD_SIZE; j++)
-		{
-			if (!state.isEmpty(i, j))
-				continue;
-
-			// Verificar si está dentro del radio de influencia de alguna pieza
-			bool withinInfluenceRadius = false;
-
-			for (int pi = 0; pi < GameState::BOARD_SIZE && !withinInfluenceRadius; pi++)
-			{
-				for (int pj = 0; pj < GameState::BOARD_SIZE && !withinInfluenceRadius; pj++)
-				{
-					if (state.getPiece(pi, pj) != GameState::EMPTY)
-					{
-						int distance = std::max(std::abs(i - pi), std::abs(j - pj));
-						if (distance <= searchRadius)
-						{
-							withinInfluenceRadius = true;
-						}
-					}
-				}
-			}
-
-			// AMPLIADO: Lógica mejorada para amenazas críticas
-			if (!withinInfluenceRadius && opponentHasThreats)
-			{
-				GameState tempState = state;
-
-				// CASO 1: Verificar si este movimiento bloquea amenazas del oponente
-				RuleEngine::MoveResult blockResult = RuleEngine::applyMove(tempState, Move(i, j));
-				if (blockResult.success)
-				{
-					bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
-					if (!stillHasThreats)
-					{
-						withinInfluenceRadius = true; // Es un bloqueo crítico
-					}
-				}
-
-				// CASO 2: NUEVO - Verificar si es un movimiento ganador del oponente
-				if (!withinInfluenceRadius)
-				{
-					GameState opponentTempState = state;
-					opponentTempState.currentPlayer = opponent; // Simular turno del oponente
-
-					RuleEngine::MoveResult winResult = RuleEngine::applyMove(opponentTempState, Move(i, j));
-					if (winResult.success && winResult.createsWin)
-					{
-						withinInfluenceRadius = true; // Es un movimiento ganador del oponente - DEBE ser evaluado
-					}
-				}
-
-				// CASO 3: NUEVO - Verificar si crea nuevas amenazas críticas para el oponente
-				if (!withinInfluenceRadius)
-				{
-					GameState opponentTempState = state;
-					opponentTempState.currentPlayer = opponent;
-
-					RuleEngine::MoveResult threatResult = RuleEngine::applyMove(opponentTempState, Move(i, j));
-					if (threatResult.success)
-					{
-						// Restaurar turno para evaluación correcta
-						opponentTempState.currentPlayer = state.currentPlayer;
-						bool createsNewThreats = Evaluator::hasWinningThreats(opponentTempState, opponent);
-
-						// Si el oponente ya tenía amenazas y este movimiento crea más
-						if (createsNewThreats)
-						{
-							withinInfluenceRadius = true; // Movimiento que amplía amenazas del oponente
-						}
-					}
-				}
-			}
-
-			// En opening, también considerar movimientos centrales estratégicos
-			if (!withinInfluenceRadius && isEarlyGamePhase(pieceCount))
-			{
-				if (isCentralStrategicPosition(i, j))
-				{
-					withinInfluenceRadius = true;
-				}
-			}
-
-// NUEVO: Para debugging - forzar inclusión de movimientos específicos sospechosos
-// (esto se puede quitar en producción, pero ayuda a debuggear)
-#ifdef DEBUG_CANDIDATE_GENERATION
-			// Si estamos en una situación de 4 en línea, forzar inclusión de completadores
-			if (!withinInfluenceRadius)
-			{
-				// Verificar si este movimiento está adyacente a secuencias largas
-				bool adjacentToLongSequence = false;
-				int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
-
-				for (int d = 0; d < 4; d++)
-				{
-					int dx = directions[d][0], dy = directions[d][1];
-
-					// Contar en ambas direcciones para cualquier jugador
-					for (int player = 1; player <= 2; player++)
-					{
-						int count = 0;
-						count += countPiecesInDirection(state, i, j, dx, dy, player);
-						count += countPiecesInDirection(state, i, j, -dx, -dy, player);
-
-						if (count >= 3)
-						{ // Secuencia de 3+ piezas
-							adjacentToLongSequence = true;
-							break;
-						}
-					}
-					if (adjacentToLongSequence)
-						break;
-				}
-
-				if (adjacentToLongSequence)
-				{
-					withinInfluenceRadius = true;
-				}
-			}
-#endif
-
-			if (withinInfluenceRadius && RuleEngine::isLegalMove(state, Move(i, j)))
-			{
-				candidates.push_back(Move(i, j));
-			}
-		}
-	}
-
-	return candidates;
+    std::vector<Move> candidates;
+    int searchRadius = getSearchRadiusForGamePhase(state.turnCount);
+    
+    // OPTIMIZACIÓN: Pre-marcar zonas relevantes
+    bool relevantZone[GameState::BOARD_SIZE][GameState::BOARD_SIZE] = {{false}};
+    
+    // PASO 1: Marcar casillas alrededor de piezas existentes
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (state.board[i][j] != GameState::EMPTY) {
+                // Marcar radio alrededor de esta pieza
+                for (int di = -searchRadius; di <= searchRadius; di++) {
+                    for (int dj = -searchRadius; dj <= searchRadius; dj++) {
+                        int ni = i + di, nj = j + dj;
+                        if (state.isValid(ni, nj) && state.isEmpty(ni, nj)) {
+                            relevantZone[ni][nj] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // PASO 2: Marcar zona alrededor del último movimiento humano (prioridad táctica)
+    if (state.lastHumanMove.isValid()) {
+        int extendedRadius = searchRadius + 1; // Radio mayor para respuestas
+        for (int di = -extendedRadius; di <= extendedRadius; di++) {
+            for (int dj = -extendedRadius; dj <= extendedRadius; dj++) {
+                int ni = state.lastHumanMove.x + di;
+                int nj = state.lastHumanMove.y + dj;
+                if (state.isValid(ni, nj) && state.isEmpty(ni, nj)) {
+                    relevantZone[ni][nj] = true;
+                }
+            }
+        }
+    }
+    
+    // PASO 3: Solo agregar candidatos de zonas marcadas
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (relevantZone[i][j]) {
+                candidates.push_back(Move(i, j));
+            }
+        }
+    }
+    
+    // Ordenar con move ordering
+    orderMovesWithPreviousBest(candidates, state);
+    
+    // Limitar número de candidatos
+    int maxCandidates = getMaxCandidatesForGamePhase(state);
+    if (candidates.size() > (size_t)maxCandidates) {
+        candidates.resize(maxCandidates);
+    }
+    
+    return candidates;
 }
 
 int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount)
