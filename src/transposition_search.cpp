@@ -929,78 +929,116 @@ void TranspositionSearch::printCacheStats() const
 }
 
 TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
-	const GameState &state, int maxDepth)
+    const GameState &state, int maxDepth)
 {
+    auto startTime = std::chrono::high_resolution_clock::now();
+    SearchResult bestResult;
 
-	auto startTime = std::chrono::high_resolution_clock::now();
-	SearchResult bestResult;
+    nodesEvaluated = 0;
+    cacheHits = 0;
+    currentGeneration++;
 
-	nodesEvaluated = 0;
-	cacheHits = 0;
+    std::cout << "Búsqueda iterativa hasta profundidad " << maxDepth << std::endl;
 
-	// NUEVO: Incrementar generación para aging-based replacement
-	currentGeneration++;
+    // ============================================
+    // NUEVO: PRE-CHECK - Detectar victoria inmediata
+    // ============================================
+    std::vector<Move> allCandidates = generateCandidatesAdaptiveRadius(state);
+    
+    for (const Move& move : allCandidates) {
+        GameState testState = state;
+        RuleEngine::MoveResult result = RuleEngine::applyMove(testState, move);
+        
+        if (!result.success) continue;
+        
+        // ¿Este movimiento gana INMEDIATAMENTE?
+        if (RuleEngine::checkWin(testState, state.currentPlayer) ||
+            testState.captures[state.currentPlayer - 1] >= 10) {
+            
+            auto endTime = std::chrono::high_resolution_clock::now();
+            int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                endTime - startTime).count();
+            
+            SearchResult winResult;
+            winResult.bestMove = move;
+            winResult.score = Evaluator::WIN; // Usar constante del evaluador
+            winResult.nodesEvaluated = allCandidates.size();
+            winResult.cacheHits = 0;
+            winResult.cacheHitRate = 0.0f;
+            
+            std::cout << "¡VICTORIA INMEDIATA detectada en " 
+                      << char('A' + move.y) << (move.x + 1) 
+                      << " en " << elapsedTime << "ms!" << std::endl;
+            
+            if (g_debugAnalyzer) {
+                DEBUG_CHOSEN_MOVE(move, winResult.score);
+                DEBUG_SNAPSHOT(state, elapsedTime, allCandidates.size());
+            }
+            
+            return winResult;
+        }
+    }
+    
+    std::cout << "No hay victoria inmediata, iniciando búsqueda iterativa..." << std::endl;
+    
+    // ============================================
+    // Iterative deepening normal
+    // ============================================
+    for (int depth = 1; depth <= maxDepth; depth++)
+    {
+        auto iterationStart = std::chrono::high_resolution_clock::now();
 
-	std::cout << "Búsqueda iterativa hasta profundidad " << maxDepth << std::endl;
+        if (bestResult.bestMove.isValid()) {
+            previousBestMove = bestResult.bestMove;
+        }
 
-	// Iterative deepening loop
-	for (int depth = 1; depth <= maxDepth; depth++)
-	{
-		auto iterationStart = std::chrono::high_resolution_clock::now();
+        Move bestMove;
+        int score = minimax(const_cast<GameState &>(state), depth,
+                            std::numeric_limits<int>::min(),
+                            std::numeric_limits<int>::max(),
+                            state.currentPlayer == GameState::PLAYER2,
+                            depth, &bestMove);
 
-		// Usar el mejor movimiento de la iteración anterior como primer candidato
-		if (bestResult.bestMove.isValid())
-		{
-			previousBestMove = bestResult.bestMove;
-		}
+        auto iterationEnd = std::chrono::high_resolution_clock::now();
+        auto iterationTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+            iterationEnd - iterationStart);
 
-		Move bestMove;
-		int score = minimax(const_cast<GameState &>(state), depth,
-							std::numeric_limits<int>::min(),
-							std::numeric_limits<int>::max(),
-							state.currentPlayer == GameState::PLAYER2,
-							depth, &bestMove);
+        bestResult.bestMove = bestMove;
+        bestResult.score = score;
+        bestResult.nodesEvaluated = nodesEvaluated;
+        bestResult.cacheHits = cacheHits;
+        bestResult.cacheHitRate = nodesEvaluated > 0 ?
+            (float)cacheHits / nodesEvaluated : 0.0f;
 
-		auto iterationEnd = std::chrono::high_resolution_clock::now();
-		auto iterationTime = std::chrono::duration_cast<std::chrono::milliseconds>(iterationEnd - iterationStart);
+        std::cout << "Profundidad " << depth
+                  << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
+                  << " (score: " << score << ")"
+                  << " - " << iterationTime.count() << "ms"
+                  << " (" << nodesEvaluated << " nodos, "
+                  << std::fixed << std::setprecision(1) 
+                  << (bestResult.cacheHitRate * 100) << "% cache hit)"
+                  << std::endl;
 
-		// Actualizar resultado
-		bestResult.bestMove = bestMove;
-		bestResult.score = score;
-		bestResult.nodesEvaluated = nodesEvaluated;
-		bestResult.cacheHits = cacheHits;
-		bestResult.cacheHitRate = nodesEvaluated > 0 ? (float)cacheHits / nodesEvaluated : 0.0f;
+        // MANTENER threshold original
+        if (std::abs(score) > 300000) {
+            std::cout << "Mate detectado en profundidad " << depth
+                      << ", completando búsqueda" << std::endl;
+            break;
+        }
+    }
 
-		std::cout << "Profundidad " << depth
-				  << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
-				  << " (score: " << score << ")"
-				  << " - " << iterationTime.count() << "ms"
-				  << " (" << nodesEvaluated << " nodos, "
-				  << std::fixed << std::setprecision(1) << (bestResult.cacheHitRate * 100) << "% cache hit)"
-				  << std::endl;
+    auto totalTime = std::chrono::high_resolution_clock::now() - startTime;
+    int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        totalTime).count();
 
-		// Si encontramos mate, podemos parar (opcional)
-		if (std::abs(score) > 300000)
-		{
-			std::cout << "Mate detectado en profundidad " << depth
-					  << ", completando búsqueda" << std::endl;
-			break;
-		}
-	}
+    std::cout << "Búsqueda completada en " << elapsedTime << "ms total" << std::endl;
 
-	auto totalTime = std::chrono::high_resolution_clock::now() - startTime;
-	int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(totalTime).count();
+    if (g_debugAnalyzer) {
+        DEBUG_CHOSEN_MOVE(bestResult.bestMove, bestResult.score);
+        DEBUG_SNAPSHOT(state, elapsedTime, nodesEvaluated);
+    }
 
-	std::cout << "Búsqueda completada en " << elapsedTime << "ms total" << std::endl;
-
-	// **NUEVO: Debug snapshot igual que en findBestMove**
-	if (g_debugAnalyzer)
-	{
-		DEBUG_CHOSEN_MOVE(bestResult.bestMove, bestResult.score);
-		DEBUG_SNAPSHOT(state, elapsedTime, nodesEvaluated);
-	}
-
-	return bestResult;
+    return bestResult;
 }
 
 std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const GameState &state)
