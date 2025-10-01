@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:24:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/10/01 19:54:16 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/10/01 23:06:33 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -654,10 +654,20 @@ int Evaluator::countPatternType(const GameState &state, int player, int consecut
 				{
 					PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
 
-					// FILTRO: Solo contar el patrón específico que buscamos
-					if (pattern.consecutiveCount == consecutiveCount &&
-						pattern.freeEnds == freeEnds)
-					{
+					// CORRECCIÓN: Considerar también patrones con gaps
+					// Para patrones de 4: pueden ser 4 consecutivos O 4 con gaps
+					bool matches = false;
+					
+					if (consecutiveCount == 4) {
+						// Para 4 en línea: aceptar 4 consecutivos O 4 con gaps
+						matches = (pattern.consecutiveCount == 4 && pattern.freeEnds == freeEnds) ||
+								 (pattern.totalPieces == 4 && pattern.hasGaps && pattern.freeEnds == freeEnds);
+					} else {
+						// Para otros patrones, usar la lógica original
+						matches = (pattern.consecutiveCount == consecutiveCount && pattern.freeEnds == freeEnds);
+					}
+					
+					if (matches) {
 						count++;
 					}
 				}
