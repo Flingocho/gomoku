@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/30 17:11:21 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/10/01 22:29:52 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,9 @@ GuiRenderer::GuiRenderer()
       showSuggestion(false),
 	  errorMessage(""),              // NUEVO: Inicializar sistema de errores
 	  showError(false),
-	  invalidMovePosition(-1, -1)
+	  invalidMovePosition(-1, -1),
+	  gameOverButtonsY(0),
+	  gameOverButtonsPositionValid(false)
 {
     // Cargar fuente personalizada
     if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
@@ -783,125 +785,210 @@ void GuiRenderer::showGameResult(int) {
     setState(GAME_OVER);
 }
 
+// En gui_renderer.cpp - reemplazar renderGameOver completo
 void GuiRenderer::renderGameOver(const GameState& state) {
-    // 1. Overlay semi-transparente sobre todo
-    sf::RectangleShape overlay(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
-    overlay.setPosition(0, 0);
-    overlay.setFillColor(sf::Color(0, 0, 0, 180)); // Negro semi-transparente
+    // ============================================
+    // PASO 1: Renderizar el tablero normal (izquierda)
+    // ============================================
+    drawBoard();
+    drawPieces(state);
+	int PIECE_RADIUS = (CELL_SIZE / 2) - 4;
+    
+    // ============================================
+    // PASO 2: Resaltar la línea ganadora
+    // ============================================
+    if (!winningLine.empty()) {
+        for (const Move& move : winningLine) {
+            sf::Vector2i pos = boardPositionToPixel(move.x, move.y);
+            
+            // Halo brillante dorado
+            sf::CircleShape highlight(PIECE_RADIUS + 8);
+            highlight.setPosition(pos.x - PIECE_RADIUS - 8, pos.y - PIECE_RADIUS - 8);
+            highlight.setFillColor(sf::Color::Transparent);
+            highlight.setOutlineThickness(5);
+            highlight.setOutlineColor(sf::Color(255, 215, 0, 255)); // Dorado sólido
+            window.draw(highlight);
+            
+            // Segundo halo más grande
+            sf::CircleShape highlight2(PIECE_RADIUS + 14);
+            highlight2.setPosition(pos.x - PIECE_RADIUS - 14, pos.y - PIECE_RADIUS - 14);
+            highlight2.setFillColor(sf::Color::Transparent);
+            highlight2.setOutlineThickness(3);
+            highlight2.setOutlineColor(sf::Color(255, 255, 0, 150)); // Amarillo brillante
+            window.draw(highlight2);
+        }
+        
+        // Línea conectando las fichas
+        if (winningLine.size() >= 2) {
+            sf::Vector2i start = boardPositionToPixel(winningLine.front().x, winningLine.front().y);
+            sf::Vector2i end = boardPositionToPixel(winningLine.back().x, winningLine.back().y);
+            
+            // Calcular grosor basado en ángulo
+            float dx = end.x - start.x;
+            float dy = end.y - start.y;
+            float length = std::sqrt(dx*dx + dy*dy);
+            float angle = std::atan2(dy, dx) * 180.0f / 3.14159f;
+            
+            // Rectángulo como línea gruesa
+            sf::RectangleShape line(sf::Vector2f(length, 6));
+            line.setPosition(start.x, start.y);
+            line.setRotation(angle);
+            line.setFillColor(sf::Color(255, 215, 0, 200));
+            window.draw(line);
+        }
+    }
+    
+    // ============================================
+    // PASO 3: Panel lateral derecho (donde va el info panel)
+    // ============================================
+    int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
+    int panelY = BOARD_OFFSET_Y;
+    int panelWidth = 280;
+    int panelHeight = BOARD_SIZE_PX; // Mismo alto que el tablero
+    
+    // Overlay oscuro solo en el panel derecho
+    sf::RectangleShape overlay(sf::Vector2f(panelWidth + 20, panelHeight));
+    overlay.setPosition(panelX - 10, panelY);
+    overlay.setFillColor(sf::Color(0, 0, 0, 200));
     window.draw(overlay);
     
-    // 2. Panel central del game over
-    int panelWidth = 400;
-    int panelHeight = 380;  // AUMENTADO: Más alto para nueva información de estadísticas
-    int panelX = WINDOW_WIDTH/2 - panelWidth/2;
-    int panelY = WINDOW_HEIGHT/2 - panelHeight/2;
+    // Fondo del panel
+    sf::RectangleShape panelBg(sf::Vector2f(panelWidth, panelHeight));
+    panelBg.setPosition(panelX, panelY);
+    panelBg.setFillColor(sf::Color(30, 30, 30, 250));
+    panelBg.setOutlineThickness(4);
+    panelBg.setOutlineColor(sf::Color(255, 215, 0)); // Borde dorado
+    window.draw(panelBg);
     
-    // Sombra del panel
-    sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 8, panelHeight + 8));
-    panelShadow.setPosition(panelX + 4, panelY + 4);
-    panelShadow.setFillColor(sf::Color(0, 0, 0, 120));
-    window.draw(panelShadow);
+    // ============================================
+    // PASO 4: Contenido del panel
+    // ============================================
+    int yOffset = panelY + 20;
+    int centerX = panelX + panelWidth / 2;
     
-    // Panel principal
-    sf::RectangleShape panel(sf::Vector2f(panelWidth, panelHeight));
-    panel.setPosition(panelX, panelY);
-    panel.setFillColor(sf::Color(60, 60, 60));
-    panel.setOutlineThickness(3);
-    panel.setOutlineColor(sf::Color::White);
-    window.draw(panel);
+    // Título GAME OVER
+    drawText("GAME OVER", centerX - 90, yOffset, 32, sf::Color(255, 100, 100));
+    yOffset += 50;
     
-    // 3. Título "GAME OVER"
-    drawText("GAME OVER", panelX + panelWidth/2 - 80, panelY + 20, 32, sf::Color::Red);
-    
-    // 4. NUEVO: Determinar y mostrar el ganador real
-    bool player1Wins = false, player2Wins = false;
+    // ============================================
+    // PASO 5: Determinar ganador y razón
+    // ============================================
+    bool player1Wins = false;
     std::string winReason = "";
+    std::string winDetails = "";
     
-    // Verificar capturas
     if (state.captures[0] >= 10) {
         player1Wins = true;
-        winReason = "by captures";
+        winReason = "BY CAPTURES";
+        winDetails = "10 pairs captured";
     } else if (state.captures[1] >= 10) {
-        player2Wins = true;
-        winReason = "by captures";
-    }
-    // Si no hay victoria por capturas, debe ser por alineación
-    // (el game engine ya verificó que hay victoria)
-    else {
-        // Determinar ganador por el turno actual (el otro jugador ganó)
+        winReason = "BY CAPTURES";
+        winDetails = "AI got 10 pairs";
+    } else {
         if (state.currentPlayer == GameState::PLAYER1) {
-            player2Wins = true; // La IA ganó en su último turno
+            winReason = "BY ALIGNMENT";
+            if (!winningLine.empty()) {
+                char col = 'A' + winningLine[0].y;
+                int row = winningLine[0].x + 1;
+                winDetails = "Line at " + std::string(1, col) + std::to_string(row);
+            } else {
+                winDetails = "5 in a row";
+            }
         } else {
-            player1Wins = true; // El humano ganó en su último turno
+            player1Wins = true;
+            winReason = "BY ALIGNMENT";
+            if (!winningLine.empty()) {
+                char col = 'A' + winningLine[0].y;
+                int row = winningLine[0].x + 1;
+                winDetails = "Line at " + std::string(1, col) + std::to_string(row);
+            } else {
+                winDetails = "5 in a row";
+            }
         }
-        winReason = "by 5 in a row";
     }
     
-    // 5. Mostrar resultado
+    // Resultado principal
     if (player1Wins) {
-        drawText("YOU WIN!", panelX + panelWidth/2 - 70, panelY + 70, 28, sf::Color::Green);
-        drawText("Congratulations!", panelX + panelWidth/2 - 80, panelY + 105, 18, sf::Color::Yellow);
-    } else if (player2Wins) {
-        drawText("AI WINS", panelX + panelWidth/2 - 50, panelY + 70, 28, sf::Color::Red);
-        drawText("The machine triumphs", panelX + panelWidth/2 - 85, panelY + 105, 18, sf::Color(200, 100, 100));
+        drawText("YOU WIN!", centerX - 70, yOffset, 28, sf::Color(100, 255, 100));
+        yOffset += 35;
+        drawText("Victory!", centerX - 40, yOffset, 18, sf::Color(200, 255, 200));
+    } else {
+        drawText("AI WINS", centerX - 55, yOffset, 28, sf::Color(255, 80, 80));
+        yOffset += 35;
+        drawText("Defeat", centerX - 35, yOffset, 18, sf::Color(255, 150, 150));
     }
     
-    // 6. Mostrar razón de victoria
-    std::string reasonText = "Victory " + winReason;
-    drawText(reasonText, panelX + panelWidth/2 - 60, panelY + 135, 16, sf::Color::White);
+    yOffset += 35;
     
-    // 7. Estadísticas finales
-    drawText("Final statistics:", panelX + panelWidth/2 - 80, panelY + 165, 16, sf::Color::Yellow);
+    // Razón de victoria (centrada)
+    drawText(winReason, centerX - winReason.length() * 6, yOffset, 20, sf::Color::White);
+    yOffset += 25;
+    drawText(winDetails, centerX - winDetails.length() * 4, yOffset, 14, sf::Color(180, 180, 180));
     
-    std::string turnosText = "Turns played: " + std::to_string(state.turnCount);
-    drawText(turnosText, panelX + 20, panelY + 190, 14, sf::Color::White);
+    yOffset += 40;
     
-    std::string capturesText = "Captures - You: " + std::to_string(state.captures[0]) + 
-                              ", AI: " + std::to_string(state.captures[1]);
-    drawText(capturesText, panelX + 20, panelY + 210, 14, sf::Color::White);
+    // Separador
+    sf::RectangleShape separator(sf::Vector2f(panelWidth - 30, 2));
+    separator.setPosition(panelX + 15, yOffset);
+    separator.setFillColor(sf::Color(255, 215, 0));
+    window.draw(separator);
     
-    // NUEVO: Mostrar estadísticas de tiempo de IA si hay datos
-    if (aiMoveCount > 0) {
-        float avgTime = getAverageAiTime();
-        std::string aiStatsText = "AI - Moves: " + std::to_string(aiMoveCount) + 
-                                 ", Avg: " + std::to_string(static_cast<int>(avgTime)) + "ms";
-        drawText(aiStatsText, panelX + 20, panelY + 230, 14, sf::Color::White);
-        
-        // Clasificación del rendimiento promedio
-        std::string perfClassText;
-        sf::Color perfColor;
-        if (avgTime < 100) {
-            perfClassText = "Performance: Excellent";
-            perfColor = sf::Color::Green;
-        } else if (avgTime < 300) {
-            perfClassText = "Performance: Good";
-            perfColor = sf::Color::Yellow;
-        } else if (avgTime < 1000) {
-            perfClassText = "Performance: Normal";
-            perfColor = sf::Color::White;
-        } else {
-            perfClassText = "Performance: Slow";
-            perfColor = sf::Color::Red;
-        }
-        drawText(perfClassText, panelX + 20, panelY + 250, 12, perfColor);
-    }
+    yOffset += 25;
     
-    // 8. Botones de acción
-    int buttonWidth = 120;
-    int buttonHeight = 40;
-    int button1X = panelX + 50;
-    int button2X = panelX + panelWidth - 170;
-    int buttonY = panelY + panelHeight - 80;
+    // ============================================
+    // PASO 6: Estadísticas finales
+    // ============================================
+    drawText("FINAL STATS", centerX - 60, yOffset, 18, sf::Color(255, 215, 0));
+    yOffset += 30;
     
-    // Botón "Nuevo Juego"
-    drawButton("New Game", button1X, buttonY, buttonWidth, buttonHeight, false);
+    // Stats compactas
+    drawText("Your Captures:", panelX + 15, yOffset, 14, sf::Color::White);
+    drawText(std::to_string(state.captures[0]), panelX + panelWidth - 40, yOffset, 14, sf::Color(150, 255, 150));
+    yOffset += 22;
     
-    // Botón "Menú"
-    drawButton("Menu", button2X, buttonY, buttonWidth, buttonHeight, false);
+    drawText("AI Captures:", panelX + 15, yOffset, 14, sf::Color::White);
+    drawText(std::to_string(state.captures[1]), panelX + panelWidth - 40, yOffset, 14, sf::Color(255, 150, 150));
+    yOffset += 22;
     
-    // 9. Instrucciones
-    drawText("Click a button or press ESC", panelX + panelWidth/2 - 120, 
-             panelY + panelHeight + 20, 14, sf::Color(150, 150, 150));
+    drawText("Total Moves:", panelX + 15, yOffset, 14, sf::Color::White);
+    drawText(std::to_string(state.turnCount), panelX + panelWidth - 40, yOffset, 14, sf::Color(200, 200, 200));
+    
+    yOffset += 35;
+    
+    // Otro separador
+    sf::RectangleShape separator2(sf::Vector2f(panelWidth - 30, 2));
+    separator2.setPosition(panelX + 15, yOffset);
+    separator2.setFillColor(sf::Color(100, 100, 100));
+    window.draw(separator2);
+    
+    yOffset += 25;
+    
+    // ============================================
+    // PASO 7: Botones con hover effect
+    // ============================================
+    int buttonWidth = panelWidth - 30;
+    int buttonHeight = 50;
+    int buttonX = panelX + 15;
+    
+    // GUARDAR posición exacta de botones para usar en mouse events
+    gameOverButtonsY = yOffset;
+    gameOverButtonsPositionValid = true;
+    
+    // Botón "New Game" con hover
+    bool newGameHover = (hoveredMenuOption == 0);
+    drawButton("NEW GAME", buttonX, gameOverButtonsY, buttonWidth, buttonHeight, newGameHover);
+    
+    // Botón "Main Menu" con hover
+    bool menuHover = (hoveredMenuOption == 1);
+    drawButton("MAIN MENU", buttonX, gameOverButtonsY + buttonHeight + 15, buttonWidth, buttonHeight, menuHover);
+    
+    // Instrucción (usar posición calculada)
+    yOffset = gameOverButtonsY + (buttonHeight + 15) * 2 + 20;
+    
+    yOffset += buttonHeight + 20;
+    
+    // Instrucción
+    drawText("Press ESC for menu", centerX - 80, yOffset, 12, sf::Color(120, 120, 120));
 }
 
 void GuiRenderer::handleMouseMove(int x, int y) {
@@ -942,38 +1029,74 @@ void GuiRenderer::handleMouseMove(int x, int y) {
             hoverPosition = Move(-1, -1); // Fuera del tablero
         }
     }
+
+	if (currentState == GAME_OVER && gameOverButtonsPositionValid) {
+        int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
+        int panelWidth = 280;
+        
+        int buttonWidth = panelWidth - 30;
+        int buttonHeight = 50;
+        int buttonX = panelX + 15;
+        
+        // Usar posición exacta guardada desde renderGameOver
+        int button1Y = gameOverButtonsY;
+        int button2Y = gameOverButtonsY + buttonHeight + 15;
+        
+        // Reset hover
+        int previousHover = hoveredMenuOption;
+        hoveredMenuOption = -1;
+        
+        // Check botón NEW GAME
+        if (x >= buttonX && x <= buttonX + buttonWidth && 
+            y >= button1Y && y <= button1Y + buttonHeight) {
+            hoveredMenuOption = 0;
+        }
+        // Check botón MAIN MENU
+        else if (x >= buttonX && x <= buttonX + buttonWidth && 
+                 y >= button2Y && y <= button2Y + buttonHeight) {
+            hoveredMenuOption = 1;
+        }
+        
+        // Debug hover (solo si cambió)
+        if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
+            std::cout << "Game Over Hover: " << (hoveredMenuOption == 0 ? "New Game" : "Main Menu") << std::endl;
+        }
+    }
 }
 
+// En gui_renderer.cpp - Reemplazar handleGameOverClick
 void GuiRenderer::handleGameOverClick(int x, int y) {
-    int panelWidth = 400;
-    int panelHeight = 300;
-    int panelX = WINDOW_WIDTH/2 - panelWidth/2;
-    int panelY = WINDOW_HEIGHT/2 - panelHeight/2;
+    if (!gameOverButtonsPositionValid) return; // No hay posiciones válidas aún
     
-    int buttonWidth = 120;
-    int buttonHeight = 40;
-    int button1X = panelX + 50;         // Botón "Nuevo Juego"
-    int button2X = panelX + panelWidth - 170;  // Botón "Menú"
-    int buttonY = panelY + panelHeight - 80;
+    int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
+    int panelWidth = 280;
     
-    // Click en "Nuevo Juego"
-    if (x >= button1X && x <= button1X + buttonWidth && 
-        y >= buttonY && y <= buttonY + buttonHeight) {
-        selectedMenuOption = 0; // Señal para reiniciar juego
-        std::cout << "Seleccionado: Nuevo Juego" << std::endl;
+    int buttonWidth = panelWidth - 30;
+    int buttonHeight = 50;
+    int buttonX = panelX + 15;
+    
+    // Usar posición exacta guardada desde renderGameOver
+    int button1Y = gameOverButtonsY;
+    int button2Y = gameOverButtonsY + buttonHeight + 15;
+    
+    // Click en "NEW GAME"
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= button1Y && y <= button1Y + buttonHeight) {
+        selectedMenuOption = 0;
+        std::cout << "✓ Seleccionado: Nuevo Juego" << std::endl;
         return;
     }
     
-    // Click en "Menú"
-    if (x >= button2X && x <= button2X + buttonWidth && 
-        y >= buttonY && y <= buttonY + buttonHeight) {
+    // Click en "MAIN MENU"
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= button2Y && y <= button2Y + buttonHeight) {
         setState(MENU);
-        selectedMenuOption = -1; // Reset
-        std::cout << "Volviendo al menu" << std::endl;
+        selectedMenuOption = -1;
+        std::cout << "✓ Volviendo al menú" << std::endl;
         return;
     }
     
-    // Click fuera de botones - no hacer nada
+    std::cout << "✗ Click fuera de los botones" << std::endl;
 }
 
 char GuiRenderer::getPieceSymbol(int piece) const {

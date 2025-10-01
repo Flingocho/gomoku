@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 19:56:20 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/10/01 21:52:11 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,4 +70,54 @@ int GameEngine::getWinner() const
 	if (RuleEngine::checkWin(state, GameState::PLAYER2))
 		return GameState::PLAYER2;
 	return 0; // No winner
+}
+
+std::vector<Move> GameEngine::findWinningLine() const {
+    std::vector<Move> line;
+    
+    // Determinar quién ganó
+    int winner = 0;
+    if (RuleEngine::checkWin(state, GameState::PLAYER1)) {
+        winner = GameState::PLAYER1;
+    } else if (RuleEngine::checkWin(state, GameState::PLAYER2)) {
+        winner = GameState::PLAYER2;
+    } else {
+        return line; // No hay ganador por alineación
+    }
+    
+    // Buscar la línea de 5
+    int directions[4][2] = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
+    
+    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+            if (state.board[i][j] != winner) continue;
+            
+            for (int d = 0; d < 4; d++) {
+                int dx = directions[d][0];
+                int dy = directions[d][1];
+                
+                // Contar consecutivas en esta dirección
+                int count = 0;
+                std::vector<Move> tempLine;
+                
+                for (int k = 0; k < 5; k++) {
+                    int ni = i + k * dx;
+                    int nj = j + k * dy;
+                    
+                    if (state.isValid(ni, nj) && state.board[ni][nj] == winner) {
+                        tempLine.push_back(Move(ni, nj));
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (count >= 5) {
+                    return tempLine; // Encontrada
+                }
+            }
+        }
+    }
+    
+    return line;
 }

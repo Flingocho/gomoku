@@ -53,6 +53,7 @@ private:
 	bool moveReady;
 	Move hoverPosition; // NUEVO: Para hover en el tablero
 	Move lastAiMove;	// NUEVO: Última ficha colocada por la IA
+	std::vector<Move> winningLine;
 
 	// Visual constants
 	static constexpr int WINDOW_WIDTH = 1000;
@@ -84,7 +85,12 @@ public:
 	void showGameResult(int winner);
 
 	// State management
-	void setState(AppState newState) { currentState = newState; }
+	void setState(AppState newState) { 
+        currentState = newState; 
+        if (newState != GAME_OVER) {
+            gameOverButtonsPositionValid = false; // Reset cuando salimos de game over
+        }
+    }
 	AppState getState() const { return currentState; }
 	bool hasUserMove() const { return moveReady; }
 	Move getUserMove(); // Non-blocking, returns pending move
@@ -113,6 +119,8 @@ public:
 	// NUEVO: Métodos para manejar errores de movimiento
 	void showInvalidMoveError(const Move& move);
 	void clearInvalidMoveError();
+	void setWinningLine(const std::vector<Move>& line) { winningLine = line; }
+	int getSelectedMenuOption() const { return selectedMenuOption; }
 
 private:
 	// Internal rendering methods
@@ -160,6 +168,10 @@ private:
 	sf::Clock errorTimer;
 	bool showError;
 	Move invalidMovePosition;
+	
+	// Posiciones exactas de botones de Game Over (calculadas en renderGameOver)
+	int gameOverButtonsY;
+	bool gameOverButtonsPositionValid;
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:22:22 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/29 19:55:40 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/10/01 21:51:55 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ public:
     void clearAICache() { ai.clearCache(); }
 	void setGameMode(GameMode mode) { currentMode = mode; }
     GameMode getGameMode() const { return currentMode; }
+	std::vector<Move> findWinningLine() const;
     
 private:
     GameState state;
