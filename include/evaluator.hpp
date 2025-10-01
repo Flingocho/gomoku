@@ -6,7 +6,7 @@
 /*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/14 21:16:58 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/30 20:09:40 by jainavas         ###   ########.fr       */
+/*   Updated: 2025/10/01 19:53:42 by jainavas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,29 @@ private:
 
 	static bool isValidCapturePattern(const GameState &state, int x, int y,
 									  int dx, int dy, int attacker, int victim);
+	static bool captureBreaksOpponentPattern(const GameState &state, const std::vector<Move> &capturedPieces, int opponent);
+	struct CaptureOpportunity {
+        Move position;
+        std::vector<Move> captured;
+        int value;
+        
+        CaptureOpportunity() : value(0) {}
+    };
+    
+    static std::vector<CaptureOpportunity> findAllCaptureOpportunities(
+        const GameState& state, int player);
+    
+    static int evaluateCaptureContext(
+        const GameState& state,
+        int player,
+        const std::vector<Move>& capturedPieces,
+        int newCaptureCount);
+    
+    static int countPatternThroughPosition(
+        const GameState& state,
+        const Move& pos,
+        int dx, int dy,
+        int player);
 };
 
 #endif

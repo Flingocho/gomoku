@@ -55,10 +55,13 @@ private:
 			: zobristKey(key), score(s), depth(d), bestMove(m), generation(gen), type(t) {}
 
 		// NUEVO: Calcula valor de importancia para replacement strategy
-		int getImportanceValue() const {
-			int value = depth * 100;  // Profundidad es más importante
-			if (type == EXACT) value += 50;  // Nodos exactos son más valiosos
-			else if (type == LOWER_BOUND) value += 25;
+		int getImportanceValue() const
+		{
+			int value = depth * 100; // Profundidad es más importante
+			if (type == EXACT)
+				value += 50; // Nodos exactos son más valiosos
+			else if (type == LOWER_BOUND)
+				value += 25;
 			return value;
 		}
 	};
@@ -70,7 +73,7 @@ private:
 	 * - Improved replacement strategy
 	 */
 	std::vector<CacheEntry> transpositionTable;
-	size_t tableSizeMask; // Para index = zobristKey & tableSizeMask
+	size_t tableSizeMask;		// Para index = zobristKey & tableSizeMask
 	uint32_t currentGeneration; // NUEVO: Para aging-based replacement
 
 	int nodesEvaluated;
@@ -137,27 +140,40 @@ private:
 	int calculateInterruptionValue(int interruptionLength);
 	int calculateConnectivityBonus(const GameState &state, const Move &move, int player);
 	int countPiecesInDirection(const GameState &state, int x, int y, int dx, int dy, int player);
-	
+
 	// NUEVO: Generar candidatos alrededor del último movimiento humano
 	void addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state);
 
-	int quickCategorizeMove(const GameState& state, const Move& move);
-    
-    // Funciones auxiliares de verificación rápida
-    bool wouldCreateFiveInRow(const GameState& state, const Move& move, int player);
-    bool createsFourInRow(const GameState& state, const Move& move, int player);
-    bool createsThreeInRow(const GameState& state, const Move& move, int player);
-    bool hasImmediateCapture(const GameState& state, const Move& move, int player);
-    bool isNearExistingPieces(const GameState& state, const Move& move);
-    
-    // Funciones para verificar bloqueos
-    bool blocksOpponentWin(const GameState& state, const Move& move, int opponent);
-    bool blocksOpponentFour(const GameState& state, const Move& move, int opponent);
-    bool blocksOpponentThree(const GameState& state, const Move& move, int opponent);
-    
-    // Función auxiliar para contar en dirección
-    int countConsecutiveInDirection(const GameState& state, int x, int y, 
-                                   int dx, int dy, int player, int maxCount = 5);
+	int quickCategorizeMove(const GameState &state, const Move &move);
+
+	// Funciones auxiliares de verificación rápida
+	bool wouldCreateFiveInRow(const GameState &state, const Move &move, int player);
+	bool createsFourInRow(const GameState &state, const Move &move, int player);
+	bool createsThreeInRow(const GameState &state, const Move &move, int player);
+	bool hasImmediateCapture(const GameState &state, const Move &move, int player);
+	bool isNearExistingPieces(const GameState &state, const Move &move);
+
+	// Funciones para verificar bloqueos
+	bool blocksOpponentWin(const GameState &state, const Move &move, int opponent);
+	bool blocksOpponentFour(const GameState &state, const Move &move, int opponent);
+	bool blocksOpponentThree(const GameState &state, const Move &move, int opponent);
+
+	// Función auxiliar para contar en dirección
+	int countConsecutiveInDirection(const GameState &state, int x, int y,
+									int dx, int dy, int player, int maxCount = 5);
+
+	static constexpr int MAIN_DIRECTIONS[4][2] = {
+		{0, 1}, // Horizontal →
+		{1, 0}, // Vertical ↓
+		{1, 1}, // Diagonal ↘
+		{1, -1} // Diagonal ↗
+	};
+
+	static constexpr int CAPTURE_DIRECTIONS[8][2] = {
+    {-1, -1}, {-1, 0}, {-1, 1},  // Arriba-izq, Arriba, Arriba-der
+    {0, -1},			{0, 1},    // Izquierda,        Derecha
+    {1, -1},  {1, 0},  {1, 1}     // Abajo-izq, Abajo, Abajo-der
+	};
 
 public:
 	/**
@@ -211,7 +227,7 @@ public:
 
 	SearchResult findBestMoveIterative(const GameState &state, int maxDepth);
 	void orderMovesWithPreviousBest(std::vector<Move> &moves, const GameState &state);
-	
+
 	/**
 	 * Genera movimientos ordenados inteligentemente
 	 * OPTIMIZADO: Usa hash de movimientos previos para ordenamiento

@@ -546,75 +546,113 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 
 
 int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& move) {
-    return quickCategorizeMove(state, move);
-}
-
-int TranspositionSearch::quickCategorizeMove(const GameState& state, const Move& move) {
     int score = 0;
     int currentPlayer = state.currentPlayer;
     int opponent = state.getOpponent(currentPlayer);
     
-    // 1. ¿Es victoria inmediata? (MÁXIMA PRIORIDAD)
-    if (wouldCreateFiveInRow(state, move, currentPlayer)) {
-        return 100000;
-    }
+    // ============================================
+    // 1. CENTRALIDAD (O(1) - trivial)
+    // ============================================
+    int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
+    score += (9 - centerDist) * 10;  // 0-90 puntos
     
-    // 2. ¿Bloquea victoria del oponente? (CRÍTICO)
-    if (blocksOpponentWin(state, move, opponent)) {
-        score += 50000;
-    }
+    // ============================================
+    // 2. CONECTIVIDAD INMEDIATA (O(8) - barato)
+    // ============================================
+    // ¿Cuántas fichas propias hay adyacentes?
+    int myAdjacent = 0;
+    int oppAdjacent = 0;
     
-    // 3. ¿Crea amenaza de 4? (MUY ALTO)
-    if (createsFourInRow(state, move, currentPlayer)) {
-        score += 25000;
-    }
-    
-    // 4. ¿Bloquea amenaza de 4 del oponente?
-    if (blocksOpponentFour(state, move, opponent)) {
-        score += 20000;
-    }
-    
-    // 5. ¿Crea amenaza de 3?
-    if (createsThreeInRow(state, move, currentPlayer)) {
-        score += 5000;
-    }
-    
-    // 6. ¿Bloquea amenaza de 3?
-    if (blocksOpponentThree(state, move, opponent)) {
-        score += 3000;
-    }
-    
-    // 7. ¿Captura piezas? (MENOR prioridad que amenazas)
-    if (hasImmediateCapture(state, move, currentPlayer)) {
-        score += 1000;
-    }
-    
-    // 8. Conectividad básica (igual que antes pero más simple)
-    int connectivity = 0;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
             if (dx == 0 && dy == 0) continue;
             int nx = move.x + dx, ny = move.y + dy;
             if (state.isValid(nx, ny)) {
                 int piece = state.getPiece(nx, ny);
-                if (piece == currentPlayer) connectivity += 50;
-                else if (piece == opponent) connectivity += 20;
+                if (piece == currentPlayer) myAdjacent++;
+                else if (piece == opponent) oppAdjacent++;
             }
         }
     }
-    score += connectivity;
     
-    // 9. Centralidad (menos importante ahora)
-    int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
-    score += (9 - centerDist) * 5;
+    score += myAdjacent * 50;      // 0-400 puntos
+    score += oppAdjacent * 20;     // Bonus menor por bloqueo
     
-    // 10. ¿Está cerca de piezas existentes?
-    if (isNearExistingPieces(state, move)) {
-        score += 100;
+    // ============================================
+    // 3. PRIORIDAD POR ZONA ACTIVA (O(1) - trivial)
+    // ============================================
+    // ¿Está cerca del último movimiento del oponente?
+    if (state.lastHumanMove.isValid()) {
+        int distToLast = std::max(
+            std::abs(move.x - state.lastHumanMove.x),
+            std::abs(move.y - state.lastHumanMove.y)
+        );
+        
+        if (distToLast <= 2) {
+            score += 500;  // Respuesta táctica
+        }
+    }
+    
+    // ============================================
+    // 4. PATRONES SIMPLES (O(4) - muy barato)
+    // ============================================
+    // Solo contar piezas consecutivas SIN verificar extremos libres
+    int maxMyLine = 0;
+    int maxOppLine = 0;
+    
+    for (int d = 0; d < 4; d++) {
+        int dx = MAIN_DIRECTIONS[d][0];
+        int dy = MAIN_DIRECTIONS[d][1];
+        
+        // Contar hacia ambos lados
+        int myCount = 1;  // La que voy a colocar
+        myCount += countConsecutiveInDirection(state, move.x, move.y, dx, dy, currentPlayer, 4);
+        myCount += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, currentPlayer, 4);
+        maxMyLine = std::max(maxMyLine, myCount);
+        
+        // Contar líneas del oponente (para bloqueo)
+        int oppCount = 0;
+        oppCount += countConsecutiveInDirection(state, move.x, move.y, dx, dy, opponent, 4);
+        oppCount += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, opponent, 4);
+        maxOppLine = std::max(maxOppLine, oppCount);
+    }
+    
+    // Scoring exponencial para líneas largas
+    if (maxMyLine >= 5) score += 100000;      // Victoria
+    else if (maxMyLine == 4) score += 10000;  // Muy peligroso
+    else if (maxMyLine == 3) score += 1000;   // Peligroso
+    else if (maxMyLine == 2) score += 100;    // Desarrollo
+    
+    // Bloqueo
+    if (maxOppLine >= 4) score += 8000;       // Bloqueo crítico
+    else if (maxOppLine == 3) score += 800;   // Bloqueo importante
+    
+    // ============================================
+    // 5. CAPTURA RÁPIDA (O(8) - barato)
+    // ============================================
+    // Solo verificar si HAY captura, sin evaluar contexto
+    for (int d = 0; d < 8; d++) {
+        int dx = CAPTURE_DIRECTIONS[d][0];
+        int dy = CAPTURE_DIRECTIONS[d][1];
+        
+        // Patrón: NUEVA + OPP + OPP + MIA
+        int x1 = move.x + dx, y1 = move.y + dy;
+        int x2 = move.x + 2*dx, y2 = move.y + 2*dy;
+        int x3 = move.x + 3*dx, y3 = move.y + 3*dy;
+        
+        if (state.isValid(x1, y1) && state.isValid(x2, y2) && state.isValid(x3, y3)) {
+            if (state.getPiece(x1, y1) == opponent &&
+                state.getPiece(x2, y2) == opponent &&
+                state.getPiece(x3, y3) == currentPlayer) {
+                score += 2000;  // Hay captura
+                break;  // No seguir buscando
+            }
+        }
     }
     
     return score;
 }
+
 
 bool TranspositionSearch::wouldCreateFiveInRow(const GameState& state, const Move& move, int player) {
     // Chequear 4 direcciones principales
