@@ -15,6 +15,7 @@
 #include <sstream>  // NUEVO: Para stringstream en drawGameInfo
 #include <cmath>    // NUEVO: Para sin() en el efecto pulsante
 #include <vector>   // NUEVO: Para vector de tiempos de IA
+#include <cstdlib>  // NUEVO: Para rand() en efectos visuales
 
 GuiRenderer::GuiRenderer() 
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Gomoku AI"),
@@ -37,8 +38,16 @@ GuiRenderer::GuiRenderer()
 	  showError(false),
 	  invalidMovePosition(-1, -1),
 	  gameOverButtonsY(0),
-	  gameOverButtonsPositionValid(false)
+	  gameOverButtonsPositionValid(false),
+	  isColorblindMode(false)        // NUEVO: Inicializar modo colorblind
 {
+    // Inicializar partículas para efectos visuales
+    particles.resize(50);
+    particleLife.resize(50);
+    for (int i = 0; i < 50; i++) {
+        particles[i] = sf::Vector2f(rand() % WINDOW_WIDTH, rand() % WINDOW_HEIGHT);
+        particleLife[i] = static_cast<float>(rand() % 100) / 100.0f;
+    }
     // Cargar fuente personalizada
     if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
         // Si no encuentra archivo, continuar sin fuente personalizada
@@ -95,6 +104,7 @@ void GuiRenderer::processEvents() {
             case sf::Event::KeyPressed:
                 if (event.key.code == sf::Keyboard::Escape) {
                     if (currentState != MENU) {
+                        resetColorblindMode(); // Resetear modo colorblind al volver al menú
                         setState(MENU);
                     } else {
                         window.close();
@@ -136,20 +146,62 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     // Este método será non-blocking, la elección se captura en handleMenuClick
     if (selectedMenuOption == 0) return VS_AI;
     if (selectedMenuOption == 1) return VS_HUMAN; 
-    if (selectedMenuOption == 2) return QUIT;
+    if (selectedMenuOption == 2) return COLORBLIND;
+    if (selectedMenuOption == 3) return QUIT;
     
     return NONE; // Sin selección aún
 }
 
 void GuiRenderer::renderMenu() {
-    // 1. Título principal
-    drawText("=== GOMOKU AI ===", WINDOW_WIDTH/2 - 120, 100, 36, sf::Color::White);
-    drawText("5 in a row with advanced AI", WINDOW_WIDTH/2 - 100, 150, 18, sf::Color(200, 200, 200));
+    // 0. Fondo moderno con efectos
+    drawModernBackground();
     
-    // 2. Botones del menú (centrados)
+    // 1. Título principal con efectos de brillo
+    std::string mainTitle = "=== GOMOKU AI ===";
+    int titleSize = 36;
+    
+    sf::Text titleText;
+    if (font.getInfo().family != "") {
+        titleText.setFont(font);
+    }
+    titleText.setString(mainTitle);
+    titleText.setCharacterSize(titleSize);
+    titleText.setFillColor(sf::Color::White);
+    
+    // Centrar usando setOrigin - más preciso
+    sf::FloatRect titleBounds = titleText.getLocalBounds();
+    titleText.setOrigin(titleBounds.width / 2.0f, 0);
+    titleText.setPosition(WINDOW_WIDTH / 2.0f, 100);
+    
+    // Efecto de brillo pulsante
+    float time = animationClock.getElapsedTime().asSeconds();
+    float pulse = sin(time * 2.0f) * 0.3f + 1.0f;
+    sf::Color glowColor = sf::Color(255, 215, 0, static_cast<sf::Uint8>(pulse * 100)); // Dorado
+    
+    drawGlowEffect(titleText, glowColor);
+    window.draw(titleText);
+    
+    // 2. Subtítulo centrado
+    std::string subtitle = "5 in a row with advanced AI";
+    int subtitleSize = 18;
+    
+    sf::Text subtitleText;
+    if (font.getInfo().family != "") {
+        subtitleText.setFont(font);
+    }
+    subtitleText.setString(subtitle);
+    subtitleText.setCharacterSize(subtitleSize);
+    subtitleText.setFillColor(sf::Color(200, 200, 200));
+    
+    sf::FloatRect subtitleBounds = subtitleText.getLocalBounds();
+    subtitleText.setOrigin(subtitleBounds.width / 2.0f, 0);
+    subtitleText.setPosition(WINDOW_WIDTH / 2.0f, 150);
+    window.draw(subtitleText);
+    
+    // 2. Botones del menú (centrados con precisión flotante)
     int buttonWidth = 250;
     int buttonHeight = 60;
-    int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+    int buttonX = WINDOW_WIDTH/2.0f - buttonWidth/2.0f;  // Usar flotantes para más precisión
     int buttonSpacing = 80;
     
     // CORREGIDO: Usar hoveredMenuOption para efectos visuales
@@ -159,18 +211,18 @@ void GuiRenderer::renderMenu() {
     bool vsHumanHover = (hoveredMenuOption == 1);
     drawButton("Play vs Human", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
     
-    bool quitHover = (hoveredMenuOption == 2);
-    drawButton("Exit", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, quitHover);
+    bool colorblindHover = (hoveredMenuOption == 2);
+    drawButton("Colorblind Mode", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, colorblindHover);
     
-    // 3. Información adicional
-    drawText("Features:", 50, 500, 20, sf::Color::Yellow);
-    drawText("- Zobrist Hashing for maximum performance", 70, 530, 16, sf::Color::White);
-    drawText("- Minimax search with Alpha-Beta pruning", 70, 550, 16, sf::Color::White);
-    drawText("- Adaptive depth up to 10 levels", 70, 570, 16, sf::Color::White);
-    drawText("- Complete rules: captures + double-three", 70, 590, 16, sf::Color::White);
+    bool quitHover = (hoveredMenuOption == 3);
+    drawButton("Exit", buttonX, 250 + buttonSpacing * 3, buttonWidth, buttonHeight, quitHover);
+    
+    // 3. Información adicional (compacta)
+    drawText("Features:", 50, 680, 16, sf::Color::Yellow);
+    drawText("- Zobrist Hashing + Alpha-Beta pruning", 70, 705, 14, sf::Color::White);
+    drawText("- Adaptive depth + Complete rules", 70, 725, 14, sf::Color::White);
     
     // 4. Controles
-    drawText("Use mouse to select", WINDOW_WIDTH/2 - 100, 650, 16, sf::Color(150, 150, 150));
     drawText("ESC = Exit", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
 }
 
@@ -195,10 +247,19 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Quit (posición Y: 410)
+    // Botón Colorblind Mode (posición Y: 410)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 410 && y <= 410 + buttonHeight) {
         selectedMenuOption = 2;
+        isColorblindMode = true;  // Activar modo colorblind
+        std::cout << "Seleccionado: Colorblind Mode (VS AI)" << std::endl;
+        return;
+    }
+    
+    // Botón Quit (posición Y: 490)
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= 490 && y <= 490 + buttonHeight) {
+        selectedMenuOption = 3;
         std::cout << "Seleccionado: Quit" << std::endl;
         return;
     }
@@ -246,6 +307,9 @@ Move GuiRenderer::getUserMove() {
 }
 
 void GuiRenderer::renderGame(const GameState& state, int aiTimeMs) {
+    // Fondo moderno igual que el menú
+    drawModernBackground();
+    
     drawBoard();
     drawPieces(state);
 	drawSuggestionIndicator();
@@ -276,32 +340,58 @@ void GuiRenderer::drawHoverIndicator() {
     // Solo mostrar hover si estamos en una posición válida
     if (!hoverPosition.isValid()) return;
     
-    // No mostrar hover en celdas ocupadas
-    // (Necesitaríamos el state aquí, por simplicidad lo omitimos por ahora)
-    
     sf::Vector2i pos = boardPositionToPixel(hoverPosition.x, hoverPosition.y);
-    int cellSize = CELL_SIZE - 4; // Mismo tamaño que las celdas del tablero
+    int cellSize = CELL_SIZE - 4;
+    float time = animationClock.getElapsedTime().asSeconds();
     
-    // 1. Fondo de la celda con transparencia
+    // 1. Efecto de ondas expandiéndose
+    for (int i = 1; i <= 3; i++) {
+        float wavePhase = fmod(time * 3.0f + i * 0.5f, 2.0f);
+        float waveSize = cellSize/2 + wavePhase * 15;
+        float waveAlpha = (2.0f - wavePhase) * 40;
+        
+        sf::CircleShape wave(waveSize);
+        wave.setPosition(pos.x - waveSize, pos.y - waveSize);
+        wave.setFillColor(sf::Color::Transparent);
+        wave.setOutlineThickness(2);
+        wave.setOutlineColor(sf::Color(0, 255, 255, static_cast<sf::Uint8>(waveAlpha))); // Cian brillante
+        window.draw(wave);
+    }
+    
+    // 2. Fondo pulsante
+    float pulse = sin(time * 4.0f) * 0.3f + 0.7f;
     sf::RectangleShape hoverBg(sf::Vector2f(cellSize, cellSize));
     hoverBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
-    hoverBg.setFillColor(sf::Color(255, 255, 255, 50)); // Blanco semi-transparente
+    hoverBg.setFillColor(sf::Color(100, 200, 255, static_cast<sf::Uint8>(pulse * 80)));
     window.draw(hoverBg);
     
-    // 2. Borde brillante
+    // 3. Borde con brillo giratorio
     sf::RectangleShape hoverBorder(sf::Vector2f(cellSize, cellSize));
     hoverBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     hoverBorder.setFillColor(sf::Color::Transparent);
-    hoverBorder.setOutlineThickness(2);
-    hoverBorder.setOutlineColor(sf::Color(255, 255, 0, 150)); // Amarillo semi-transparente
+    hoverBorder.setOutlineThickness(3);
+    hoverBorder.setOutlineColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 200)));
     window.draw(hoverBorder);
     
-    // 3. Pequeño círculo en el centro para indicar donde se colocaría la ficha
-    sf::CircleShape hoverIndicator(6);
-    hoverIndicator.setPosition(pos.x - 6, pos.y - 6);
-    hoverIndicator.setFillColor(sf::Color(255, 255, 255, 100));
-    hoverIndicator.setOutlineThickness(1);
-    hoverIndicator.setOutlineColor(sf::Color(255, 255, 0, 200));
+    // 4. Partículas giratorias alrededor del centro
+    for (int i = 0; i < 6; i++) {
+        float angle = time * 2.0f + i * 1.047f; // 60 grados entre partículas
+        float radius = 15;
+        float sparkX = pos.x + cos(angle) * radius;
+        float sparkY = pos.y + sin(angle) * radius;
+        
+        sf::CircleShape spark(3);
+        spark.setPosition(sparkX - 3, sparkY - 3);
+        spark.setFillColor(sf::Color(255, 255, 100, static_cast<sf::Uint8>(pulse * 255)));
+        window.draw(spark);
+    }
+    
+    // 5. Círculo central brillante
+    sf::CircleShape hoverIndicator(8 + pulse * 3);
+    hoverIndicator.setPosition(pos.x - (8 + pulse * 3), pos.y - (8 + pulse * 3));
+    hoverIndicator.setFillColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 150)));
+    hoverIndicator.setOutlineThickness(2);
+    hoverIndicator.setOutlineColor(sf::Color(0, 255, 255, 255));
     window.draw(hoverIndicator);
 }
 
@@ -424,7 +514,13 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 int pieceRadius = (CELL_SIZE / 2) - 4; // Margen de 4px desde el borde de la celda
                 sf::CircleShape pieceMain(pieceRadius);
                 pieceMain.setPosition(pos.x - pieceRadius, pos.y - pieceRadius);
-                pieceMain.setFillColor(getPieceColor(piece));
+                
+                // En modo colorblind, todas las piezas tienen el mismo color, EXCEPTO cuando el juego terminó
+                if (isColorblindMode && currentState != GAME_OVER) {
+                    pieceMain.setFillColor(sf::Color(128, 128, 128)); // Gris neutral
+                } else {
+                    pieceMain.setFillColor(getPieceColor(piece)); // Colores reales (normal o revelados al final)
+                }
                 
                 // Efecto 3D para las fichas
                 // Sombra de la ficha
@@ -441,7 +537,10 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 pieceHighlight.setPosition(pos.x - pieceRadius + 3, pos.y - pieceRadius + 3);
                 
                 // Color del highlight según el tipo de pieza
-                if (piece == GameState::PLAYER1) {
+                if (isColorblindMode && currentState != GAME_OVER) {
+                    // En modo colorblind, highlight ligeramente más claro, EXCEPTO al final del juego
+                    pieceHighlight.setFillColor(sf::Color(160, 160, 160)); // Gris más claro
+                } else if (piece == GameState::PLAYER1) {
                     // Azul más claro para highlight (más legible)
                     pieceHighlight.setFillColor(sf::Color(135, 206, 250)); // Light sky blue
                 } else {
@@ -484,26 +583,45 @@ void GuiRenderer::drawPieces(const GameState& state) {
 
 void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, int height, 
                            bool highlighted) {
-    // 1. Sombra del botón (efecto 3D)
-    sf::RectangleShape buttonShadow(sf::Vector2f(width + 4, height + 4));
-    buttonShadow.setPosition(x + 2, y + 2);
-    buttonShadow.setFillColor(sf::Color(0, 0, 0, 100));
+    float time = animationClock.getElapsedTime().asSeconds();
+    
+    // 1. Sombra suave y moderna
+    sf::RectangleShape buttonShadow(sf::Vector2f(width + 8, height + 8));
+    buttonShadow.setPosition(x + 4, y + 4);
+    buttonShadow.setFillColor(sf::Color(0, 0, 0, 60));
     window.draw(buttonShadow);
     
-    // 2. Fondo del botón
+    // 2. Fondo del botón con gradiente
     sf::RectangleShape buttonBg(sf::Vector2f(width, height));
     buttonBg.setPosition(x, y);
     
     if (highlighted) {
-        // Color más claro cuando está resaltado
-        buttonBg.setFillColor(sf::Color(70, 130, 180)); // Steel blue
+        // Efecto hover animado
+        float pulse = sin(time * 4.0f) * 0.2f + 0.8f;
+        sf::Uint8 brightness = static_cast<sf::Uint8>(pulse * 255);
+        buttonBg.setFillColor(sf::Color(30, 144, 255, brightness)); // Azul brillante
+        
+        // Borde con brillo
         buttonBg.setOutlineThickness(3);
-        buttonBg.setOutlineColor(sf::Color::White);
+        sf::Color glowBorder = sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 200));
+        buttonBg.setOutlineColor(glowBorder);
+        
+        // Efecto de partículas en hover
+        for (int i = 0; i < 8; i++) {
+            float angle = (time * 2.0f + i * 0.785f);
+            float sparkX = x + width/2 + cos(angle) * (width/2 + 10);
+            float sparkY = y + height/2 + sin(angle) * (height/2 + 10);
+            
+            sf::CircleShape spark(1.5f);
+            spark.setPosition(sparkX, sparkY);
+            spark.setFillColor(sf::Color(255, 255, 255, 150));
+            window.draw(spark);
+        }
     } else {
-        // Color normal
-        buttonBg.setFillColor(sf::Color(47, 79, 79)); // Dark slate gray
+        // Estilo moderno normal con gradiente sutil
+        buttonBg.setFillColor(sf::Color(45, 45, 65, 220)); // Azul oscuro translúcido
         buttonBg.setOutlineThickness(2);
-        buttonBg.setOutlineColor(sf::Color(105, 105, 105)); // Dim gray
+        buttonBg.setOutlineColor(sf::Color(100, 149, 237, 150)); // Cornflower blue
     }
     
     window.draw(buttonBg);
@@ -533,16 +651,23 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
         window.draw(rightShadow);
     }
     
-    // 4. Texto del botón (centrado)
+    // 4. Texto del botón (centrado perfectamente)
     sf::Color textColor = highlighted ? sf::Color::Yellow : sf::Color::White;
     int textSize = 20;
     
-    // Aproximación del ancho del texto (para centrado)
-    int textWidth = text.length() * textSize * 0.6; // Aproximación
-    int textX = x + (width - textWidth) / 2;
-    int textY = y + (height - textSize) / 2;
+    // Centrado perfecto usando setOrigin
+    sf::Text buttonText;
+    if (font.getInfo().family != "") {
+        buttonText.setFont(font);
+    }
+    buttonText.setString(text);
+    buttonText.setCharacterSize(textSize);
+    buttonText.setFillColor(textColor);
     
-    drawText(text, textX, textY, textSize, textColor);
+    sf::FloatRect textBounds = buttonText.getLocalBounds();
+    buttonText.setOrigin(textBounds.width / 2.0f, textBounds.height / 2.0f);
+    buttonText.setPosition(x + width / 2.0f, y + height / 2.0f);
+    window.draw(buttonText);
 }
 
 void GuiRenderer::drawText(const std::string& text, int x, int y, int size, sf::Color color) {
@@ -563,21 +688,47 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     int panelY = BOARD_OFFSET_Y;
     int panelWidth = 250;
     
-    // 1. Fondo del panel con efecto 3D
-    sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 4, 400));
-    panelShadow.setPosition(panelX + 2, panelY + 2);
-    panelShadow.setFillColor(sf::Color(0, 0, 0, 100));
+    // 1. Fondo del panel con efectos modernos
+    float time = animationClock.getElapsedTime().asSeconds();
+    
+    // Sombra suave y amplia
+    sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 12, 400 + 12));
+    panelShadow.setPosition(panelX + 6, panelY + 6);
+    panelShadow.setFillColor(sf::Color(0, 0, 0, 80));
     window.draw(panelShadow);
     
+    // Fondo translúcido con efecto de cristal
     sf::RectangleShape panelBg(sf::Vector2f(panelWidth, 400));
     panelBg.setPosition(panelX, panelY);
-    panelBg.setFillColor(sf::Color(45, 45, 45)); // Gris oscuro
-    panelBg.setOutlineThickness(2);
-    panelBg.setOutlineColor(sf::Color(100, 100, 100));
+    panelBg.setFillColor(sf::Color(20, 25, 40, 200)); // Azul oscuro translúcido
+    
+    // Borde con brillo animado
+    panelBg.setOutlineThickness(3);
+    float pulse = sin(time * 1.5f) * 0.3f + 0.7f;
+    sf::Color glowBorder = sf::Color(100, 149, 237, static_cast<sf::Uint8>(pulse * 180));
+    panelBg.setOutlineColor(glowBorder);
     window.draw(panelBg);
     
-    // 2. Título del panel
-    drawText("=== STATUS ===", panelX + 10, panelY + 10, 18, sf::Color::Yellow);
+    // Línea de brillo superior
+    sf::RectangleShape topGlow(sf::Vector2f(panelWidth - 20, 2));
+    topGlow.setPosition(panelX + 10, panelY + 5);
+    topGlow.setFillColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 100)));
+    window.draw(topGlow);
+    
+    // 2. Título del panel con efectos de brillo
+    sf::Text statusTitle;
+    if (font.getInfo().family != "") {
+        statusTitle.setFont(font);
+    }
+    statusTitle.setString("=== STATUS ===");
+    statusTitle.setCharacterSize(18);
+    statusTitle.setFillColor(sf::Color(255, 215, 0)); // Dorado
+    statusTitle.setPosition(panelX + 10, panelY + 15);
+    
+    // Efecto de brillo para el título del panel
+    sf::Color titleGlow = sf::Color(255, 255, 0, static_cast<sf::Uint8>(pulse * 80));
+    drawGlowEffect(statusTitle, titleGlow);
+    window.draw(statusTitle);
     
     int yOffset = panelY + 50;
     int lineHeight = 25;
@@ -787,6 +938,11 @@ void GuiRenderer::showGameResult(int) {
 
 // En gui_renderer.cpp - reemplazar renderGameOver completo
 void GuiRenderer::renderGameOver(const GameState& state) {
+    // ============================================
+    // PASO 0: Fondo moderno espectacular
+    // ============================================
+    drawModernBackground();
+    
     // ============================================
     // PASO 1: Renderizar el tablero normal (izquierda)
     // ============================================
@@ -1009,13 +1165,15 @@ void GuiRenderer::handleMouseMove(int x, int y) {
             } else if (y >= 330 && y <= 330 + buttonHeight) {
                 hoveredMenuOption = 1; // VS Human hover
             } else if (y >= 410 && y <= 410 + buttonHeight) {
-                hoveredMenuOption = 2; // Quit hover
+                hoveredMenuOption = 2; // Colorblind hover
+            } else if (y >= 490 && y <= 490 + buttonHeight) {
+                hoveredMenuOption = 3; // Quit hover
             }
         }
         
         // Solo logear si cambió el hover (evitar spam)
         if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
-            std::string options[] = {"VS AI", "VS Human", "Quit"};
+            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Quit"};
             std::cout << "Hover: " << options[hoveredMenuOption] << std::endl;
         }
     }
@@ -1216,4 +1374,87 @@ void GuiRenderer::drawInvalidMoveIndicator() {
     errorBorder.setOutlineThickness(4);
     errorBorder.setOutlineColor(sf::Color(255, 0, 0, 200)); // Rojo sólido
     window.draw(errorBorder);
+}
+
+// ===============================================
+// MODERN VISUAL EFFECTS - Efectos Visuales Modernos
+// ===============================================
+
+void GuiRenderer::drawModernBackground() {
+    // 1. Fondo con gradiente dinámico
+    float time = animationClock.getElapsedTime().asSeconds();
+    
+    // Gradiente vertical animado
+    for (int y = 0; y < WINDOW_HEIGHT; y += 4) {
+        float ratio = static_cast<float>(y) / WINDOW_HEIGHT;
+        float wave = sin(time * 0.5f + ratio * 3.14159f) * 0.3f + 0.7f;
+        
+        sf::Uint8 r = static_cast<sf::Uint8>(20 + 40 * wave);
+        sf::Uint8 g = static_cast<sf::Uint8>(25 + 35 * wave);
+        sf::Uint8 b = static_cast<sf::Uint8>(60 + 60 * wave);
+        
+        sf::RectangleShape gradientLine(sf::Vector2f(WINDOW_WIDTH, 4));
+        gradientLine.setPosition(0, y);
+        gradientLine.setFillColor(sf::Color(r, g, b));
+        window.draw(gradientLine);
+    }
+    
+    // 2. Partículas flotantes
+    updateParticles();
+    for (size_t i = 0; i < particles.size(); i++) {
+        float alpha = particleLife[i] * 100;
+        sf::CircleShape particle(2 + particleLife[i] * 3);
+        particle.setPosition(particles[i]);
+        particle.setFillColor(sf::Color(200, 220, 255, static_cast<sf::Uint8>(alpha)));
+        window.draw(particle);
+    }
+    
+    // 3. Grid de puntos brillantes de fondo
+    for (int x = 50; x < WINDOW_WIDTH; x += 80) {
+        for (int y = 50; y < WINDOW_HEIGHT; y += 80) {
+            float distance = sqrt((x - WINDOW_WIDTH/2) * (x - WINDOW_WIDTH/2) + 
+                                (y - WINDOW_HEIGHT/2) * (y - WINDOW_HEIGHT/2));
+            float pulse = sin(time * 2.0f + distance * 0.01f) * 0.5f + 0.5f;
+            
+            sf::CircleShape dot(1.5f);
+            dot.setPosition(x, y);
+            dot.setFillColor(sf::Color(100, 150, 255, static_cast<sf::Uint8>(pulse * 80)));
+            window.draw(dot);
+        }
+    }
+}
+
+void GuiRenderer::updateParticles() {
+    float deltaTime = 0.016f; // ~60 FPS
+    
+    for (size_t i = 0; i < particles.size(); i++) {
+        // Movimiento flotante
+        particles[i].y -= 20 * deltaTime;
+        particles[i].x += sin(animationClock.getElapsedTime().asSeconds() + i) * 10 * deltaTime;
+        
+        // Actualizar vida
+        particleLife[i] -= deltaTime * 0.3f;
+        
+        // Resetear partícula si murió
+        if (particleLife[i] <= 0 || particles[i].y < 0) {
+            particles[i] = sf::Vector2f(rand() % WINDOW_WIDTH, WINDOW_HEIGHT + 10);
+            particleLife[i] = 1.0f;
+        }
+    }
+}
+
+void GuiRenderer::drawGlowEffect(const sf::Text& text, sf::Color glowColor) {
+    // Efecto de glow/brillo alrededor del texto
+    for (int i = 1; i <= 5; i++) {
+        sf::Text glowText = text;
+        glowText.setFillColor(sf::Color(glowColor.r, glowColor.g, glowColor.b, 50 - i * 8));
+        glowText.setPosition(text.getPosition().x + i, text.getPosition().y);
+        window.draw(glowText);
+        glowText.setPosition(text.getPosition().x - i, text.getPosition().y);
+        window.draw(glowText);
+        glowText.setPosition(text.getPosition().x, text.getPosition().y + i);
+        window.draw(glowText);
+        glowText.setPosition(text.getPosition().x, text.getPosition().y - i);
+        window.draw(glowText);
+    }
 }

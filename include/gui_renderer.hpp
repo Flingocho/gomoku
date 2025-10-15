@@ -35,6 +35,7 @@ public:
 	{
 		VS_AI,
 		VS_HUMAN,
+		COLORBLIND,
 		QUIT,
 		NONE
 	};
@@ -70,6 +71,11 @@ private:
 	sf::Color player2Color; // AI
 	sf::Color hoverColor;
 
+	// Visual Effects
+	sf::Clock animationClock;
+	std::vector<sf::Vector2f> particles;
+	std::vector<float> particleLife;
+
 public:
 	GuiRenderer();
 	~GuiRenderer();
@@ -97,6 +103,7 @@ public:
 	void clearUserMove() { moveReady = false; }
 	void refreshSelectedMenuOption() { selectedMenuOption = -1; }
 	void setLastAiMove(const Move &move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA
+	void resetColorblindMode() { isColorblindMode = false; } // NUEVO: Resetear modo colorblind
 
 	// NUEVO: Métodos para estadísticas de tiempo de IA
 	    void addAiTime(int timeMs);     // Add a new AI time
@@ -126,7 +133,14 @@ private:
 	// Internal rendering methods
 	void renderMenu();
 	void renderGame(const GameState &state, int aiTimeMs);
-    void renderGameOver(const GameState &state); // FIXED: Receive state to show winner	// Board rendering
+    void renderGameOver(const GameState &state); // FIXED: Receive state to show winner
+	
+	// Visual Effects
+	void drawModernBackground();
+	void updateParticles();
+	void drawGlowEffect(const sf::Text& text, sf::Color glowColor);
+
+	// Board rendering
 	void drawBoard();
 	void drawPieces(const GameState &state);
 	void drawHoverIndicator();
@@ -172,6 +186,7 @@ private:
 	// Posiciones exactas de botones de Game Over (calculadas en renderGameOver)
 	int gameOverButtonsY;
 	bool gameOverButtonsPositionValid;
+	bool isColorblindMode;	// NUEVO: Flag para el modo colorblind
 };
 
 #endif

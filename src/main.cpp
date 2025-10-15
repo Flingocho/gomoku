@@ -85,6 +85,16 @@ int main()
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
 			}
+			else if (choice == GuiRenderer::COLORBLIND)
+			{
+				std::cout << "Starting Colorblind Mode vs AI (same color pieces)" << std::endl;
+				game.setGameMode(GameMode::VS_AI); // Misma lógica que VS_AI pero con colores iguales
+				game.newGame();
+				renderer.resetAiStats();
+				renderer.setState(GuiRenderer::PLAYING);
+				suggestionCalculated = false;
+				currentSuggestion = Move(-1, -1);
+			}
 			else if (choice == GuiRenderer::QUIT)
 			{
 				gameActive = false;
@@ -137,12 +147,14 @@ int main()
 							{
 								std::cout << "❌ Invalid move" << std::endl;
 								renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
+								renderer.clearUserMove(); // CRITICAL: Limpiar movimiento inválido del buffer
 							}
 							else
 							{
 								std::cout << "✓ Player moved: "
 										  << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
 								waitingForMove = true;
+								renderer.clearUserMove(); // Limpiar movimiento válido también
 							}
 						}
 					}
@@ -215,6 +227,7 @@ int main()
 						{
 							std::cout << "❌ Invalid move" << std::endl;
 							renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
+							renderer.clearUserMove(); // CRITICAL: Limpiar movimiento inválido del buffer
 						}
 						else
 						{
@@ -232,6 +245,7 @@ int main()
 
 							// IMPORTANTE: Reset para próximo turno
 							renderer.clearSuggestion();
+							renderer.clearUserMove(); // Limpiar movimiento válido también
 							suggestionCalculated = false;
 							currentSuggestion = Move(-1, -1);
 						}

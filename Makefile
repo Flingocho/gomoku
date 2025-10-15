@@ -16,7 +16,9 @@ SRCS = src/ai.cpp\
 		src/debug_analyzer.cpp\
 		src/gui_renderer.cpp\
 		src/suggestion_engine.cpp
-OBJS = $(SRCS:.cpp=.o)
+
+OBJ_DIR = objects
+OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
 
 EXEC = gomoku
 
@@ -25,11 +27,14 @@ all: $(EXEC)
 $(EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $(EXEC) $(LIBS)
 
-%.o: %.cpp
+$(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
 clean:
-	rm -f $(OBJS)
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	rm -f $(EXEC)
