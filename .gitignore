@@ -1,2 +1,12 @@
 .vscode/
 gomoku_debug.log
+
+# SFML and OpenAL build files
+SFML-*/
+SFML-*.zip
+openal-soft-*/
+openal-soft-*.tar.bz2
+
+# Built libraries (if any)
+sfml-*/
+openal/

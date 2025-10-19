@@ -105,6 +105,7 @@ void GuiRenderer::processEvents() {
                 if (event.key.code == sf::Keyboard::Escape) {
                     if (currentState != MENU) {
                         resetColorblindMode(); // Resetear modo colorblind al volver al menú
+                        selectedMenuOption = -1; // Resetear selección de menú
                         setState(MENU);
                     } else {
                         window.close();
@@ -235,6 +236,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 250 && y <= 250 + buttonHeight) {
         selectedMenuOption = 0;
+        isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS AI" << std::endl;
         return;
     }
@@ -243,6 +245,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 330 && y <= 330 + buttonHeight) {
         selectedMenuOption = 1;
+        isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS Human" << std::endl;
         return;
     }
