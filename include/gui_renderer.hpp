@@ -36,6 +36,7 @@ public:
 		VS_AI,
 		VS_HUMAN,
 		COLORBLIND,
+		RUST_AI,
 		QUIT,
 		NONE
 	};

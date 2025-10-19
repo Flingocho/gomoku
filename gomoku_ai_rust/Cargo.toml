@@ -1,0 +1,10 @@
+[package]
+name = "gomoku_ai_rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gomoku_ai_rust"
+crate-type = ["staticlib"]  # Generate static library for C++ linking
+
+[dependencies]

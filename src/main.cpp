@@ -95,6 +95,17 @@ int main()
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
 			}
+			else if (choice == GuiRenderer::RUST_AI)
+			{
+				std::cout << "Starting game vs Rust AI" << std::endl;
+				game.setGameMode(GameMode::VS_AI);
+				game.setAiImplementation(RUST_IMPLEMENTATION); // Usar implementación Rust
+				game.newGame();
+				renderer.resetAiStats();
+				renderer.setState(GuiRenderer::PLAYING);
+				suggestionCalculated = false;
+				currentSuggestion = Move(-1, -1);
+			}
 			else if (choice == GuiRenderer::QUIT)
 			{
 				gameActive = false;

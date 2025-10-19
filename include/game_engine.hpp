@@ -55,6 +55,7 @@ public:
     int getWinner() const;
     
     void setAIDepth(int depth) { ai.setDepth(depth); }
+    void setAiImplementation(AIImplementation impl) { ai.setImplementation(impl); }
     
     int getLastAIThinkingTime() const { return lastAITime; }
     int getLastNodesEvaluated() const { return ai.getLastNodesEvaluated(); }

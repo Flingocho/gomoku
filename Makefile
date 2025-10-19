@@ -1,7 +1,8 @@
 CXX = c++
 SFML_HOME := $(HOME)/sfml-2.5.1
-INCLUDES := -I$(SFML_HOME)/include
-LIBS := -L$(SFML_HOME)/lib -lsfml-graphics -lsfml-window -lsfml-system
+RUST_LIB_DIR := gomoku_ai_rust/target/release
+INCLUDES := -I$(SFML_HOME)/include -Igomoku_ai_rust/src
+LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lgomoku_ai_rust -ldl -lpthread
 CXXFLAGS := -Wall -Wextra -Werror -O3 -std=c++17 $(INCLUDES)
 
 SRCS = src/ai.cpp\
@@ -22,7 +23,10 @@ OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
 
 EXEC = gomoku
 
-all: $(EXEC)
+all: rust_lib $(EXEC)
+
+rust_lib:
+	cd gomoku_ai_rust && cargo build --release
 
 $(EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $(EXEC) $(LIBS)
@@ -35,6 +39,7 @@ $(OBJ_DIR):
 
 clean:
 	rm -rf $(OBJ_DIR)
+	cd gomoku_ai_rust && cargo clean
 
 fclean: clean
 	rm -f $(EXEC)

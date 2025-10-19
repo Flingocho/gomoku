@@ -7,6 +7,10 @@ SFML-*.zip
 openal-soft-*/
 openal-soft-*.tar.bz2
 
+# Rust build artifacts
+gomoku_ai_rust/target/
+gomoku_ai_rust/Cargo.lock
+
 # Built libraries (if any)
 sfml-*/
 openal/

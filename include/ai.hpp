@@ -16,9 +16,15 @@
 #include "game_types.hpp"
 #include "transposition_search.hpp"
 
+enum AIImplementation {
+    CPP_IMPLEMENTATION,
+    RUST_IMPLEMENTATION
+};
+
 class AI {
 public:
-    AI(int searchDepth = 10) : depth(searchDepth) {}
+    AI(int searchDepth = 10, AIImplementation impl = CPP_IMPLEMENTATION)
+        : depth(searchDepth), implementation(impl) {}
     
     // Obtener mejor movimiento para el estado actual
     Move getBestMove(const GameState& state);
@@ -28,6 +34,10 @@ public:
 	// Configurar profundidad de búsqueda
     void setDepth(int newDepth) { depth = newDepth; }
     int getDepth() const { return depth; }
+    
+    // Set AI implementation
+    void setImplementation(AIImplementation impl) { implementation = impl; }
+    AIImplementation getImplementation() const { return implementation; }
     
     // Get statistics from last search
     int getLastNodesEvaluated() const { return lastResult.nodesEvaluated; }
@@ -46,6 +56,7 @@ public:
     
 private:
     int depth;
+    AIImplementation implementation;
     TranspositionSearch searchEngine;
     TranspositionSearch::SearchResult lastResult;
 };

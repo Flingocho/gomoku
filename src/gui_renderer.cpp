@@ -148,7 +148,8 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     if (selectedMenuOption == 0) return VS_AI;
     if (selectedMenuOption == 1) return VS_HUMAN; 
     if (selectedMenuOption == 2) return COLORBLIND;
-    if (selectedMenuOption == 3) return QUIT;
+    if (selectedMenuOption == 3) return RUST_AI;
+    if (selectedMenuOption == 4) return QUIT;
     
     return NONE; // Sin selección aún
 }
@@ -215,8 +216,11 @@ void GuiRenderer::renderMenu() {
     bool colorblindHover = (hoveredMenuOption == 2);
     drawButton("Colorblind Mode", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, colorblindHover);
     
-    bool quitHover = (hoveredMenuOption == 3);
-    drawButton("Exit", buttonX, 250 + buttonSpacing * 3, buttonWidth, buttonHeight, quitHover);
+    bool rustAiHover = (hoveredMenuOption == 3);
+    drawButton("Rust AI", buttonX, 250 + buttonSpacing * 3, buttonWidth, buttonHeight, rustAiHover);
+    
+    bool quitHover = (hoveredMenuOption == 4);
+    drawButton("Exit", buttonX, 250 + buttonSpacing * 4, buttonWidth, buttonHeight, quitHover);
     
     // 3. Información adicional (compacta)
     drawText("Features:", 50, 680, 16, sf::Color::Yellow);
@@ -259,10 +263,18 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Quit (posición Y: 490)
+    // Botón Rust AI (posición Y: 490)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 490 && y <= 490 + buttonHeight) {
         selectedMenuOption = 3;
+        std::cout << "Seleccionado: Rust AI" << std::endl;
+        return;
+    }
+    
+    // Botón Quit (posición Y: 570)
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= 570 && y <= 570 + buttonHeight) {
+        selectedMenuOption = 4;
         std::cout << "Seleccionado: Quit" << std::endl;
         return;
     }
@@ -1170,13 +1182,15 @@ void GuiRenderer::handleMouseMove(int x, int y) {
             } else if (y >= 410 && y <= 410 + buttonHeight) {
                 hoveredMenuOption = 2; // Colorblind hover
             } else if (y >= 490 && y <= 490 + buttonHeight) {
-                hoveredMenuOption = 3; // Quit hover
+                hoveredMenuOption = 3; // Rust AI hover
+            } else if (y >= 570 && y <= 570 + buttonHeight) {
+                hoveredMenuOption = 4; // Quit hover
             }
         }
         
         // Solo logear si cambió el hover (evitar spam)
         if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
-            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Quit"};
+            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Rust AI", "Quit"};
             std::cout << "Hover: " << options[hoveredMenuOption] << std::endl;
         }
     }
