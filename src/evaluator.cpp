@@ -22,17 +22,29 @@ int Evaluator::evaluate(const GameState &state, int maxDepth, int currentDepth)
 	int mateDistance = maxDepth - currentDepth;
 
 	// Verificar condiciones de fin inmediato CON distancia al mate
-	if (RuleEngine::checkWin(state, GameState::PLAYER2))
-	{
-		// Victoria más cercana = mayor puntuación
-		// WIN - mateDistance hace que mate en 1 valga más que mate en 5
-		return WIN - mateDistance;
-	}
-	if (RuleEngine::checkWin(state, GameState::PLAYER1))
-	{
-		// Derrota más lejana = menos malo
-		// -WIN + mateDistance hace que perder en 5 sea menos malo que perder en 1
-		return -WIN + mateDistance;
+	// En modo de solo capturas, verificar 15 capturas en lugar de 5 en línea
+	if (state.captureModeOnly) {
+		// CAPTURE MODE: Victoria por 15 capturas
+		if (state.captures[1] >= 15) { // AI (PLAYER2 = índice 1)
+			return WIN - mateDistance;
+		}
+		if (state.captures[0] >= 15) { // Human (PLAYER1 = índice 0)
+			return -WIN + mateDistance;
+		}
+	} else {
+		// MODO NORMAL: Victoria por 5 en línea
+		if (RuleEngine::checkWin(state, GameState::PLAYER2))
+		{
+			// Victoria más cercana = mayor puntuación
+			// WIN - mateDistance hace que mate en 1 valga más que mate en 5
+			return WIN - mateDistance;
+		}
+		if (RuleEngine::checkWin(state, GameState::PLAYER1))
+		{
+			// Derrota más lejana = menos malo
+			// -WIN + mateDistance hace que perder en 5 sea menos malo que perder en 1
+			return -WIN + mateDistance;
+		}
 	}
 
 	int aiScore = evaluateForPlayer(state, GameState::PLAYER2);
@@ -45,10 +57,18 @@ int Evaluator::evaluate(const GameState &state, int maxDepth, int currentDepth)
 int Evaluator::evaluate(const GameState &state)
 {
 	// Verificar condiciones de fin inmediato
-	if (RuleEngine::checkWin(state, GameState::PLAYER2))
-		return WIN;
-	if (RuleEngine::checkWin(state, GameState::PLAYER1))
-		return -WIN;
+	// En modo de solo capturas, verificar 15 capturas en lugar de 5 en línea
+	if (state.captureModeOnly) {
+		if (state.captures[1] >= 15) // AI wins
+			return WIN;
+		if (state.captures[0] >= 15) // Human wins
+			return -WIN;
+	} else {
+		if (RuleEngine::checkWin(state, GameState::PLAYER2))
+			return WIN;
+		if (RuleEngine::checkWin(state, GameState::PLAYER1))
+			return -WIN;
+	}
 
 	// NUEVO: Evaluar AI con captura de debug si está activo
 	if (g_evalDebug.active)
@@ -78,7 +98,10 @@ int Evaluator::evaluateForPlayer(const GameState &state, int player)
 	// NUEVO: Si el debug está activo y es para el jugador correcto, capturar información
 	bool captureForThisPlayer = g_evalDebug.active && player == g_evalDebug.currentPlayer;
 
-	score += evaluateImmediateThreats(state, player);
+	// En modo de solo capturas, NO evaluar amenazas de alineación
+	if (!state.captureModeOnly) {
+		score += evaluateImmediateThreats(state, player);
+	}
 
 	// 1. EVALUACIÓN UNIFICADA: patrones + capturas en una sola pasada
 	score += analyzePosition(state, player);
@@ -111,30 +134,33 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     bool evaluated[GameState::BOARD_SIZE][GameState::BOARD_SIZE][4] = {{{false}}};
     
     // ============================================
-    // PARTE 1: EVALUACIÓN DE PATRONES (sin cambios)
+    // PARTE 1: EVALUACIÓN DE PATRONES (SOLO EN MODO NORMAL)
     // ============================================
-    for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            if (state.board[i][j] == player) {
-                for (int d = 0; d < 4; d++) {
-                    if (evaluated[i][j][d]) continue;
-                    
-                    int dx = MAIN_DIRECTIONS[d][0];
-                    int dy = MAIN_DIRECTIONS[d][1];
-                    
-                    if (isLineStart(state, i, j, dx, dy, player)) {
-                        PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
-                        totalScore += patternToScore(pattern);
+    // En modo de solo capturas, NO evaluar patrones de alineación
+    if (!state.captureModeOnly) {
+        for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+            for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+                if (state.board[i][j] == player) {
+                    for (int d = 0; d < 4; d++) {
+                        if (evaluated[i][j][d]) continue;
                         
-                        int markX = i, markY = j;
-                        for (int k = 0; k < pattern.consecutiveCount && 
-                                       state.isValid(markX, markY); k++) {
-                            if (markX >= 0 && markX < GameState::BOARD_SIZE && 
-                                markY >= 0 && markY < GameState::BOARD_SIZE) {
-                                evaluated[markX][markY][d] = true;
+                        int dx = MAIN_DIRECTIONS[d][0];
+                        int dy = MAIN_DIRECTIONS[d][1];
+                        
+                        if (isLineStart(state, i, j, dx, dy, player)) {
+                            PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
+                            totalScore += patternToScore(pattern);
+                            
+                            int markX = i, markY = j;
+                            for (int k = 0; k < pattern.consecutiveCount && 
+                                           state.isValid(markX, markY); k++) {
+                                if (markX >= 0 && markX < GameState::BOARD_SIZE && 
+                                    markY >= 0 && markY < GameState::BOARD_SIZE) {
+                                    evaluated[markX][markY][d] = true;
+                                }
+                                markX += dx;
+                                markY += dy;
                             }
-                            markX += dx;
-                            markY += dy;
                         }
                     }
                 }

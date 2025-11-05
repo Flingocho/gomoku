@@ -12,6 +12,7 @@
 
 #include "../include/rule_engine.hpp"
 #include "../include/zobrist_hasher.hpp"
+#include <iostream>
 
 // En rule_engine.cpp - REEMPLAZAR applyMove
 
@@ -88,9 +89,15 @@ bool RuleEngine::checkWin(const GameState &state, int player)
 {
     int opponent = state.getOpponent(player);
     
+    std::cout << "DEBUG checkWin: Checking win for player " << player 
+              << " (captures: P1=" << state.captures[0] << ", P2=" << state.captures[1] << ")" << std::endl;
+    
     // 1. Victoria por capturas (esta no cambia)
     if (state.captures[player - 1] >= 10)
+    {
+        std::cout << "DEBUG: Player " << player << " wins by 10 captures!" << std::endl;
         return true;
+    }
 
     // 2. Victoria por 5 en línea (AHORA CON VERIFICACIÓN)
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
@@ -106,21 +113,38 @@ bool RuleEngine::checkWin(const GameState &state, int player)
                     if (checkLineWinInDirection(state, pos, dx, dy, player)) {
                         // ✅ Encontramos 5 en línea
                         
+                        std::cout << "DEBUG: Found 5-in-a-row for player " << player 
+                                  << " at (" << pos.x << "," << pos.y << ")" << std::endl;
+                        
                         // NUEVA VERIFICACIÓN 1: ¿Oponente puede romperla?
-                        if (canBreakLineByCapture(state, pos, dx, dy, player)) {
-                            continue;  // No es victoria todavía
+                        // This will be handled by the game engine setting forced captures
+                        std::vector<Move> captureMoves;
+                        bool canBreak = canBreakLineByCapture(state, pos, dx, dy, player, &captureMoves);
+                        
+                        if (canBreak) {
+                            std::cout << "DEBUG: Opponent CAN break this line by capture" << std::endl;
+                            std::cout << "DEBUG: Found " << captureMoves.size() << " forced capture positions" << std::endl;
+                            // NOTE: The game engine will handle setting forced captures
+                            // For now, we treat this as "not a win yet"
+                            continue;
                         }
+                        std::cout << "DEBUG: Opponent CANNOT break this line by capture" << std::endl;
                         
                         // NUEVA VERIFICACIÓN 2: ¿Estoy en peligro de perder por captura?
                         if (state.captures[opponent - 1] >= 8) {
                             // Tengo 4+ pares capturados en mi contra
                             // ¿El oponente puede capturar uno más?
+                            std::cout << "DEBUG: Opponent has " << state.captures[opponent - 1] 
+                                      << " captures (8+), checking if they can win by capture..." << std::endl;
                             if (opponentCanCaptureNextTurn(state, opponent)) {
+                                std::cout << "DEBUG: Opponent CAN win by capture next turn - NOT A WIN" << std::endl;
                                 return false;  // No gano, el oponente puede ganar por captura
                             }
+                            std::cout << "DEBUG: Opponent CANNOT win by capture next turn" << std::endl;
                         }
                         
                         // Si llegamos aquí, es victoria legítima
+                        std::cout << "DEBUG: This IS a legitimate win!" << std::endl;
                         return true;
                     }
                 }
@@ -402,55 +426,78 @@ bool RuleEngine::canBreakLineByCapture(
     const GameState &state, 
     const Move &lineStart,  // Primera ficha de la línea de 5
     int dx, int dy,         // Dirección de la línea
-    int winningPlayer
+    int winningPlayer,
+    std::vector<Move>* outCaptureMoves  // OUT: positions where opponent can capture
 ) {
     int opponent = state.getOpponent(winningPlayer);
     
-    // Revisar cada par consecutivo en la línea de 5
-    // En una línea de 5 hay 4 pares posibles: (0,1), (1,2), (2,3), (3,4)
-    for (int i = 0; i < 4; i++) {
-        Move pos1(lineStart.x + i*dx, lineStart.y + i*dy);
-        Move pos2(lineStart.x + (i+1)*dx, lineStart.y + (i+1)*dy);
+    std::cout << "DEBUG canBreakLineByCapture: Checking if player " << opponent 
+              << " can break line starting at (" << lineStart.x << "," << lineStart.y 
+              << ") direction (" << dx << "," << dy << ")" << std::endl;
+    
+    // Recopilar todas las posiciones de la línea de 5
+    std::vector<Move> linePositions;
+    for (int i = 0; i < 5; i++) {
+        linePositions.push_back(Move(lineStart.x + i*dx, lineStart.y + i*dy));
+    }
+    
+    bool foundCapture = false;
+    
+    // Para cada pieza en la línea, verificar si el oponente puede capturarla
+    // en CUALQUIER dirección (no solo en la dirección de la línea)
+    for (const Move& piece : linePositions) {
+        std::cout << "  Checking if piece at (" << piece.x << "," << piece.y << ") can be captured" << std::endl;
         
-        // Para capturar este par, el oponente necesita flanquearlo:
-        // Patrón de captura: OPP-PAIR-PAIR-OPP
-        
-        // Opción 1: Puede jugar ANTES del par
-        Move before(pos1.x - dx, pos1.y - dy);
-        Move beforeBefore(before.x - dx, before.y - dy);
-        
-        if (state.isValid(before.x, before.y) && state.isEmpty(before.x, before.y) &&
-            state.isValid(beforeBefore.x, beforeBefore.y) && 
-            state.getPiece(beforeBefore.x, beforeBefore.y) == opponent) {
-            // El oponente puede jugar en "before" y tiene ficha en "beforeBefore"
-            // Esto formaría: OPP-NUEVA-PAR1-PAR2
-            // Falta verificar que tenga otra ficha DESPUÉS del par
-            Move after(pos2.x + dx, pos2.y + dy);
-            if (state.isValid(after.x, after.y) && 
-                state.getPiece(after.x, after.y) == opponent) {
-                return true;  // Patrón completo: OPP-NUEVA-PAR-PAR-OPP
-            }
-        }
-        
-        // Opción 2: Puede jugar DESPUÉS del par
-        Move after(pos2.x + dx, pos2.y + dy);
-        Move afterAfter(after.x + dx, after.y + dy);
-        
-        if (state.isValid(after.x, after.y) && state.isEmpty(after.x, after.y) &&
-            state.isValid(afterAfter.x, afterAfter.y) && 
-            state.getPiece(afterAfter.x, afterAfter.y) == opponent) {
-            // El oponente puede jugar en "after" y tiene ficha en "afterAfter"
-            // Esto formaría: PAR1-PAR2-NUEVA-OPP
-            // Falta verificar que tenga otra ficha ANTES del par
-            Move before(pos1.x - dx, pos1.y - dy);
+        // Probar las 8 direcciones para capturas
+        for (int d = 0; d < 8; d++) {
+            int cdx = DIRECTIONS[d][0];
+            int cdy = DIRECTIONS[d][1];
+            
+            // Buscar patrón X-O-O-? donde X=oponente, O=pieza actual
+            // La pieza actual debe ser la primera O del par
+            Move secondPiece(piece.x + cdx, piece.y + cdy);
+            Move before(piece.x - cdx, piece.y - cdy);
+            Move after(secondPiece.x + cdx, secondPiece.y + cdy);
+            
+            // Verificar patrón: OPP-PIECE-SECOND-EMPTY
             if (state.isValid(before.x, before.y) && 
-                state.getPiece(before.x, before.y) == opponent) {
-                return true;  // Patrón completo: OPP-PAR-PAR-NUEVA-OPP
+                state.getPiece(before.x, before.y) == opponent &&
+                state.isValid(secondPiece.x, secondPiece.y) &&
+                state.getPiece(secondPiece.x, secondPiece.y) == winningPlayer &&
+                state.isValid(after.x, after.y) &&
+                state.isEmpty(after.x, after.y)) {
+                
+                std::cout << "    -> YES! Can capture at (" << after.x << "," << after.y 
+                          << ") - pattern OPP-WIN-WIN-EMPTY in direction (" << cdx << "," << cdy << ")" << std::endl;
+                foundCapture = true;
+                if (outCaptureMoves) {
+                    outCaptureMoves->push_back(after);
+                }
+            }
+            
+            // También verificar patrón: EMPTY-PIECE-SECOND-OPP
+            if (state.isValid(after.x, after.y) &&
+                state.getPiece(after.x, after.y) == opponent &&
+                state.isValid(secondPiece.x, secondPiece.y) &&
+                state.getPiece(secondPiece.x, secondPiece.y) == winningPlayer &&
+                state.isValid(before.x, before.y) &&
+                state.isEmpty(before.x, before.y)) {
+                
+                std::cout << "    -> YES! Can capture at (" << before.x << "," << before.y 
+                          << ") - pattern EMPTY-WIN-WIN-OPP in direction (" << cdx << "," << cdy << ")" << std::endl;
+                foundCapture = true;
+                if (outCaptureMoves) {
+                    outCaptureMoves->push_back(before);
+                }
             }
         }
     }
     
-    return false;  // No puede romper la línea
+    if (!foundCapture) {
+        std::cout << "  -> No capture pattern found for any piece in the line" << std::endl;
+    }
+    
+    return foundCapture;
 }
 
 bool RuleEngine::opponentCanCaptureNextTurn(

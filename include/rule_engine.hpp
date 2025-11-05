@@ -47,6 +47,12 @@ public:
 
 	static bool createsDoubleFreeThree(const GameState &state, const Move &move, int player);
 
+	static bool canBreakLineByCapture(const GameState &state,
+									  const Move &lineStart,
+									  int dx, int dy,
+									  int winningPlayer,
+									  std::vector<Move>* outCaptureMoves = nullptr);
+
 private:
 	static std::vector<Move> findCapturesInDirection(const GameState &state,
 													 const Move &move, int player,
@@ -66,11 +72,6 @@ private:
 	static constexpr int DIRECTIONS[8][2] = {
 		{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 	static constexpr int MAIN_DIRECTIONS[4][2] = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
-
-	static bool canBreakLineByCapture(const GameState &state,
-									  const Move &lineStart,
-									  int dx, int dy,
-									  int winningPlayer);
 
 	static bool opponentCanCaptureNextTurn(const GameState &state, int opponent);
 

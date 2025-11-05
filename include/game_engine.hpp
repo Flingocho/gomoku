@@ -31,7 +31,8 @@ struct ConditionalResponse {
 
 enum class GameMode {
     VS_AI,
-    VS_HUMAN_SUGGESTED
+    VS_HUMAN_SUGGESTED,
+    CAPTURE_MODE  // NUEVO: Modo de solo capturas
 };
 
 class GameEngine {
@@ -67,6 +68,10 @@ public:
 	void setGameMode(GameMode mode) { currentMode = mode; }
     GameMode getGameMode() const { return currentMode; }
 	std::vector<Move> findWinningLine() const;
+    
+    // Check if the previous player created a 5-in-a-row that can be broken by capture
+    // If so, set forced capture moves for the current player
+    void checkAndSetForcedCaptures();
     
 private:
     GameState state;

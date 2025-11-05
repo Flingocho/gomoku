@@ -149,7 +149,8 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     if (selectedMenuOption == 1) return VS_HUMAN; 
     if (selectedMenuOption == 2) return COLORBLIND;
     if (selectedMenuOption == 3) return RUST_AI;
-    if (selectedMenuOption == 4) return QUIT;
+    if (selectedMenuOption == 4) return CAPTURE_MODE;  // NUEVO
+    if (selectedMenuOption == 5) return QUIT;  // ACTUALIZADO índice
     
     return NONE; // Sin selección aún
 }
@@ -202,25 +203,28 @@ void GuiRenderer::renderMenu() {
     
     // 2. Botones del menú (centrados con precisión flotante)
     int buttonWidth = 250;
-    int buttonHeight = 60;
+    int buttonHeight = 50;  // REDUCIDO de 60 a 50 para acomodar más botones
     int buttonX = WINDOW_WIDTH/2.0f - buttonWidth/2.0f;  // Usar flotantes para más precisión
-    int buttonSpacing = 80;
+    int buttonSpacing = 65;  // REDUCIDO de 80 a 65 para mejor distribución
     
     // CORREGIDO: Usar hoveredMenuOption para efectos visuales
     bool vsAiHover = (hoveredMenuOption == 0);
-    drawButton("Play vs AI", buttonX, 250, buttonWidth, buttonHeight, vsAiHover);
+    drawButton("Play vs AI", buttonX, 230, buttonWidth, buttonHeight, vsAiHover);
     
     bool vsHumanHover = (hoveredMenuOption == 1);
-    drawButton("Play vs Human", buttonX, 250 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
+    drawButton("Play vs Human", buttonX, 230 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
     
     bool colorblindHover = (hoveredMenuOption == 2);
-    drawButton("Colorblind Mode", buttonX, 250 + buttonSpacing * 2, buttonWidth, buttonHeight, colorblindHover);
+    drawButton("Colorblind Mode", buttonX, 230 + buttonSpacing * 2, buttonWidth, buttonHeight, colorblindHover);
     
     bool rustAiHover = (hoveredMenuOption == 3);
-    drawButton("Rust AI", buttonX, 250 + buttonSpacing * 3, buttonWidth, buttonHeight, rustAiHover);
+    drawButton("Rust AI", buttonX, 230 + buttonSpacing * 3, buttonWidth, buttonHeight, rustAiHover);
     
-    bool quitHover = (hoveredMenuOption == 4);
-    drawButton("Exit", buttonX, 250 + buttonSpacing * 4, buttonWidth, buttonHeight, quitHover);
+    bool captureModeHover = (hoveredMenuOption == 4);
+    drawButton("Capture Mode", buttonX, 230 + buttonSpacing * 4, buttonWidth, buttonHeight, captureModeHover);
+    
+    bool quitHover = (hoveredMenuOption == 5);
+    drawButton("Exit", buttonX, 230 + buttonSpacing * 5, buttonWidth, buttonHeight, quitHover);
     
     // 3. Información adicional (compacta)
     drawText("Features:", 50, 680, 16, sf::Color::Yellow);
@@ -233,48 +237,58 @@ void GuiRenderer::renderMenu() {
 
 void GuiRenderer::handleMenuClick(int x, int y) {
     int buttonWidth = 250;
-    int buttonHeight = 60;
+    int buttonHeight = 50;  // ACTUALIZADO para coincidir con renderMenu
     int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+    int buttonSpacing = 65;  // ACTUALIZADO para coincidir con renderMenu
     
-    // Botón VS AI (posición Y: 250)
+    // Botón VS AI (posición Y: 230)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 250 && y <= 250 + buttonHeight) {
+        y >= 230 && y <= 230 + buttonHeight) {
         selectedMenuOption = 0;
         isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS AI" << std::endl;
         return;
     }
     
-    // Botón VS Human (posición Y: 330)
+    // Botón VS Human (posición Y: 230 + 65)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 330 && y <= 330 + buttonHeight) {
+        y >= 230 + buttonSpacing && y <= 230 + buttonSpacing + buttonHeight) {
         selectedMenuOption = 1;
         isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS Human" << std::endl;
         return;
     }
     
-    // Botón Colorblind Mode (posición Y: 410)
+    // Botón Colorblind Mode (posición Y: 230 + 130)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 410 && y <= 410 + buttonHeight) {
+        y >= 230 + buttonSpacing * 2 && y <= 230 + buttonSpacing * 2 + buttonHeight) {
         selectedMenuOption = 2;
         isColorblindMode = true;  // Activar modo colorblind
         std::cout << "Seleccionado: Colorblind Mode (VS AI)" << std::endl;
         return;
     }
     
-    // Botón Rust AI (posición Y: 490)
+    // Botón Rust AI (posición Y: 230 + 195)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 490 && y <= 490 + buttonHeight) {
+        y >= 230 + buttonSpacing * 3 && y <= 230 + buttonSpacing * 3 + buttonHeight) {
         selectedMenuOption = 3;
         std::cout << "Seleccionado: Rust AI" << std::endl;
         return;
     }
     
-    // Botón Quit (posición Y: 570)
+    // Botón Capture Mode (posición Y: 230 + 260) - NUEVO
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 570 && y <= 570 + buttonHeight) {
+        y >= 230 + buttonSpacing * 4 && y <= 230 + buttonSpacing * 4 + buttonHeight) {
         selectedMenuOption = 4;
+        isColorblindMode = false;
+        std::cout << "Seleccionado: Capture Mode" << std::endl;
+        return;
+    }
+    
+    // Botón Quit (posición Y: 230 + 325)
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= 230 + buttonSpacing * 5 && y <= 230 + buttonSpacing * 5 + buttonHeight) {
+        selectedMenuOption = 5;  // ACTUALIZADO índice
         std::cout << "Seleccionado: Quit" << std::endl;
         return;
     }
@@ -1166,8 +1180,9 @@ void GuiRenderer::handleMouseMove(int x, int y) {
     if (currentState == MENU) {
         // CORREGIDO: Usar hoveredMenuOption para efectos visuales
         int buttonWidth = 250;
-        int buttonHeight = 60;
+        int buttonHeight = 50;  // ACTUALIZADO
         int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+        int buttonSpacing = 65;  // ACTUALIZADO
         
         // Reset hover state
         int previousHover = hoveredMenuOption;
@@ -1175,22 +1190,24 @@ void GuiRenderer::handleMouseMove(int x, int y) {
         
         // Check each button
         if (x >= buttonX && x <= buttonX + buttonWidth) {
-            if (y >= 250 && y <= 250 + buttonHeight) {
+            if (y >= 230 && y <= 230 + buttonHeight) {
                 hoveredMenuOption = 0; // VS AI hover
-            } else if (y >= 330 && y <= 330 + buttonHeight) {
+            } else if (y >= 230 + buttonSpacing && y <= 230 + buttonSpacing + buttonHeight) {
                 hoveredMenuOption = 1; // VS Human hover
-            } else if (y >= 410 && y <= 410 + buttonHeight) {
+            } else if (y >= 230 + buttonSpacing * 2 && y <= 230 + buttonSpacing * 2 + buttonHeight) {
                 hoveredMenuOption = 2; // Colorblind hover
-            } else if (y >= 490 && y <= 490 + buttonHeight) {
+            } else if (y >= 230 + buttonSpacing * 3 && y <= 230 + buttonSpacing * 3 + buttonHeight) {
                 hoveredMenuOption = 3; // Rust AI hover
-            } else if (y >= 570 && y <= 570 + buttonHeight) {
-                hoveredMenuOption = 4; // Quit hover
+            } else if (y >= 230 + buttonSpacing * 4 && y <= 230 + buttonSpacing * 4 + buttonHeight) {
+                hoveredMenuOption = 4; // Capture Mode hover
+            } else if (y >= 230 + buttonSpacing * 5 && y <= 230 + buttonSpacing * 5 + buttonHeight) {
+                hoveredMenuOption = 5; // Quit hover
             }
         }
         
         // Solo logear si cambió el hover (evitar spam)
         if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
-            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Rust AI", "Quit"};
+            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Rust AI", "Capture Mode", "Quit"};
             std::cout << "Hover: " << options[hoveredMenuOption] << std::endl;
         }
     }

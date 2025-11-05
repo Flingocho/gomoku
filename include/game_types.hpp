@@ -47,6 +47,16 @@ struct GameState {
     // NUEVO: Última jugada del humano para generación de candidatos defensivos
     Move lastHumanMove;
     
+    // NUEVO: Flag para modo de solo capturas (15 capturas para ganar, no 5 en línea)
+    bool captureModeOnly = false;
+    
+    // NUEVO: Forced capture mechanism
+    // When a player makes 5-in-a-row but opponent can break it by capture,
+    // opponent MUST play one of these positions on their next turn
+    std::vector<Move> forcedCaptureMoves;
+    int forcedCapturePlayer = 0;  // Which player must make the forced capture (0 = none)
+    int pendingWinPlayer = 0;     // Which player has the pending 5-in-a-row
+    
     // NUEVO: Referencia al hasher (compartido entre todos los estados)
     static const ZobristHasher* hasher;
     

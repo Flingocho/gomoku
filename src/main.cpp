@@ -85,38 +85,46 @@ int main()
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
 			}
-			else if (choice == GuiRenderer::COLORBLIND)
-			{
-				std::cout << "Starting Colorblind Mode vs AI (same color pieces)" << std::endl;
-				game.setGameMode(GameMode::VS_AI); // Misma lógica que VS_AI pero con colores iguales
-				game.newGame();
-				renderer.resetAiStats();
-				renderer.setState(GuiRenderer::PLAYING);
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
-			}
-			else if (choice == GuiRenderer::RUST_AI)
-			{
-				std::cout << "Starting game vs Rust AI" << std::endl;
-				game.setGameMode(GameMode::VS_AI);
-				game.setAiImplementation(RUST_IMPLEMENTATION); // Usar implementación Rust
-				game.newGame();
-				renderer.resetAiStats();
-				renderer.setState(GuiRenderer::PLAYING);
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
-			}
-			else if (choice == GuiRenderer::QUIT)
-			{
-				gameActive = false;
-			}
-
-			// Renderizar menú
-			renderer.render(game.getState());
-			break;
+		else if (choice == GuiRenderer::COLORBLIND)
+		{
+			std::cout << "Starting Colorblind Mode vs AI (same color pieces)" << std::endl;
+			game.setGameMode(GameMode::VS_AI); // Misma lógica que VS_AI pero con colores iguales
+			game.newGame();
+			renderer.resetAiStats();
+			renderer.setState(GuiRenderer::PLAYING);
+			suggestionCalculated = false;
+			currentSuggestion = Move(-1, -1);
+		}
+		else if (choice == GuiRenderer::RUST_AI)
+		{
+			std::cout << "Starting game vs Rust AI" << std::endl;
+			game.setGameMode(GameMode::VS_AI);
+			game.setAiImplementation(RUST_IMPLEMENTATION); // Usar implementación Rust
+			game.newGame();
+			renderer.resetAiStats();
+			renderer.setState(GuiRenderer::PLAYING);
+			suggestionCalculated = false;
+			currentSuggestion = Move(-1, -1);
+		}
+		else if (choice == GuiRenderer::CAPTURE_MODE)
+		{
+			std::cout << "Starting Capture Mode vs AI (15 captures to win)" << std::endl;
+			game.setGameMode(GameMode::CAPTURE_MODE);
+			game.newGame();
+			renderer.resetAiStats();
+			renderer.setState(GuiRenderer::PLAYING);
+			suggestionCalculated = false;
+			currentSuggestion = Move(-1, -1);
+		}
+		else if (choice == GuiRenderer::QUIT)
+		{
+			gameActive = false;
 		}
 
-		case GuiRenderer::PLAYING:
+		// Renderizar menú
+		renderer.render(game.getState());
+		break;
+	}		case GuiRenderer::PLAYING:
 		{
 			const GameState &state = game.getState();
 
@@ -132,10 +140,10 @@ int main()
 			}
 
 			// DIFERENTES COMPORTAMIENTOS SEGÚN MODO
-			if (game.getGameMode() == GameMode::VS_AI)
+			if (game.getGameMode() == GameMode::VS_AI || game.getGameMode() == GameMode::CAPTURE_MODE)
 			{
 				// ============================================
-				// MODO VS AI (código original sin cambios)
+				// MODO VS AI y CAPTURE_MODE (mismo comportamiento)
 				// ============================================
 				if (state.currentPlayer == GameState::PLAYER1)
 				{

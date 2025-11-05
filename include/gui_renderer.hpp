@@ -37,6 +37,7 @@ public:
 		VS_HUMAN,
 		COLORBLIND,
 		RUST_AI,
+		CAPTURE_MODE,  // NUEVO: Modo de capturas
 		QUIT,
 		NONE
 	};
