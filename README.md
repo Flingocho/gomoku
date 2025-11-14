@@ -15,6 +15,20 @@
 
 ---
 
+## 🖼️ Screenshots
+
+<div align="center">
+
+### Main Menu
+![Main Menu](imgs/main_menu.png)
+
+### Gameplay
+![Gameplay](imgs/game.png)
+
+</div>
+
+---
+
 ## 📋 Table of Contents
 
 - [About](#-about)
