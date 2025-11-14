@@ -6,8 +6,8 @@ use crate::transposition_table::{TranspositionTable, CacheEntryType};
 use crate::move_ordering::MoveOrdering;
 
 pub struct AI {
-    nodes_evaluated: u64,
-    cache_hits: u64,
+    pub nodes_evaluated: u64,
+    pub cache_hits: u64,
     transposition_table: TranspositionTable,
     previous_best_move: Move,
 }
@@ -38,6 +38,20 @@ impl AI {
             if test_state.make_move(*mv) {
                 if test_state.is_game_over() {
                     println!("Immediate win detected at ({}, {})", mv.x, mv.y);
+                    return *mv;
+                }
+            }
+        }
+
+        // CRITICAL: Check if opponent can win on their next move and block it!
+        let opponent = state.get_opponent(state.current_player);
+        for mv in &all_candidates {
+            let mut test_state = state.clone();
+            // Simulate opponent playing this move
+            test_state.current_player = opponent;
+            if test_state.make_move(*mv) {
+                if test_state.is_game_over() {
+                    println!("Blocking opponent win at ({}, {})", mv.x, mv.y);
                     return *mv;
                 }
             }

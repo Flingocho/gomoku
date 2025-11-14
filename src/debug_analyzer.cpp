@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*   debug_analyzer.cpp                               :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/18 17:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/18 17:00:00 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/debug_analyzer.hpp"
 #include "../include/evaluator.hpp"
 #include "../include/rule_engine.hpp"

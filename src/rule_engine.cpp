@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   rule_engine.cpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/14 21:24:14 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/30 19:12:57 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/rule_engine.hpp"
 #include "../include/zobrist_hasher.hpp"
 #include <iostream>
@@ -89,13 +77,9 @@ bool RuleEngine::checkWin(const GameState &state, int player)
 {
     int opponent = state.getOpponent(player);
     
-    std::cout << "DEBUG checkWin: Checking win for player " << player 
-              << " (captures: P1=" << state.captures[0] << ", P2=" << state.captures[1] << ")" << std::endl;
-    
     // 1. Victoria por capturas (esta no cambia)
     if (state.captures[player - 1] >= 10)
     {
-        std::cout << "DEBUG: Player " << player << " wins by 10 captures!" << std::endl;
         return true;
     }
 
@@ -113,38 +97,27 @@ bool RuleEngine::checkWin(const GameState &state, int player)
                     if (checkLineWinInDirection(state, pos, dx, dy, player)) {
                         // ✅ Encontramos 5 en línea
                         
-                        std::cout << "DEBUG: Found 5-in-a-row for player " << player 
-                                  << " at (" << pos.x << "," << pos.y << ")" << std::endl;
-                        
                         // NUEVA VERIFICACIÓN 1: ¿Oponente puede romperla?
                         // This will be handled by the game engine setting forced captures
                         std::vector<Move> captureMoves;
                         bool canBreak = canBreakLineByCapture(state, pos, dx, dy, player, &captureMoves);
                         
                         if (canBreak) {
-                            std::cout << "DEBUG: Opponent CAN break this line by capture" << std::endl;
-                            std::cout << "DEBUG: Found " << captureMoves.size() << " forced capture positions" << std::endl;
                             // NOTE: The game engine will handle setting forced captures
                             // For now, we treat this as "not a win yet"
                             continue;
                         }
-                        std::cout << "DEBUG: Opponent CANNOT break this line by capture" << std::endl;
                         
                         // NUEVA VERIFICACIÓN 2: ¿Estoy en peligro de perder por captura?
                         if (state.captures[opponent - 1] >= 8) {
                             // Tengo 4+ pares capturados en mi contra
                             // ¿El oponente puede capturar uno más?
-                            std::cout << "DEBUG: Opponent has " << state.captures[opponent - 1] 
-                                      << " captures (8+), checking if they can win by capture..." << std::endl;
                             if (opponentCanCaptureNextTurn(state, opponent)) {
-                                std::cout << "DEBUG: Opponent CAN win by capture next turn - NOT A WIN" << std::endl;
                                 return false;  // No gano, el oponente puede ganar por captura
                             }
-                            std::cout << "DEBUG: Opponent CANNOT win by capture next turn" << std::endl;
                         }
                         
                         // Si llegamos aquí, es victoria legítima
-                        std::cout << "DEBUG: This IS a legitimate win!" << std::endl;
                         return true;
                     }
                 }
@@ -431,10 +404,6 @@ bool RuleEngine::canBreakLineByCapture(
 ) {
     int opponent = state.getOpponent(winningPlayer);
     
-    std::cout << "DEBUG canBreakLineByCapture: Checking if player " << opponent 
-              << " can break line starting at (" << lineStart.x << "," << lineStart.y 
-              << ") direction (" << dx << "," << dy << ")" << std::endl;
-    
     // Recopilar todas las posiciones de la línea de 5
     std::vector<Move> linePositions;
     for (int i = 0; i < 5; i++) {
@@ -446,7 +415,6 @@ bool RuleEngine::canBreakLineByCapture(
     // Para cada pieza en la línea, verificar si el oponente puede capturarla
     // en CUALQUIER dirección (no solo en la dirección de la línea)
     for (const Move& piece : linePositions) {
-        std::cout << "  Checking if piece at (" << piece.x << "," << piece.y << ") can be captured" << std::endl;
         
         // Probar las 8 direcciones para capturas
         for (int d = 0; d < 8; d++) {
@@ -467,8 +435,6 @@ bool RuleEngine::canBreakLineByCapture(
                 state.isValid(after.x, after.y) &&
                 state.isEmpty(after.x, after.y)) {
                 
-                std::cout << "    -> YES! Can capture at (" << after.x << "," << after.y 
-                          << ") - pattern OPP-WIN-WIN-EMPTY in direction (" << cdx << "," << cdy << ")" << std::endl;
                 foundCapture = true;
                 if (outCaptureMoves) {
                     outCaptureMoves->push_back(after);
@@ -483,8 +449,6 @@ bool RuleEngine::canBreakLineByCapture(
                 state.isValid(before.x, before.y) &&
                 state.isEmpty(before.x, before.y)) {
                 
-                std::cout << "    -> YES! Can capture at (" << before.x << "," << before.y 
-                          << ") - pattern EMPTY-WIN-WIN-OPP in direction (" << cdx << "," << cdy << ")" << std::endl;
                 foundCapture = true;
                 if (outCaptureMoves) {
                     outCaptureMoves->push_back(before);

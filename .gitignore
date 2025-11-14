@@ -1,6 +1,11 @@
 .vscode/
 gomoku_debug.log
 
+# Build artifacts
+gomoku
+objects/
+*.o
+
 # SFML and OpenAL build files
 SFML-*/
 SFML-*.zip

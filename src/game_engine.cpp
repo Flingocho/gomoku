@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   game_engine.cpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/14 21:26:45 by jainavas          #+#    #+#             */
-/*   Updated: 2025/10/01 21:52:11 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/game_engine.hpp"
 #include "../include/display.hpp"
 #include "../include/debug_analyzer.hpp"

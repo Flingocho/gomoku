@@ -1,16 +1,3 @@
-/* ******************************************************		int value = depth * 100;  // Depth is more important
-		if (type == EXACT) value += 50;  // Exact nodes are more valuable****************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   transposition_search.hpp                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/14 21:38:39 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/28 23:41:08 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef TRANSPOSITION_SEARCH_HPP
 #define TRANSPOSITION_SEARCH_HPP
 

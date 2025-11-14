@@ -46,12 +46,29 @@ This implementation features:
 
 ### 🎨 **User Interface**
 - ✅ Smooth SFML-based graphical interface
-- ✅ Real-time move suggestions
-- ✅ Visual feedback for valid moves
-- ✅ Game state tracking (captures, turn count)
-- ✅ Clean, professional board design
+- ✅ Real-time move suggestions with scoring
+- ✅ Visual feedback for valid/invalid moves
+- ✅ Game state tracking (captures, turn count, AI stats)
+- ✅ Clean, professional board design with readable coordinates
+- ✅ Interactive menu system
+- ✅ Real-time AI analysis display (nodes evaluated, cache hits)
+
+### 🎵 **Audio System**
+- ✅ Background music (looping main theme)
+- ✅ Sound effects for:
+  - Piece placement
+  - Invalid moves
+  - Menu clicks
+  - Victory/Defeat
+- ✅ Volume controls and mute functionality
+- ✅ OGG format support via SFML Audio
 
 ### 🤖 **AI Engine**
+- ✅ **Hybrid C++/Rust Implementation**: Core AI in Rust for maximum performance
+- ✅ **Immediate Threat Detection**: 
+  - Checks for AI winning moves before search
+  - **Blocks opponent winning threats instantly**
+  - Prevents obvious 5-in-a-row losses
 - ✅ **Iterative Deepening Search**: Progressive depth searching for optimal time management
 - ✅ **Alpha-Beta Pruning**: Efficient tree search with cutoffs
 - ✅ **Transposition Table**: 64MB cache with Zobrist hashing
@@ -64,8 +81,11 @@ This implementation features:
   - Detection of 2/3/4/5-in-a-row patterns
   - Gap pattern analysis (e.g., X-XXX, XX-X)
   - Free-end evaluation
+  - Open and half-open pattern scoring
 - ✅ **Mate Distance Calculation**: Prefers faster wins and slower losses
 - ✅ **Adaptive Candidate Generation**: Smart move pruning based on game phase
+- ✅ **In-Place Move Application**: Zero-copy state updates for performance
+- ✅ **Capture Evaluation**: Context-aware scoring based on game progression
 
 ### 🎲 **Game Rules**
 - ✅ Standard Gomoku (5-in-a-row wins)
@@ -86,7 +106,7 @@ This implementation features:
 - **C++ Compiler**: GCC 9+ or Clang 10+ (C++17 support required)
 - **Rust**: 1.70 or newer
 - **Cargo**: Latest version
-- **SFML**: 2.5.1 or newer
+- **SFML**: 2.5.1 or newer (Graphics, Window, System, **Audio** modules)
 - **Make**: GNU Make 4.0+
 
 ### Development Tools (Optional)
@@ -110,6 +130,8 @@ cd gomoku
 sudo apt-get update
 sudo apt-get install libsfml-dev
 ```
+
+**Note**: This installs all SFML modules including Graphics, Window, System, and Audio.
 
 #### macOS (Homebrew):
 ```bash
@@ -145,18 +167,30 @@ This will:
 ```
 
 ### Controls
-- **Mouse Click**: Place a stone
+- **Mouse Click**: Place a stone / Click menu buttons
 - **ESC**: Quit game
-- **Mouse Hover**: Preview move position
+- **Mouse Hover**: Preview move position and see suggestions
+
+### Audio Controls
+- **M Key**: Toggle mute
+- Volume is set to comfortable levels by default
 
 ### Gameplay
 1. Launch the game
 2. Click on an empty intersection to place your stone (⚪)
 3. AI will automatically respond with its move (⚫)
+   - Watch AI stats (nodes evaluated, cache hits) in real-time
+   - See move suggestions and scores
 4. Continue until:
    - One player gets 5 in a row (horizontal, vertical, or diagonal)
    - One player captures 10 opponent stones
    - Board is full (draw)
+
+### Game Feedback
+- ✅ **Valid moves**: Play "place piece" sound
+- ❌ **Invalid moves**: Play "invalid move" sound with visual feedback
+- 🏆 **Victory**: Victory fanfare
+- 💀 **Defeat**: Defeat sound
 
 ---
 
@@ -167,6 +201,13 @@ The AI uses a sophisticated hybrid approach combining the strengths of C++ and R
 ### Core Algorithm: Minimax with Alpha-Beta Pruning
 
 ```
+┌─────────────────────────────────────────────────────────┐
+│                 Pre-Search Checks                       │
+│  1. Check for immediate AI winning moves                │
+│  2. Check for opponent winning threats → BLOCK!         │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    Iterative Deepening                  │
 │                     (depth 1 → max)                     │
@@ -226,7 +267,8 @@ The AI evaluates positions using multiple heuristics:
 
 **Additional bonuses:**
 - **Captures**: 500-300,000 points (scaling with proximity to 10 captures)
-- **Immediate threats**: ±90,000 points
+- **Immediate threats**: ±90,000 to ±105,000 points
+- **Blocking opponent winning threats**: Highest priority (pre-search)
 - **Mate distance**: Closer mates valued higher
 
 ### Transposition Table
@@ -248,6 +290,51 @@ gomoku/
 │   ├── ai.cpp                    # AI interface and mode selection
 │   ├── game_engine.cpp           # Main game loop and state management
 │   ├── rule_engine.cpp           # Rule validation and move legality
+│   ├── evaluator.cpp             # Position evaluation heuristics
+│   ├── transposition_search.cpp  # Minimax + transposition table
+│   ├── zobrist_hasher.cpp        # Zobrist hash generation
+│   ├── gui_renderer.cpp          # SFML graphics rendering
+│   ├── audio_manager.cpp         # Audio playback and sound management
+│   ├── display.cpp               # Terminal display (legacy)
+│   ├── debug_analyzer.cpp        # Debug logging utilities
+│   ├── suggestion_engine.cpp     # Move suggestion system
+│   └── main.cpp                  # Entry point
+│
+├── include/                      # C++ headers
+│   ├── ai.hpp
+│   ├── game_types.hpp            # Core data structures (Move, GameState)
+│   ├── evaluator.hpp
+│   ├── transposition_search.hpp
+│   ├── zobrist_hasher.hpp
+│   ├── rule_engine.hpp
+│   ├── gui_renderer.hpp
+│   ├── audio_manager.hpp         # Audio system interface
+│   ├── suggestion_engine.hpp     # Suggestion system interface
+│   └── ...
+│
+├── gomoku_ai_rust/              # Rust AI implementation
+│   ├── src/
+│   │   ├── lib.rs               # Module exports + FFI interface
+│   │   ├── game_types.rs        # Move, GameState, constants
+│   │   ├── evaluator.rs         # Pattern evaluation
+│   │   ├── transposition_table.rs # Cache management
+│   │   ├── move_ordering.rs     # Candidate generation & ordering
+│   │   └── ai.rs                # Search engine (minimax + iterative deepening)
+│   └── Cargo.toml
+│
+├── sounds/                       # Audio files (OGG format)
+│   ├── main_theme.ogg           # Background music (looping)
+│   ├── place_piece.ogg          # Piece placement sound
+│   ├── invalid_move.ogg         # Invalid move feedback
+│   ├── click_menu.ogg           # Menu interaction
+│   ├── victory.ogg              # Win sound
+│   ├── defeat.ogg               # Loss sound
+│   └── README.md                # Audio format documentation
+│
+├── fonts/                        # Fonts for GUI
+├── Makefile                      # Build configuration
+└── README.md                     # This file
+```
 │   ├── evaluator.cpp             # Position evaluation heuristics
 │   ├── transposition_search.cpp  # Minimax + transposition table
 │   ├── zobrist_hasher.cpp        # Zobrist hash generation
@@ -287,13 +374,15 @@ gomoku/
 - **Game Engine**: Manages game state, turn flow, win detection
 - **Rule Engine**: Validates moves, handles captures
 - **GUI Renderer**: SFML-based graphics and user interaction
+- **Audio Manager**: Music streaming and sound effect playback
+- **Suggestion Engine**: Real-time move evaluation and display
 - **Zobrist Hasher**: Hash key generation for transposition table
 - **AI Wrapper**: Bridges C++ and Rust AI implementations
 
 #### Rust Layer (Performance-Critical)
-- **Search Engine**: Minimax, alpha-beta, iterative deepening
+- **Search Engine**: Minimax, alpha-beta, iterative deepening, immediate threat detection
 - **Evaluator**: Position scoring and pattern analysis
-- **Transposition Table**: Cached position storage
+- **Transposition Table**: Cached position storage with Zobrist hashing
 - **Move Ordering**: Smart candidate generation and prioritization
 
 ---
@@ -307,6 +396,7 @@ gomoku/
 | Game Logic | C++ | SFML integration, mature ecosystem |
 | AI Search | Rust | Memory safety, zero-cost abstractions, performance |
 | GUI | C++ | SFML library compatibility |
+| Audio | C++ | SFML Audio module integration |
 | Evaluation | Rust | CPU-intensive calculations benefit from Rust optimizations |
 
 ### Compilation Flags
@@ -344,11 +434,13 @@ cargo build --release
 
 ### Optimizations Applied
 
+✅ **Immediate Threat Detection**: Instant blocking of opponent winning moves  
 ✅ **Alpha-Beta Pruning**: ~100x speedup over naive minimax  
 ✅ **Transposition Table**: ~2-3x speedup from caching  
 ✅ **Move Ordering**: ~5x speedup from PV-first search  
 ✅ **Adaptive Candidates**: ~10x speedup from limiting search space  
 ✅ **Iterative Deepening**: Better time management  
+✅ **In-Place Move Application**: Zero-copy state updates  
 
 **Total Speedup**: ~10,000x faster than naive minimax at depth 8
 

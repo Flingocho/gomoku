@@ -2,10 +2,11 @@ CXX = c++
 SFML_HOME := $(HOME)/sfml-2.5.1
 RUST_LIB_DIR := gomoku_ai_rust/target/release
 INCLUDES := -I$(SFML_HOME)/include -Igomoku_ai_rust/src
-LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lgomoku_ai_rust -ldl -lpthread
+LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lgomoku_ai_rust -ldl -lpthread
 CXXFLAGS := -Wall -Wextra -Werror -O3 -std=c++17 $(INCLUDES)
 
 SRCS = src/ai.cpp\
+		src/audio_manager.cpp\
 		src/display.cpp\
 		src/evaluator.cpp\
 		src/game_engine.cpp\
@@ -41,6 +42,9 @@ clean:
 	rm -rf $(OBJ_DIR)
 	cd gomoku_ai_rust && cargo clean
 
+.PHONY: run
+run: $(EXEC)
+	LD_LIBRARY_PATH=$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(EXEC)
 fclean: clean
 	rm -f $(EXEC)
 

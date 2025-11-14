@@ -1,22 +1,9 @@
-/* ************************************************************************** */
-/*     void clearUserMove() { moveReady = false; }
-	void refreshSelectedMenuOption() { selectedMenuOption = -1; }
-	void setLastAiMove(const Move& move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA                                                                         */
-/*                                                        :::      ::::::::   */
-/*   gui_renderer.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/23 17:23:14 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef GUI_RENDERER_HPP
 #define GUI_RENDERER_HPP
 
 #include <SFML/Graphics.hpp>
 #include "game_types.hpp"
+#include "audio_manager.hpp"
 #include <string>
 #include <chrono>
 #include <vector> // NUEVO: Para vector de tiempos de IA
@@ -130,6 +117,13 @@ public:
 	void clearInvalidMoveError();
 	void setWinningLine(const std::vector<Move>& line) { winningLine = line; }
 	int getSelectedMenuOption() const { return selectedMenuOption; }
+	
+	// Audio control methods
+	void playPlacePieceSound() { audioManager.playSound("place_piece"); }
+	void playInvalidMoveSound() { audioManager.playSound("invalid_move"); }
+	void playVictorySound() { audioManager.playSound("victory"); }
+	void playDefeatSound() { audioManager.playSound("defeat"); }
+	void toggleMute() { audioManager.toggleMute(); }
 
 private:
 	// Internal rendering methods
@@ -189,6 +183,9 @@ private:
 	int gameOverButtonsY;
 	bool gameOverButtonsPositionValid;
 	bool isColorblindMode;	// NUEVO: Flag para el modo colorblind
+	
+	// Audio
+	AudioManager audioManager;
 };
 
 #endif

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/14 21:27:46 by jainavas          #+#    #+#             */
-/*   Updated: 2025/10/01 22:32:22 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/game_engine.hpp"
 #include "../include/gui_renderer.hpp"
 #include "../include/game_types.hpp"
@@ -136,6 +124,16 @@ int main()
 				renderer.setState(GuiRenderer::GAME_OVER);
 				renderer.refreshSelectedMenuOption(); // Resetear selección al entrar en GAME_OVER
 				renderer.showGameResult(game.getWinner());
+				
+				// Play victory or defeat sound based on winner
+				int winner = game.getWinner();
+				if (winner == GameState::PLAYER1) {
+					renderer.playVictorySound(); // Human won
+				} else if (winner == GameState::PLAYER2) {
+					renderer.playDefeatSound(); // AI won (player lost)
+				}
+				// For draw (winner == 0), no sound
+				
 				break;
 			}
 
@@ -172,6 +170,7 @@ int main()
 							{
 								std::cout << "✓ Player moved: "
 										  << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
+								renderer.playPlacePieceSound(); // Play piece placement sound
 								waitingForMove = true;
 								renderer.clearUserMove(); // Limpiar movimiento válido también
 							}
@@ -189,6 +188,7 @@ int main()
 					{
 						renderer.setLastAiMove(aiMove);
 						renderer.addAiTime(game.getLastAIThinkingTime());
+						renderer.playPlacePieceSound(); // Play piece placement sound for AI
 						std::cout << "AI played: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
 						std::cout << "Time: " << game.getLastAIThinkingTime() << "ms" << std::endl;
 						std::cout << "Nodes evaluated: " << game.getLastNodesEvaluated() << std::endl;
@@ -262,6 +262,8 @@ int main()
 							}
 							std::cout << std::endl;
 
+							renderer.playPlacePieceSound(); // Play piece placement sound
+							
 							// IMPORTANTE: Reset para próximo turno
 							renderer.clearSuggestion();
 							renderer.clearUserMove(); // Limpiar movimiento válido también

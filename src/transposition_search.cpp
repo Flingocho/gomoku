@@ -1,34 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   transposition_search.cpp                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+       // NUEVA LÓGICA EFICIENTE: Verificar amenazas del oponente sin iterar
-	bool opponentHasThreats = Evaluator::hasWinningThreats(state, opponent);
-
-	if (opponentHasThreats) {
-		// Evaluar si este movimiento podría ayudar defensivamente
-		// Simulación rápida: aplicar movimiento y re-evaluar amenazas
-		GameState tempState = state;
-		RuleEngine::MoveResult result = RuleEngine::applyMove(tempState, move);
-
-		if (result.success) {
-			bool stillHasThreats = Evaluator::hasWinningThreats(tempState, opponent);
-
-			if (!stillHasThreats) {
-				score += 400000; // SUPERVIVENCIA - neutralizó amenazas
-			} else {
-				score -= 200000; // PARCIAL - aún hay amenazas pero es mejor que nada
-			}
-		} else {
-			score -= 500000; // SUICIDIO - movimiento ilegal con amenazas activas
-		}
-	}                                        +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/14 21:38:31 by jainavas          #+#    #+#             */
-/*   Updated: 2025/09/22 16:34:18 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/transposition_search.hpp"
 #include "../include/debug_analyzer.hpp"
 #include <algorithm>

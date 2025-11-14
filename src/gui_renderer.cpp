@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   gui_renderer.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jainavas <jainavas@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/01 00:00:00 by jainavas          #+#    #+#             */
-/*   Updated: 2025/10/01 22:29:52 by jainavas         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/gui_renderer.hpp"
 #include <iostream>
 #include <sstream>  // NUEVO: Para stringstream en drawGameInfo
@@ -59,6 +47,23 @@ GuiRenderer::GuiRenderer()
     
     window.setFramerateLimit(60);
     std::cout << "GUI Renderer initialized: " << WINDOW_WIDTH << "x" << WINDOW_HEIGHT << std::endl;
+    
+    // Load audio files (OGG format - MP3 not supported by SFML)
+    // Background music - infinite loop
+    if (audioManager.loadMusic("sounds/main_theme.ogg")) {
+        audioManager.playMusic(true); // Loop main theme infinitely
+    }
+    
+    // Sound effects
+    audioManager.loadSound("place_piece", "sounds/place_piece.ogg");
+    audioManager.loadSound("invalid_move", "sounds/invalid_move.ogg");
+    audioManager.loadSound("click_menu", "sounds/click_menu.ogg");
+    audioManager.loadSound("victory", "sounds/victory.ogg");
+    audioManager.loadSound("defeat", "sounds/defeat.ogg");
+    
+    // Set initial volumes
+    audioManager.setMusicVolume(30.0f);  // Background music quieter
+    audioManager.setSoundVolume(70.0f);  // Effects louder
 }
 
 GuiRenderer::~GuiRenderer() {
@@ -244,6 +249,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón VS AI (posición Y: 230)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 && y <= 230 + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 0;
         isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS AI" << std::endl;
@@ -253,6 +259,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón VS Human (posición Y: 230 + 65)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 + buttonSpacing && y <= 230 + buttonSpacing + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 1;
         isColorblindMode = false;  // Resetear modo colorblind
         std::cout << "Seleccionado: VS Human" << std::endl;
@@ -262,6 +269,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón Colorblind Mode (posición Y: 230 + 130)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 + buttonSpacing * 2 && y <= 230 + buttonSpacing * 2 + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 2;
         isColorblindMode = true;  // Activar modo colorblind
         std::cout << "Seleccionado: Colorblind Mode (VS AI)" << std::endl;
@@ -271,6 +279,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón Rust AI (posición Y: 230 + 195)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 + buttonSpacing * 3 && y <= 230 + buttonSpacing * 3 + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 3;
         std::cout << "Seleccionado: Rust AI" << std::endl;
         return;
@@ -279,6 +288,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón Capture Mode (posición Y: 230 + 260) - NUEVO
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 + buttonSpacing * 4 && y <= 230 + buttonSpacing * 4 + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 4;
         isColorblindMode = false;
         std::cout << "Seleccionado: Capture Mode" << std::endl;
@@ -288,12 +298,13 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     // Botón Quit (posición Y: 230 + 325)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 230 + buttonSpacing * 5 && y <= 230 + buttonSpacing * 5 + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play sound on valid button click
         selectedMenuOption = 5;  // ACTUALIZADO índice
         std::cout << "Seleccionado: Quit" << std::endl;
         return;
     }
     
-    // Click fuera de botones
+    // Click fuera de botones - no sound
     selectedMenuOption = -1;
 }
 
@@ -353,6 +364,9 @@ void GuiRenderer::handleGameClick(int x, int y) {
     auto [boardX, boardY] = pixelToBoardPosition(x, y);
     pendingMove = Move(boardX, boardY);
     moveReady = true;
+    
+    // Note: Sound will be played in main.cpp after move validation
+    // (place_piece for valid move, invalid_move for invalid move)
     
     std::cout << "Movimiento capturado: " << char('A' + boardY) << (boardX + 1) << std::endl;
 }
@@ -505,13 +519,13 @@ void GuiRenderer::drawBoard() {
         drawText(coordText, 
                 BOARD_OFFSET_X + j * CELL_SIZE + CELL_SIZE/2 - 6, 
                 BOARD_OFFSET_Y - 25, 
-                16, sf::Color(100, 50, 0));
+                16, sf::Color(220, 220, 220)); // Bright light gray
         
         // Coordenada inferior
         drawText(coordText, 
                 BOARD_OFFSET_X + j * CELL_SIZE + CELL_SIZE/2 - 6, 
                 BOARD_OFFSET_Y + BOARD_SIZE_PX + 8, 
-                16, sf::Color(100, 50, 0));
+                16, sf::Color(220, 220, 220)); // Bright light gray
     }
     
     // Números verticales (1-19)
@@ -522,13 +536,13 @@ void GuiRenderer::drawBoard() {
         drawText(coordText, 
                 BOARD_OFFSET_X - 25, 
                 BOARD_OFFSET_Y + i * CELL_SIZE + CELL_SIZE/2 - 8, 
-                16, sf::Color(100, 50, 0));
+                16, sf::Color(220, 220, 220)); // Bright light gray
         
         // Coordenada derecha
         drawText(coordText, 
                 BOARD_OFFSET_X + BOARD_SIZE_PX + 8, 
                 BOARD_OFFSET_Y + i * CELL_SIZE + CELL_SIZE/2 - 8, 
-                16, sf::Color(100, 50, 0));
+                16, sf::Color(220, 220, 220)); // Bright light gray
     }
 }
 
@@ -715,19 +729,20 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     // Panel lateral derecho con información del juego
     int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
     int panelY = BOARD_OFFSET_Y;
-    int panelWidth = 250;
+    int panelWidth = 280;
+    int panelHeight = 650; // Increased height to fit all content
     
     // 1. Fondo del panel con efectos modernos
     float time = animationClock.getElapsedTime().asSeconds();
     
     // Sombra suave y amplia
-    sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 12, 400 + 12));
+    sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 12, panelHeight + 12));
     panelShadow.setPosition(panelX + 6, panelY + 6);
     panelShadow.setFillColor(sf::Color(0, 0, 0, 80));
     window.draw(panelShadow);
     
     // Fondo translúcido con efecto de cristal
-    sf::RectangleShape panelBg(sf::Vector2f(panelWidth, 400));
+    sf::RectangleShape panelBg(sf::Vector2f(panelWidth, panelHeight));
     panelBg.setPosition(panelX, panelY);
     panelBg.setFillColor(sf::Color(20, 25, 40, 200)); // Azul oscuro translúcido
     
@@ -760,7 +775,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     window.draw(statusTitle);
     
     int yOffset = panelY + 50;
-    int lineHeight = 25;
+    int lineHeight = 22;
     
     // 3. Información básica del juego
     std::string turnInfo = "Turn: " + std::to_string(state.turnCount);
@@ -771,13 +786,21 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Player 1 (O)" : "Player 2 (X)";
     sf::Color playerColor = (state.currentPlayer == GameState::PLAYER1) ? player1Color : player2Color;
     drawText("Player:", panelX + 10, yOffset, 16, sf::Color::White);
-    drawText(currentPlayerStr, panelX + 10, yOffset + lineHeight, 16, playerColor);
-    yOffset += lineHeight * 2 + 10;
+    yOffset += lineHeight;
+    drawText(currentPlayerStr, panelX + 10, yOffset, 16, playerColor);
+    yOffset += lineHeight + 15;
+    
+    // Separador
+    sf::RectangleShape separator1(sf::Vector2f(panelWidth - 20, 2));
+    separator1.setPosition(panelX + 10, yOffset);
+    separator1.setFillColor(sf::Color(100, 100, 100));
+    window.draw(separator1);
+    yOffset += 20;
     
     // NUEVO: Mostrar mensaje de error si está activo
     if (showError && errorTimer.getElapsedTime().asSeconds() < 3.0f) {
         // Fondo rojo para el mensaje de error
-        sf::RectangleShape errorBg(sf::Vector2f(panelWidth - 20, 30));
+        sf::RectangleShape errorBg(sf::Vector2f(panelWidth - 20, 50));
         errorBg.setPosition(panelX + 10, yOffset - 5);
         errorBg.setFillColor(sf::Color(150, 0, 0, 100)); // Rojo semi-transparente
         errorBg.setOutlineThickness(1);
@@ -790,27 +813,28 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         sf::Color errorColor(255, 100, 100, (sf::Uint8)(alpha * 255));
         
         drawText("! " + errorMessage, panelX + 15, yOffset, 14, errorColor);
+        yOffset += 20;
         
         // Coordenada del movimiento inválido si está disponible
         if (invalidMovePosition.isValid()) {
             std::string posText = "Position: ";
             posText += char('A' + invalidMovePosition.y);
             posText += std::to_string(invalidMovePosition.x + 1);
-            drawText(posText, panelX + 15, yOffset + 15, 12, sf::Color(200, 150, 150));
+            drawText(posText, panelX + 15, yOffset, 12, sf::Color(200, 150, 150));
         }
         
-        yOffset += 40;
+        yOffset += 30;
+        
+        // Separador
+        sf::RectangleShape separator2(sf::Vector2f(panelWidth - 20, 2));
+        separator2.setPosition(panelX + 10, yOffset);
+        separator2.setFillColor(sf::Color(100, 100, 100));
+        window.draw(separator2);
+        yOffset += 20;
     }
     
     // NUEVO: Mostrar sugerencia si está activa
     if (showSuggestion && currentSuggestion.isValid()) {
-        // Separador
-        sf::RectangleShape separator(sf::Vector2f(panelWidth - 20, 2));
-        separator.setPosition(panelX + 10, yOffset);
-        separator.setFillColor(sf::Color(100, 100, 100));
-        window.draw(separator);
-        yOffset += 20;
-        
         // Título de sugerencia con icono
         drawText("AI SUGGESTION:", panelX + 10, yOffset, 16, sf::Color(255, 215, 0));
         yOffset += lineHeight + 5;
@@ -825,15 +849,15 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         
         // Nota informativa
         drawText("(You can ignore it)", panelX + 15, yOffset, 11, sf::Color(150, 150, 150));
-        yOffset += lineHeight + 10;
+        yOffset += lineHeight + 15;
+        
+        // Separador
+        sf::RectangleShape separator3(sf::Vector2f(panelWidth - 20, 2));
+        separator3.setPosition(panelX + 10, yOffset);
+        separator3.setFillColor(sf::Color(100, 100, 100));
+        window.draw(separator3);
+        yOffset += 20;
     }
-    
-    // 4. Separador
-    sf::RectangleShape separator(sf::Vector2f(panelWidth - 20, 2));
-    separator.setPosition(panelX + 10, yOffset);
-    separator.setFillColor(sf::Color(100, 100, 100));
-    window.draw(separator);
-    yOffset += 20;
     
     // 5. Capturas
     drawText("CAPTURES:", panelX + 10, yOffset, 16, sf::Color::Yellow);
@@ -843,7 +867,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     std::string humanCaptures = "You: " + std::to_string(state.captures[0]) + "/10";
     drawText(humanCaptures, panelX + 15, yOffset, 14, player1Color);
     if (state.captures[0] >= 8) {
-        drawText("Close!", panelX + 120, yOffset, 14, sf::Color::Red);
+        drawText("Close!", panelX + 150, yOffset, 14, sf::Color::Red);
     }
     yOffset += lineHeight;
     
@@ -851,9 +875,16 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     std::string aiCaptures = "AI: " + std::to_string(state.captures[1]) + "/10";
     drawText(aiCaptures, panelX + 15, yOffset, 14, player2Color);
     if (state.captures[1] >= 8) {
-        drawText("Danger!", panelX + 120, yOffset, 14, sf::Color::Red);
+        drawText("Danger!", panelX + 150, yOffset, 14, sf::Color::Red);
     }
     yOffset += lineHeight + 15;
+    
+    // Separador
+    sf::RectangleShape separator4(sf::Vector2f(panelWidth - 20, 2));
+    separator4.setPosition(panelX + 10, yOffset);
+    separator4.setFillColor(sf::Color(100, 100, 100));
+    window.draw(separator4);
+    yOffset += 20;
     
     // 6. Estadísticas de la IA (si disponibles)
     if (aiTimeMs > 0) {
@@ -1274,6 +1305,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     // Click en "NEW GAME"
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button1Y && y <= button1Y + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play click sound
         selectedMenuOption = 0;
         std::cout << "✓ Seleccionado: Nuevo Juego" << std::endl;
         return;
@@ -1282,6 +1314,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     // Click en "MAIN MENU"
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button2Y && y <= button2Y + buttonHeight) {
+        audioManager.playSound("click_menu"); // Play click sound
         setState(MENU);
         selectedMenuOption = -1;
         std::cout << "✓ Volviendo al menú" << std::endl;
@@ -1369,6 +1402,9 @@ void GuiRenderer::showInvalidMoveError(const Move& move) {
     invalidMovePosition = move;
     showError = true;
     errorTimer.restart();
+    
+    // Play invalid move sound
+    audioManager.playSound("invalid_move");
 }
 
 // NUEVO: Método para limpiar error de movimiento inválido
