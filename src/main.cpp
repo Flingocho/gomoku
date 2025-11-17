@@ -1,8 +1,8 @@
-#include "../include/game_engine.hpp"
-#include "../include/gui_renderer.hpp"
-#include "../include/game_types.hpp"
-#include "../include/debug_analyzer.hpp"
-#include "../include/suggestion_engine.hpp" // NUEVO
+#include "../include/core/game_engine.hpp"
+#include "../include/gui/gui_renderer.hpp"
+#include "../include/core/game_types.hpp"
+#include "../include/debug/debug_analyzer.hpp"
+#include "../include/ai/suggestion_engine.hpp" // NUEVO
 #include <iostream>
 #include <chrono>
 
@@ -39,6 +39,7 @@ int main()
 	bool gameActive = true;
 	Move currentSuggestion(-1, -1);
 	bool suggestionCalculated = false;
+	bool menuStateInitialized = false; // Flag para resetear solo una vez al entrar al menú
 
 	while (renderer.isWindowOpen() && gameActive)
 	{
@@ -50,6 +51,17 @@ int main()
 		{
 		case GuiRenderer::MENU:
 		{
+			// IMPORTANTE: Resetear estado de sugerencias SOLO UNA VEZ al entrar al menú
+			if (!menuStateInitialized) {
+				suggestionCalculated = false;
+				currentSuggestion = Move(-1, -1);
+				renderer.clearSuggestion();
+				renderer.setWinningLine(std::vector<Move>()); // Limpiar línea ganadora
+				renderer.clearInvalidMoveError(); // Limpiar errores
+				menuStateInitialized = true;
+				std::cout << "✓ Menu state initialized and cleaned" << std::endl;
+			}
+			
 			// Mostrar menú y esperar selección
 			GuiRenderer::MenuOption choice = renderer.showMenuAndGetChoice();
 
@@ -62,6 +74,7 @@ int main()
 				renderer.setState(GuiRenderer::PLAYING);
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
+				menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
 			}
 			else if (choice == GuiRenderer::VS_HUMAN)
 			{
@@ -72,6 +85,7 @@ int main()
 				renderer.setState(GuiRenderer::PLAYING);
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
+				menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
 			}
 		else if (choice == GuiRenderer::COLORBLIND)
 		{
@@ -82,6 +96,7 @@ int main()
 			renderer.setState(GuiRenderer::PLAYING);
 			suggestionCalculated = false;
 			currentSuggestion = Move(-1, -1);
+			menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
 		}
 		else if (choice == GuiRenderer::RUST_AI)
 		{
@@ -93,16 +108,7 @@ int main()
 			renderer.setState(GuiRenderer::PLAYING);
 			suggestionCalculated = false;
 			currentSuggestion = Move(-1, -1);
-		}
-		else if (choice == GuiRenderer::CAPTURE_MODE)
-		{
-			std::cout << "Starting Capture Mode vs AI (15 captures to win)" << std::endl;
-			game.setGameMode(GameMode::CAPTURE_MODE);
-			game.newGame();
-			renderer.resetAiStats();
-			renderer.setState(GuiRenderer::PLAYING);
-			suggestionCalculated = false;
-			currentSuggestion = Move(-1, -1);
+			menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
 		}
 		else if (choice == GuiRenderer::QUIT)
 		{
@@ -138,10 +144,10 @@ int main()
 			}
 
 			// DIFERENTES COMPORTAMIENTOS SEGÚN MODO
-			if (game.getGameMode() == GameMode::VS_AI || game.getGameMode() == GameMode::CAPTURE_MODE)
+			if (game.getGameMode() == GameMode::VS_AI)
 			{
 				// ============================================
-				// MODO VS AI y CAPTURE_MODE (mismo comportamiento)
+				// MODO VS AI
 				// ============================================
 				if (state.currentPlayer == GameState::PLAYER1)
 				{
@@ -289,8 +295,12 @@ int main()
             int selectedOption = renderer.getSelectedMenuOption();
             if (selectedOption == 0)
             {
-                std::cout << "\n=== REINICIANDO JUEGO ===" << std::endl;				// Reiniciar el juego
+                std::cout << "\n=== REINICIANDO JUEGO ===" << std::endl;
+				
+				// Reiniciar el juego
 				game.newGame();
+				
+				// Limpiar todo el estado visual
 				renderer.clearSuggestion();
 				renderer.clearInvalidMoveError();
 				renderer.resetAiStats();
@@ -301,6 +311,7 @@ int main()
 				// Resetear variables de sugerencias (si usas modo vs humano)
 				suggestionCalculated = false;
 				currentSuggestion = Move(-1, -1);
+				menuStateInitialized = false; // IMPORTANTE: Reset flag para cuando vuelva al menú
 
 				std::cout << "Nuevo juego iniciado" << std::endl;
 
