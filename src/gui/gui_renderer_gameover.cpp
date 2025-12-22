@@ -89,54 +89,95 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     }
     
     // ============================================
-    // PASO 2.6: Mostrar animación apropiada ENCIMA del highlighter
+    // PASO 2.6: Mostrar animación apropiada ENCIMA del highlighter (si está activa)
     // ============================================
-    if (player1Wins && !winAnimationFrames.empty()) {
-        // VICTORIA - Mostrar animación de victoria
-        // Actualizar frame de animación (cambiar cada 50ms para 115 frames - animación fluida)
-        if (winAnimationClock.getElapsedTime().asMilliseconds() > 50) {
-            currentWinFrame = (currentWinFrame + 1) % winAnimationFrames.size();
-            winAnimationSprite.setTexture(winAnimationFrames[currentWinFrame]);
-            winAnimationClock.restart();
+    if (showGameOverAnimation) {
+        if (player1Wins && !winAnimationFrames.empty()) {
+            // VICTORIA - Mostrar animación de victoria
+            // Actualizar frame de animación (cambiar cada 50ms para 115 frames - animación fluida)
+            if (winAnimationClock.getElapsedTime().asMilliseconds() > 50) {
+                currentWinFrame = (currentWinFrame + 1) % winAnimationFrames.size();
+                winAnimationSprite.setTexture(winAnimationFrames[currentWinFrame]);
+                winAnimationClock.restart();
+            }
+            
+            // Calcular posición centrada con el tablero
+            sf::Vector2u frameSize = winAnimationFrames[currentWinFrame].getSize();
+            float scale = winAnimationSprite.getScale().x;
+            float frameWidth = frameSize.x * scale;
+            float frameHeight = frameSize.y * scale;
+            
+            // Posición: centrado horizontalmente y verticalmente con el tablero
+            float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
+            float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
+            
+            winAnimationSprite.setPosition(gifX, gifY);
+            winAnimationSprite.setColor(sf::Color::White);
+            
+            window.draw(winAnimationSprite);
+        } else if (!player1Wins && !defeatAnimationFrames.empty()) {
+            // DERROTA - Mostrar animación de derrota
+            // Actualizar frame de animación (cambiar cada 50ms para animación más fluida - 41 frames)
+            if (defeatAnimationClock.getElapsedTime().asMilliseconds() > 50) {
+                currentDefeatFrame = (currentDefeatFrame + 1) % defeatAnimationFrames.size();
+                defeatAnimationSprite.setTexture(defeatAnimationFrames[currentDefeatFrame]);
+                defeatAnimationClock.restart();
+            }
+            
+            // Calcular posición centrada con el tablero
+            sf::Vector2u frameSize = defeatAnimationFrames[currentDefeatFrame].getSize();
+            float scale = defeatAnimationSprite.getScale().x;
+            float frameWidth = frameSize.x * scale;
+            float frameHeight = frameSize.y * scale;
+            
+            // Posición: centrado horizontalmente y verticalmente con el tablero
+            float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
+            float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
+            
+            defeatAnimationSprite.setPosition(gifX, gifY);
+            defeatAnimationSprite.setColor(sf::Color::White);
+            
+            window.draw(defeatAnimationSprite);
         }
         
-        // Calcular posición centrada con el tablero
-        sf::Vector2u frameSize = winAnimationFrames[currentWinFrame].getSize();
-        float scale = winAnimationSprite.getScale().x;
-        float frameWidth = frameSize.x * scale;
-        float frameHeight = frameSize.y * scale;
+        // ============================================
+        // PASO 2.7: Botón NEXT para saltar animación
+        // ============================================
+        nextButtonWidth = 120;
+        nextButtonHeight = 45;
+        nextButtonX = BOARD_OFFSET_X + (BOARD_SIZE_PX - nextButtonWidth) / 2;
+        nextButtonY = BOARD_OFFSET_Y + BOARD_SIZE_PX - nextButtonHeight - 30;
         
-        // Posición: centrado horizontalmente y verticalmente con el tablero
-        float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
-        float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
+        // Fondo semi-transparente para el botón
+        sf::RectangleShape buttonBg(sf::Vector2f(nextButtonWidth, nextButtonHeight));
+        buttonBg.setPosition(nextButtonX, nextButtonY);
+        buttonBg.setFillColor(sf::Color(40, 40, 40, 220));
+        buttonBg.setOutlineThickness(2);
         
-        winAnimationSprite.setPosition(gifX, gifY);
-        winAnimationSprite.setColor(sf::Color::White);
-        
-        window.draw(winAnimationSprite);
-    } else if (!player1Wins && !defeatAnimationFrames.empty()) {
-        // DERROTA - Mostrar animación de derrota
-        // Actualizar frame de animación (cambiar cada 50ms para animación más fluida - 41 frames)
-        if (defeatAnimationClock.getElapsedTime().asMilliseconds() > 50) {
-            currentDefeatFrame = (currentDefeatFrame + 1) % defeatAnimationFrames.size();
-            defeatAnimationSprite.setTexture(defeatAnimationFrames[currentDefeatFrame]);
-            defeatAnimationClock.restart();
+        // Hover effect
+        bool nextHover = (hoveredMenuOption == 10);  // Usamos 10 para el botón NEXT
+        if (nextHover) {
+            buttonBg.setOutlineColor(sf::Color(255, 215, 0));  // Dorado en hover
+            buttonBg.setFillColor(sf::Color(60, 60, 60, 240));
+        } else {
+            buttonBg.setOutlineColor(sf::Color(200, 200, 200));
         }
+        window.draw(buttonBg);
         
-        // Calcular posición centrada con el tablero
-        sf::Vector2u frameSize = defeatAnimationFrames[currentDefeatFrame].getSize();
-        float scale = defeatAnimationSprite.getScale().x;
-        float frameWidth = frameSize.x * scale;
-        float frameHeight = frameSize.y * scale;
+        // Texto del botón
+        sf::Text nextText;
+        nextText.setFont(font);
+        nextText.setString("NEXT");
+        nextText.setCharacterSize(20);
+        nextText.setFillColor(nextHover ? sf::Color(255, 215, 0) : sf::Color::White);
         
-        // Posición: centrado horizontalmente y verticalmente con el tablero
-        float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
-        float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
-        
-        defeatAnimationSprite.setPosition(gifX, gifY);
-        defeatAnimationSprite.setColor(sf::Color::White);
-        
-        window.draw(defeatAnimationSprite);
+        // Centrar texto en el botón
+        sf::FloatRect textBounds = nextText.getLocalBounds();
+        nextText.setPosition(
+            nextButtonX + (nextButtonWidth - textBounds.width) / 2 - textBounds.left,
+            nextButtonY + (nextButtonHeight - textBounds.height) / 2 - textBounds.top
+        );
+        window.draw(nextText);
     }
     
     // ============================================
@@ -395,6 +436,15 @@ void GuiRenderer::handleMouseMove(int x, int y) {
         
         hoveredMenuOption = -1;
         
+        // Check botón NEXT (solo si la animación está activa)
+        if (showGameOverAnimation && nextButtonWidth > 0) {
+            if (x >= nextButtonX && x <= nextButtonX + nextButtonWidth && 
+                y >= nextButtonY && y <= nextButtonY + nextButtonHeight) {
+                hoveredMenuOption = 10;  // NEXT button
+                return;
+            }
+        }
+        
         // Check botón NEW GAME
         if (x >= buttonX && x <= buttonX + buttonWidth && 
             y >= button1Y && y <= button1Y + buttonHeight) {
@@ -411,6 +461,16 @@ void GuiRenderer::handleMouseMove(int x, int y) {
 void GuiRenderer::handleGameOverClick(int x, int y) {
     if (!gameOverButtonsPositionValid) return;
     
+    // Check click en botón NEXT (saltar animación)
+    if (showGameOverAnimation && nextButtonWidth > 0) {
+        if (x >= nextButtonX && x <= nextButtonX + nextButtonWidth && 
+            y >= nextButtonY && y <= nextButtonY + nextButtonHeight) {
+            audioManager.playSound("click_menu");
+            showGameOverAnimation = false;  // Ocultar animación
+            return;
+        }
+    }
+    
     int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
     int panelWidth = 280;
     
@@ -425,6 +485,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button1Y && y <= button1Y + buttonHeight) {
         audioManager.playSound("click_menu");
+        showGameOverAnimation = true;  // Reset para la próxima partida
         selectedMenuOption = 0;
         return;
     }
@@ -433,6 +494,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button2Y && y <= button2Y + buttonHeight) {
         audioManager.playSound("click_menu");
+        showGameOverAnimation = true;  // Reset para la próxima partida
         clearSuggestion();
         clearInvalidMoveError();
         setWinningLine(std::vector<Move>());

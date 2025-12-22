@@ -91,7 +91,9 @@ public:
 	// State management
 	void setState(AppState newState) { 
         currentState = newState; 
-        if (newState != GAME_OVER) {
+        if (newState == GAME_OVER) {
+            showGameOverAnimation = true;  // Mostrar animación al entrar en GAME_OVER
+        } else {
             gameOverButtonsPositionValid = false; // Reset cuando salimos de game over
         }
     }
@@ -206,6 +208,10 @@ private:
 	int gameOverButtonsY;
 	bool gameOverButtonsPositionValid;
 	bool isColorblindMode;	// Flag para el modo colorblind
+	
+	// Animation skip control
+	bool showGameOverAnimation;  // Si mostrar la animación de victoria/derrota
+	int nextButtonX, nextButtonY, nextButtonWidth, nextButtonHeight;  // Posición del botón NEXT
 	
 	// Options state
 	bool debugEnabled;

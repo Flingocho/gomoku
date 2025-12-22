@@ -34,6 +34,8 @@ GuiRenderer::GuiRenderer()
       gameOverButtonsY(0),
       gameOverButtonsPositionValid(false),
       isColorblindMode(false),
+      showGameOverAnimation(true),
+      nextButtonX(0), nextButtonY(0), nextButtonWidth(0), nextButtonHeight(0),
       debugEnabled(false),
       soundEnabled(true),
       musicEnabled(true),
@@ -174,6 +176,7 @@ void GuiRenderer::processEvents() {
                         clearSuggestion();
                         clearInvalidMoveError();
                         setWinningLine(std::vector<Move>());
+                        showGameOverAnimation = true;  // Reset para la próxima partida
                         selectedMenuOption = -1;
                         setState(MENU);
                         std::cout << "✓ Returned to menu - all state cleaned" << std::endl;
