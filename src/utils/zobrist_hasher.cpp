@@ -13,6 +13,8 @@ ZobristHasher::ZobristHasher() {
     initializeZobristTable();
 }
 
+ZobristHasher::~ZobristHasher() {}
+
 void ZobristHasher::initializeZobristTable() {
     // Inicializar generador aleatorio una sola vez
     if (!rngInitialized) {

@@ -1,0 +1,86 @@
+# Suppressions for external library "leaks" (not real leaks)
+{
+   X11_locale_cache
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so*
+}
+{
+   SFML_window_init
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libsfml-window.so*
+}
+{
+   SFML_graphics_init
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libsfml-graphics.so*
+}
+{
+   SFML_audio_init
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libsfml-audio.so*
+}
+{
+   NVIDIA_driver_buffers
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libnvidia-glcore.so*
+}
+{
+   OpenGL_driver
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so*
+}
+{
+   FontConfig
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libfontconfig.so*
+}
+{
+   FreeType
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libfreetype.so*
+}
+# NVIDIA driver bugs - realloc with size 0
+{
+   NVIDIA_realloc_zero_1
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libnvidia-glcore.so*
+}
+{
+   NVIDIA_realloc_zero_2
+   Memcheck:Addr4
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libnvidia-glcore.so*
+}
+{
+   NVIDIA_realloc_zero_3
+   Memcheck:Value8
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libnvidia-glcore.so*
+}
+{
+   NVIDIA_GLX_1
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so*
+}
+{
+   NVIDIA_GLX_2
+   Memcheck:Addr4
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so*
+}
+{
+   NVIDIA_GLX_3
+   Memcheck:Value8
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so*
+}

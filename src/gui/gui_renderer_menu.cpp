@@ -16,10 +16,11 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     
     // Este método será non-blocking, la elección se captura en handleMenuClick
     if (selectedMenuOption == 0) return VS_AI;
-    if (selectedMenuOption == 1) return VS_HUMAN; 
+    if (selectedMenuOption == 1) return VS_HUMAN;
     if (selectedMenuOption == 2) return COLORBLIND;
     if (selectedMenuOption == 3) return RUST_AI;
-    if (selectedMenuOption == 4) return QUIT;
+    if (selectedMenuOption == 4) return OPTIONS_MENU;
+    if (selectedMenuOption == 5) return QUIT;
     
     return NONE; // Sin selección aún
 }
@@ -44,7 +45,6 @@ void GuiRenderer::renderMenu() {
     titleText.setCharacterSize(titleSize);
     titleText.setFillColor(sf::Color::White);
     
-    // Centrar usando setOrigin - más preciso
     sf::FloatRect titleBounds = titleText.getLocalBounds();
     titleText.setOrigin(titleBounds.width / 2.0f, 0);
     titleText.setPosition(WINDOW_WIDTH / 2.0f, 100);
@@ -52,7 +52,7 @@ void GuiRenderer::renderMenu() {
     // Efecto de brillo pulsante
     float time = animationClock.getElapsedTime().asSeconds();
     float pulse = sin(time * 2.0f) * 0.3f + 1.0f;
-    sf::Color glowColor = sf::Color(255, 215, 0, static_cast<sf::Uint8>(pulse * 100)); // Dorado
+    sf::Color glowColor = sf::Color(255, 215, 0, static_cast<sf::Uint8>(pulse * 100));
     
     drawGlowEffect(titleText, glowColor);
     window.draw(titleText);
@@ -74,35 +74,91 @@ void GuiRenderer::renderMenu() {
     subtitleText.setPosition(WINDOW_WIDTH / 2.0f, 150);
     window.draw(subtitleText);
     
-    // 2. Botones del menú (centrados con precisión flotante)
+    // 3. Botones del menú
     int buttonWidth = 250;
-    int buttonHeight = 50;
+    int buttonHeight = 45;
     int buttonX = WINDOW_WIDTH/2.0f - buttonWidth/2.0f;
-    int buttonSpacing = 65;
+    int buttonSpacing = 55;
     
-    // Usar hoveredMenuOption para efectos visuales
-    bool vsAiHover = (hoveredMenuOption == 0);
-    drawButton("Play vs AI", buttonX, 230, buttonWidth, buttonHeight, vsAiHover);
+    drawButton("Play vs AI", buttonX, 220, buttonWidth, buttonHeight, hoveredMenuOption == 0);
+    drawButton("Play vs Human", buttonX, 220 + buttonSpacing, buttonWidth, buttonHeight, hoveredMenuOption == 1);
+    drawButton("Colorblind Mode", buttonX, 220 + buttonSpacing * 2, buttonWidth, buttonHeight, hoveredMenuOption == 2);
+    drawButton("Rust AI", buttonX, 220 + buttonSpacing * 3, buttonWidth, buttonHeight, hoveredMenuOption == 3);
+    drawButton("Options", buttonX, 220 + buttonSpacing * 4, buttonWidth, buttonHeight, hoveredMenuOption == 4);
+    drawButton("Exit", buttonX, 220 + buttonSpacing * 5, buttonWidth, buttonHeight, hoveredMenuOption == 5);
     
-    bool vsHumanHover = (hoveredMenuOption == 1);
-    drawButton("Play vs Human", buttonX, 230 + buttonSpacing, buttonWidth, buttonHeight, vsHumanHover);
-    
-    bool colorblindHover = (hoveredMenuOption == 2);
-    drawButton("Colorblind Mode", buttonX, 230 + buttonSpacing * 2, buttonWidth, buttonHeight, colorblindHover);
-    
-    bool rustAiHover = (hoveredMenuOption == 3);
-    drawButton("Rust AI", buttonX, 230 + buttonSpacing * 3, buttonWidth, buttonHeight, rustAiHover);
-    
-    bool quitHover = (hoveredMenuOption == 4);
-    drawButton("Exit", buttonX, 230 + buttonSpacing * 4, buttonWidth, buttonHeight, quitHover);
-    
-    // 3. Información adicional (compacta)
+    // 4. Información adicional
     drawText("Features:", 50, 680, 16, sf::Color::Yellow);
     drawText("- Zobrist Hashing + Alpha-Beta pruning", 70, 705, 14, sf::Color::White);
     drawText("- Adaptive depth + Complete rules", 70, 725, 14, sf::Color::White);
     
-    // 4. Controles
+    // 5. Controles
     drawText("ESC = Exit", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
+}
+
+// ============================================================================
+// OPTIONS MENU RENDERING
+// ============================================================================
+
+void GuiRenderer::renderOptions() {
+    drawModernBackground();
+    
+    // Título
+    sf::Text titleText;
+    if (font.getInfo().family != "") {
+        titleText.setFont(font);
+    }
+    titleText.setString("OPTIONS");
+    titleText.setCharacterSize(32);
+    titleText.setFillColor(sf::Color::White);
+    sf::FloatRect titleBounds = titleText.getLocalBounds();
+    titleText.setOrigin(titleBounds.width / 2.0f, 0);
+    titleText.setPosition(WINDOW_WIDTH / 2.0f, 80);
+    window.draw(titleText);
+    
+    int buttonWidth = 300;
+    int buttonHeight = 40;
+    int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+    int startY = 150;
+    int spacing = 50;
+    
+    // === MUSIC SECTION ===
+    drawText("=== MUSIC ===", WINDOW_WIDTH/2 - 50, startY - 25, 16, sf::Color::Yellow);
+    
+    // Music toggle
+    std::string musicText = musicEnabled ? "Music: ON" : "Music: OFF";
+    drawButton(musicText, buttonX, startY, buttonWidth, buttonHeight, hoveredMenuOption == 0);
+    
+    // Music volume
+    std::string musicVolText = "Music Vol: " + std::to_string((int)musicVolume) + "%";
+    drawText(musicVolText, WINDOW_WIDTH/2 - 55, startY + spacing, 14, sf::Color::White);
+    drawButton("-", buttonX, startY + spacing + 25, 60, 35, hoveredMenuOption == 1);
+    drawButton("+", buttonX + buttonWidth - 60, startY + spacing + 25, 60, 35, hoveredMenuOption == 2);
+    
+    // === SOUND FX SECTION ===
+    drawText("=== SOUND FX ===", WINDOW_WIDTH/2 - 60, startY + spacing * 2 + 35, 16, sf::Color::Yellow);
+    
+    // Sound FX toggle
+    std::string soundText = soundEnabled ? "Sound FX: ON" : "Sound FX: OFF";
+    drawButton(soundText, buttonX, startY + spacing * 3, buttonWidth, buttonHeight, hoveredMenuOption == 3);
+    
+    // FX volume
+    std::string fxVolText = "FX Vol: " + std::to_string((int)soundVolume) + "%";
+    drawText(fxVolText, WINDOW_WIDTH/2 - 40, startY + spacing * 4, 14, sf::Color::White);
+    drawButton("-", buttonX, startY + spacing * 4 + 25, 60, 35, hoveredMenuOption == 4);
+    drawButton("+", buttonX + buttonWidth - 60, startY + spacing * 4 + 25, 60, 35, hoveredMenuOption == 5);
+    
+    // === DEBUG SECTION ===
+    drawText("=== DEBUG ===", WINDOW_WIDTH/2 - 50, startY + spacing * 5 + 35, 16, sf::Color::Yellow);
+    
+    std::string debugText = debugEnabled ? "Debug Mode: ON" : "Debug Mode: OFF";
+    drawButton(debugText, buttonX, startY + spacing * 6 + 10, buttonWidth, buttonHeight, hoveredMenuOption == 6);
+    
+    // Back button
+    drawButton("Back to Menu", buttonX, startY + spacing * 7 + 30, buttonWidth, buttonHeight, hoveredMenuOption == 7);
+    
+    // Help text
+    drawText("ESC = Back", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
 }
 
 // ============================================================================
@@ -111,58 +167,141 @@ void GuiRenderer::renderMenu() {
 
 void GuiRenderer::handleMenuClick(int x, int y) {
     int buttonWidth = 250;
-    int buttonHeight = 50;
+    int buttonHeight = 45;
     int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
-    int buttonSpacing = 65;
+    int buttonSpacing = 55;
     
-    // Botón VS AI (posición Y: 230)
+    // Botón VS AI
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 230 && y <= 230 + buttonHeight) {
+        y >= 220 && y <= 220 + buttonHeight) {
         audioManager.playSound("click_menu");
         selectedMenuOption = 0;
         isColorblindMode = false;
-        std::cout << "Seleccionado: VS AI" << std::endl;
         return;
     }
     
-    // Botón VS Human (posición Y: 230 + 65)
+    // Botón VS Human (con sugerencias)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 230 + buttonSpacing && y <= 230 + buttonSpacing + buttonHeight) {
+        y >= 220 + buttonSpacing && y <= 220 + buttonSpacing + buttonHeight) {
         audioManager.playSound("click_menu");
         selectedMenuOption = 1;
         isColorblindMode = false;
-        std::cout << "Seleccionado: VS Human" << std::endl;
         return;
     }
     
-    // Botón Colorblind Mode (posición Y: 230 + 130)
+    // Botón Colorblind Mode
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 230 + buttonSpacing * 2 && y <= 230 + buttonSpacing * 2 + buttonHeight) {
+        y >= 220 + buttonSpacing * 2 && y <= 220 + buttonSpacing * 2 + buttonHeight) {
         audioManager.playSound("click_menu");
         selectedMenuOption = 2;
         isColorblindMode = true;
-        std::cout << "Seleccionado: Colorblind Mode (VS AI)" << std::endl;
         return;
     }
     
-    // Botón Rust AI (posición Y: 230 + 195)
+    // Botón Rust AI
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 230 + buttonSpacing * 3 && y <= 230 + buttonSpacing * 3 + buttonHeight) {
+        y >= 220 + buttonSpacing * 3 && y <= 220 + buttonSpacing * 3 + buttonHeight) {
         audioManager.playSound("click_menu");
         selectedMenuOption = 3;
-        std::cout << "Seleccionado: Rust AI" << std::endl;
         return;
     }
     
-    // Botón Quit (posición Y: 230 + 260)
+    // Botón Options
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= 230 + buttonSpacing * 4 && y <= 230 + buttonSpacing * 4 + buttonHeight) {
+        y >= 220 + buttonSpacing * 4 && y <= 220 + buttonSpacing * 4 + buttonHeight) {
         audioManager.playSound("click_menu");
         selectedMenuOption = 4;
-        std::cout << "Seleccionado: Quit" << std::endl;
         return;
     }
     
-    // Click fuera de botones
+    // Botón Quit
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= 220 + buttonSpacing * 5 && y <= 220 + buttonSpacing * 5 + buttonHeight) {
+        audioManager.playSound("click_menu");
+        selectedMenuOption = 5;
+        return;
+    }
+    
     selectedMenuOption = -1;
+}
+
+// ============================================================================
+// OPTIONS CLICK HANDLING
+// ============================================================================
+
+void GuiRenderer::handleOptionsClick(int x, int y) {
+    int buttonWidth = 300;
+    int buttonHeight = 40;
+    int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+    int startY = 150;
+    int spacing = 50;
+    
+    // Music toggle
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= startY && y <= startY + buttonHeight) {
+        audioManager.playSound("click_menu");
+        toggleMusic();
+        return;
+    }
+    
+    // Music volume down
+    if (x >= buttonX && x <= buttonX + 60 && 
+        y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+        audioManager.playSound("click_menu");
+        musicVolume = std::max(0.0f, musicVolume - 10.0f);
+        audioManager.setMusicVolume(musicEnabled ? musicVolume : 0);
+        return;
+    }
+    
+    // Music volume up
+    if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
+        y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+        audioManager.playSound("click_menu");
+        musicVolume = std::min(100.0f, musicVolume + 10.0f);
+        audioManager.setMusicVolume(musicEnabled ? musicVolume : 0);
+        return;
+    }
+    
+    // Sound FX toggle
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= startY + spacing * 3 && y <= startY + spacing * 3 + buttonHeight) {
+        audioManager.playSound("click_menu");
+        toggleSound();
+        return;
+    }
+    
+    // FX volume down
+    if (x >= buttonX && x <= buttonX + 60 && 
+        y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+        audioManager.playSound("click_menu");
+        soundVolume = std::max(0.0f, soundVolume - 10.0f);
+        audioManager.setSoundVolume(soundEnabled ? soundVolume : 0);
+        return;
+    }
+    
+    // FX volume up
+    if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
+        y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+        audioManager.playSound("click_menu");
+        soundVolume = std::min(100.0f, soundVolume + 10.0f);
+        audioManager.setSoundVolume(soundEnabled ? soundVolume : 0);
+        return;
+    }
+    
+    // Debug toggle
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= startY + spacing * 6 + 10 && y <= startY + spacing * 6 + 10 + buttonHeight) {
+        audioManager.playSound("click_menu");
+        toggleDebug();
+        return;
+    }
+    
+    // Back button
+    if (x >= buttonX && x <= buttonX + buttonWidth && 
+        y >= startY + spacing * 7 + 30 && y <= startY + spacing * 7 + 30 + buttonHeight) {
+        audioManager.playSound("click_menu");
+        setState(MENU);
+        selectedMenuOption = -1;
+        return;
+    }
 }

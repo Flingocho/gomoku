@@ -1,15 +1,31 @@
 // ===============================================
 // AI Engine - Suggestion Engine Module
 // ===============================================
-// Handles: Quick suggestions for hotseat mode
-// Dependencies: RuleEngine
+// Handles: Move suggestions using the main AI
+// Dependencies: RuleEngine, AI
 // ===============================================
 
 #include "../../include/ai/suggestion_engine.hpp"
 #include <algorithm>
 #include <limits>
+#include <iostream>
 
-Move SuggestionEngine::getSuggestion(const GameState& state) {
+Move SuggestionEngine::getSuggestion(const GameState& state, int depth) {
+    // Usar la IA principal con profundidad especificada
+    AI suggestionAI(depth);
+    
+    // Obtener el mejor movimiento de la IA
+    Move bestMove = suggestionAI.getBestMove(state);
+    
+    if (bestMove.isValid()) {
+        return bestMove;
+    }
+    
+    // Fallback a sugerencia rápida si algo falla
+    return getQuickSuggestion(state);
+}
+
+Move SuggestionEngine::getQuickSuggestion(const GameState& state) {
     std::vector<Move> candidates = generateCandidates(state);
     
     if (candidates.empty()) {

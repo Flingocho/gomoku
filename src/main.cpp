@@ -2,345 +2,249 @@
 #include "../include/gui/gui_renderer.hpp"
 #include "../include/core/game_types.hpp"
 #include "../include/debug/debug_analyzer.hpp"
-#include "../include/ai/suggestion_engine.hpp" // NUEVO
+#include "../include/ai/suggestion_engine.hpp"
 #include <iostream>
 #include <chrono>
 
 int main()
 {
-	// TERMINAL: Solo debug/info - mantiene funcionalidad actual
 	std::cout << "=== GOMOKU AI WITH ZOBRIST HASHING ===" << std::endl;
-	std::cout << "Initializing optimizations..." << std::endl;
+	std::cout << "Initializing..." << std::endl;
 
-	// Inicialización del sistema (igual que antes)
+	// Inicialización del sistema
 	GameState::initializeHasher();
-	std::cout << "✓ Zobrist hasher initialized" << std::endl;
 
-	g_debugAnalyzer = new DebugAnalyzer(DebugAnalyzer::DEBUG_HEURISTIC);
+	g_debugAnalyzer = new DebugAnalyzer(DebugAnalyzer::DEBUG_OFF);
 	g_debugAnalyzer->enableFileLogging("gomoku_debug.log");
-	std::cout << "✓ Initializing debug system..." << std::endl;
 
 	GameEngine game;
-	std::cout << "✓ Game engine initialized" << std::endl;
-
 	GuiRenderer renderer;
-	std::cout << "✓ Graphical interface initialized" << std::endl;
 
-	std::cout << "\n=== ACTIVE OPTIMIZATIONS ===" << std::endl;
-	std::cout << "• Zobrist Hashing: ENABLED (Incremental O(1) Hash)" << std::endl;
-	std::cout << "• Transposition Table: ENABLED (64MB cache)" << std::endl;
-	std::cout << "• Move Ordering: ENABLED (Smart ordering)" << std::endl;
-	std::cout << "• Alpha-Beta Pruning: ENABLED (Aggressive pruning)" << std::endl;
-	std::cout << "Expecting ~50-100x speed improvement..." << std::endl;
-	std::cout << "========================================\n"
-			  << std::endl;
+	std::cout << "✓ Game ready\n" << std::endl;
 
-	// Variables para modo hotseat
+	// Variables de control
 	bool gameActive = true;
-	Move currentSuggestion(-1, -1);
-	bool suggestionCalculated = false;
-	bool menuStateInitialized = false; // Flag para resetear solo una vez al entrar al menú
+	bool menuStateInitialized = false;
 
 	while (renderer.isWindowOpen() && gameActive)
 	{
-		// Procesar eventos de ventana
 		renderer.processEvents();
 
-		// State machine principal
 		switch (renderer.getState())
 		{
 		case GuiRenderer::MENU:
 		{
-			// IMPORTANTE: Resetear estado de sugerencias SOLO UNA VEZ al entrar al menú
 			if (!menuStateInitialized) {
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
 				renderer.clearSuggestion();
-				renderer.setWinningLine(std::vector<Move>()); // Limpiar línea ganadora
-				renderer.clearInvalidMoveError(); // Limpiar errores
+				renderer.setWinningLine(std::vector<Move>());
+				renderer.clearInvalidMoveError();
 				menuStateInitialized = true;
-				std::cout << "✓ Menu state initialized and cleaned" << std::endl;
 			}
 			
-			// Mostrar menú y esperar selección
 			GuiRenderer::MenuOption choice = renderer.showMenuAndGetChoice();
 
 			if (choice == GuiRenderer::VS_AI)
 			{
 				std::cout << "Starting game vs AI" << std::endl;
 				game.setGameMode(GameMode::VS_AI);
+				game.setAiImplementation(CPP_IMPLEMENTATION);
 				game.newGame();
 				renderer.resetAiStats();
 				renderer.setState(GuiRenderer::PLAYING);
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
-				menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
+				menuStateInitialized = false;
 			}
 			else if (choice == GuiRenderer::VS_HUMAN)
 			{
-				std::cout << "Starting game vs Human (hotseat with suggestions)" << std::endl;
+				std::cout << "Starting game vs Human (with AI suggestions)" << std::endl;
 				game.setGameMode(GameMode::VS_HUMAN_SUGGESTED);
 				game.newGame();
 				renderer.resetAiStats();
 				renderer.setState(GuiRenderer::PLAYING);
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
-				menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
+				menuStateInitialized = false;
 			}
-		else if (choice == GuiRenderer::COLORBLIND)
-		{
-			std::cout << "Starting Colorblind Mode vs AI (same color pieces)" << std::endl;
-			game.setGameMode(GameMode::VS_AI); // Misma lógica que VS_AI pero con colores iguales
-			game.newGame();
-			renderer.resetAiStats();
-			renderer.setState(GuiRenderer::PLAYING);
-			suggestionCalculated = false;
-			currentSuggestion = Move(-1, -1);
-			menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
-		}
-		else if (choice == GuiRenderer::RUST_AI)
-		{
-			std::cout << "Starting game vs Rust AI" << std::endl;
-			game.setGameMode(GameMode::VS_AI);
-			game.setAiImplementation(RUST_IMPLEMENTATION); // Usar implementación Rust
-			game.newGame();
-			renderer.resetAiStats();
-			renderer.setState(GuiRenderer::PLAYING);
-			suggestionCalculated = false;
-			currentSuggestion = Move(-1, -1);
-			menuStateInitialized = false; // Reset flag para próxima vez que vuelva al menú
-		}
-		else if (choice == GuiRenderer::QUIT)
-		{
-			gameActive = false;
+			else if (choice == GuiRenderer::COLORBLIND)
+			{
+				std::cout << "Starting Colorblind Mode vs AI" << std::endl;
+				game.setGameMode(GameMode::VS_AI);
+				game.setAiImplementation(CPP_IMPLEMENTATION);
+				game.newGame();
+				renderer.resetAiStats();
+				renderer.setState(GuiRenderer::PLAYING);
+				menuStateInitialized = false;
+			}
+			else if (choice == GuiRenderer::RUST_AI)
+			{
+				std::cout << "Starting game vs Rust AI" << std::endl;
+				game.setGameMode(GameMode::VS_AI);
+				game.setAiImplementation(RUST_IMPLEMENTATION);
+				game.newGame();
+				renderer.resetAiStats();
+				renderer.setState(GuiRenderer::PLAYING);
+				menuStateInitialized = false;
+			}
+			else if (choice == GuiRenderer::OPTIONS_MENU)
+			{
+				renderer.setState(GuiRenderer::OPTIONS);
+				renderer.refreshSelectedMenuOption();
+			}
+			else if (choice == GuiRenderer::QUIT)
+			{
+				gameActive = false;
+			}
+
+			renderer.render(game.getState());
+			break;
 		}
 
-		// Renderizar menú
-		renderer.render(game.getState());
-		break;
-	}		case GuiRenderer::PLAYING:
+		case GuiRenderer::OPTIONS:
+		{
+			// Actualizar nivel de debug según configuración
+			if (renderer.isDebugEnabled()) {
+				g_debugAnalyzer->setDebugLevel(DebugAnalyzer::DEBUG_TOP_MOVES);
+			} else {
+				g_debugAnalyzer->setDebugLevel(DebugAnalyzer::DEBUG_OFF);
+			}
+			
+			renderer.render(game.getState());
+			break;
+		}
+
+		case GuiRenderer::PLAYING:
 		{
 			const GameState &state = game.getState();
 
-			// Verificar si el juego terminó
 			if (game.isGameOver())
 			{
 				std::vector<Move> winningLine = game.findWinningLine();
 				renderer.setWinningLine(winningLine);
 				renderer.setState(GuiRenderer::GAME_OVER);
-				renderer.refreshSelectedMenuOption(); // Resetear selección al entrar en GAME_OVER
+				renderer.refreshSelectedMenuOption();
 				renderer.showGameResult(game.getWinner());
 				
-				// Play victory or defeat sound based on winner
 				int winner = game.getWinner();
 				if (winner == GameState::PLAYER1) {
-					renderer.playVictorySound(); // Human won
+					renderer.playVictorySound();
 				} else if (winner == GameState::PLAYER2) {
-					renderer.playDefeatSound(); // AI won (player lost)
+					renderer.playDefeatSound();
 				}
-				// For draw (winner == 0), no sound
 				
 				break;
 			}
 
-			// DIFERENTES COMPORTAMIENTOS SEGÚN MODO
-			if (game.getGameMode() == GameMode::VS_AI)
+			// Modo VS_HUMAN_SUGGESTED: Ambos jugadores son humanos con sugerencias
+			if (game.getGameMode() == GameMode::VS_HUMAN_SUGGESTED)
 			{
-				// ============================================
-				// MODO VS AI
-				// ============================================
-				if (state.currentPlayer == GameState::PLAYER1)
-				{
-					// Turno humano
-					static bool waitingForMove = true;
-
-					if (waitingForMove)
-					{
-						std::cout << "Waiting for player move..." << std::endl;
-						waitingForMove = false;
-					}
-
-					if (renderer.hasUserMove())
-					{
-						Move humanMove = renderer.getUserMove();
-
-						if (humanMove.isValid())
-						{
-							if (!game.makeHumanMove(humanMove))
-							{
-								std::cout << "❌ Invalid move" << std::endl;
-								renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
-								renderer.clearUserMove(); // CRITICAL: Limpiar movimiento inválido del buffer
-							}
-							else
-							{
-								std::cout << "✓ Player moved: "
-										  << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
-								renderer.playPlacePieceSound(); // Play piece placement sound
-								waitingForMove = true;
-								renderer.clearUserMove(); // Limpiar movimiento válido también
-							}
-						}
-					}
+				// Generar sugerencia para el jugador actual usando la IA
+				Move suggestion = SuggestionEngine::getSuggestion(state, 6);
+				if (suggestion.isValid()) {
+					renderer.setSuggestion(suggestion);
 				}
-				else
-				{
-					// Turno AI
-					std::cout << "AI thinking..." << std::endl;
-
-					Move aiMove = game.makeAIMove();
-
-					if (aiMove.isValid())
-					{
-						renderer.setLastAiMove(aiMove);
-						renderer.addAiTime(game.getLastAIThinkingTime());
-						renderer.playPlacePieceSound(); // Play piece placement sound for AI
-						std::cout << "AI played: " << char('A' + aiMove.y) << (aiMove.x + 1) << std::endl;
-						std::cout << "Time: " << game.getLastAIThinkingTime() << "ms" << std::endl;
-						std::cout << "Nodes evaluated: " << game.getLastNodesEvaluated() << std::endl;
-						std::cout << "Cache hits: " << game.getLastCacheHits()
-								  << " (hit rate: " << (game.getLastCacheHitRate() * 100) << "%)" << std::endl;
-						std::cout << "Cache size: " << game.getCacheSize() << " entries" << std::endl;
-					}
-				}
-			}
-			else // GameMode::VS_HUMAN_SUGGESTED
-			{
-				// ============================================
-				// MODO HOTSEAT CON SUGERENCIAS (nuevo)
-				// ============================================
-
-				// PASO 1: Calcular sugerencia si no está calculada
-				if (!suggestionCalculated)
-				{
-					std::string playerName = (state.currentPlayer == GameState::PLAYER1) ? "Player 1 (O)" : "Player 2 (X)";
-					std::cout << "💡 Calculating suggestion for " << playerName << "..." << std::endl;
-
-					auto startTime = std::chrono::high_resolution_clock::now();
-					currentSuggestion = SuggestionEngine::getSuggestion(state);
-					auto endTime = std::chrono::high_resolution_clock::now();
-
-					int suggestionTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-											 endTime - startTime)
-											 .count();
-
-					if (currentSuggestion.isValid())
-					{
-						std::cout << "💡 Suggestion: "
-								  << char('A' + currentSuggestion.y)
-								  << (currentSuggestion.x + 1)
-								  << " (calculated in " << suggestionTime << "ms)" << std::endl;
-
-						renderer.setSuggestion(currentSuggestion);
-					}
-
-					suggestionCalculated = true;
-				}
-
-				// PASO 2: Esperar movimiento del jugador actual
+				
 				if (renderer.hasUserMove())
 				{
 					Move humanMove = renderer.getUserMove();
 
 					if (humanMove.isValid())
 					{
-						// Guardar el jugador ANTES de aplicar el movimiento
-						int playerWhoMoved = state.currentPlayer;
-						std::string playerName = (playerWhoMoved == GameState::PLAYER1) ? "Player 1 (O)" : "Player 2 (X)";
-
 						if (!game.makeHumanMove(humanMove))
 						{
-							std::cout << "❌ Invalid move" << std::endl;
-							renderer.showInvalidMoveError(humanMove); // NUEVO: Mostrar error en GUI
-							renderer.clearUserMove(); // CRITICAL: Limpiar movimiento inválido del buffer
+							renderer.showInvalidMoveError(humanMove);
+							renderer.clearUserMove();
 						}
 						else
 						{
-							std::cout << "✓ " << playerName << " moved: "
-									  << char('A' + humanMove.y) << (humanMove.x + 1);
-
-							// Indicar si siguió la sugerencia
-							if (currentSuggestion.isValid() &&
-								humanMove.x == currentSuggestion.x &&
-								humanMove.y == currentSuggestion.y)
-							{
-								std::cout << " ✨ (followed suggestion)";
+							std::string player = (state.currentPlayer == GameState::PLAYER1) ? "Player 1" : "Player 2";
+							if (renderer.isDebugEnabled()) {
+								std::cout << player << ": " << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
 							}
-							std::cout << std::endl;
-
-							renderer.playPlacePieceSound(); // Play piece placement sound
-							
-							// IMPORTANTE: Reset para próximo turno
+							renderer.playPlacePieceSound();
+							renderer.clearUserMove();
 							renderer.clearSuggestion();
-							renderer.clearUserMove(); // Limpiar movimiento válido también
-							suggestionCalculated = false;
-							currentSuggestion = Move(-1, -1);
 						}
 					}
 				}
 			}
+			// Modo VS_AI: Jugador 1 humano, Jugador 2 IA
+			else if (state.currentPlayer == GameState::PLAYER1)
+			{
+				if (renderer.hasUserMove())
+				{
+					Move humanMove = renderer.getUserMove();
 
-			// Renderizar (común para ambos modos)
+					if (humanMove.isValid())
+					{
+						if (!game.makeHumanMove(humanMove))
+						{
+							renderer.showInvalidMoveError(humanMove);
+							renderer.clearUserMove();
+						}
+						else
+						{
+							if (renderer.isDebugEnabled()) {
+								std::cout << "Player: " << char('A' + humanMove.y) << (humanMove.x + 1) << std::endl;
+							}
+							renderer.playPlacePieceSound();
+							renderer.clearUserMove();
+						}
+					}
+				}
+			}
+			else
+			{
+				// Turno AI
+				Move aiMove = game.makeAIMove();
+
+				if (aiMove.isValid())
+				{
+					renderer.setLastAiMove(aiMove);
+					renderer.addAiTime(game.getLastAIThinkingTime());
+					renderer.playPlacePieceSound();
+					
+					if (renderer.isDebugEnabled()) {
+						std::cout << "AI: " << char('A' + aiMove.y) << (aiMove.x + 1) 
+								  << " (" << game.getLastAIThinkingTime() << "ms)" << std::endl;
+					}
+				}
+			}
+
 			renderer.render(game.getState(), game.getLastAIThinkingTime());
 			break;
 		}
 
 		case GuiRenderer::GAME_OVER:
 		{
-			// Primero procesar eventos (para capturar clicks)
 			renderer.processEvents();
 			renderer.render(game.getState());
 
-            // NUEVO: Detectar si se seleccionó "New Game"
-            int selectedOption = renderer.getSelectedMenuOption();
-            if (selectedOption == 0)
-            {
-                std::cout << "\n=== REINICIANDO JUEGO ===" << std::endl;
-				
-				// Reiniciar el juego
+			int selectedOption = renderer.getSelectedMenuOption();
+			if (selectedOption == 0)
+			{
 				game.newGame();
-				
-				// Limpiar todo el estado visual
 				renderer.clearSuggestion();
 				renderer.clearInvalidMoveError();
 				renderer.resetAiStats();
-				renderer.setWinningLine(std::vector<Move>()); // Limpiar línea ganadora
+				renderer.setWinningLine(std::vector<Move>());
 				renderer.setState(GuiRenderer::PLAYING);
-				renderer.refreshSelectedMenuOption(); // Reset selección DESPUÉS de procesarla
-
-				// Resetear variables de sugerencias (si usas modo vs humano)
-				suggestionCalculated = false;
-				currentSuggestion = Move(-1, -1);
-				menuStateInitialized = false; // IMPORTANTE: Reset flag para cuando vuelva al menú
-
-				std::cout << "Nuevo juego iniciado" << std::endl;
-
-				// Volver al loop de juego
+				renderer.refreshSelectedMenuOption();
+				menuStateInitialized = false;
 				break;
 			}
 
-			// Resetear selección solo si no se procesó nada importante
 			renderer.refreshSelectedMenuOption();
-
 			break;
 		}
 		}
 	}
 
 	// Cleanup
-	std::cout << "\n=== CLOSING APPLICATION ===" << std::endl;
-	if (game.isGameOver())
-	{
-		std::cout << "Final statistics:" << std::endl;
-		std::cout << "Final cache size: " << game.getCacheSize() << " entries" << std::endl;
-		std::cout << "Final hash: 0x" << std::hex << game.getState().getZobristHash() << std::dec << std::endl;
-	}
-
 	if (g_debugAnalyzer)
 	{
 		delete g_debugAnalyzer;
 		g_debugAnalyzer = nullptr;
 	}
+	
+	// Cleanup hasher
+	GameState::cleanupHasher();
 
 	std::cout << "Thanks for playing!" << std::endl;
 	return 0;

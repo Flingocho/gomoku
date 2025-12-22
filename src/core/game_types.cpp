@@ -80,6 +80,13 @@ void GameState::initializeHasher() {
     }
 }
 
+void GameState::cleanupHasher() {
+    if (hasher) {
+        delete hasher;
+        hasher = nullptr;
+    }
+}
+
 void GameState::updateHashAfterMove(const Move& move, int player, 
                                    const std::vector<Move>& capturedPieces,
                                    int oldCaptures) {

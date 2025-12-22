@@ -14,6 +14,7 @@ public:
 	enum AppState
 	{
 		MENU,
+		OPTIONS,
 		PLAYING,
 		GAME_OVER
 	};
@@ -24,6 +25,7 @@ public:
 		VS_HUMAN,
 		COLORBLIND,
 		RUST_AI,
+		OPTIONS_MENU,
 		QUIT,
 		NONE
 	};
@@ -131,10 +133,23 @@ public:
 	void playVictorySound() { audioManager.playSound("victory"); }
 	void playDefeatSound() { audioManager.playSound("defeat"); }
 	void toggleMute() { audioManager.toggleMute(); }
+	
+	// Options menu controls
+	void setMusicVolume(float vol) { audioManager.setMusicVolume(vol); }
+	void setSoundVolume(float vol) { audioManager.setSoundVolume(vol); }
+	float getMusicVolume() const { return musicVolume; }
+	float getSoundVolume() const { return soundVolume; }
+	bool isSoundEnabled() const { return soundEnabled; }
+	bool isMusicEnabled() const { return musicEnabled; }
+	void toggleSound() { soundEnabled = !soundEnabled; }
+	void toggleMusic() { musicEnabled = !musicEnabled; audioManager.setMusicVolume(musicEnabled ? musicVolume : 0); }
+	bool isDebugEnabled() const { return debugEnabled; }
+	void toggleDebug() { debugEnabled = !debugEnabled; }
 
 private:
 	// Internal rendering methods
 	void renderMenu();
+	void renderOptions();
 	void renderGame(const GameState &state, int aiTimeMs);
     void renderGameOver(const GameState &state); // FIXED: Receive state to show winner
 	
@@ -166,8 +181,9 @@ private:
 
 	// Event handling helpers
 	void handleMenuClick(int x, int y);
+	void handleOptionsClick(int x, int y);
 	void handleGameClick(int x, int y);
-	void handleGameOverClick(int x, int y); // NUEVO
+	void handleGameOverClick(int x, int y);
 	void handleMouseMove(int x, int y);
 
 	// Member variables for hover position
@@ -189,7 +205,14 @@ private:
 	// Posiciones exactas de botones de Game Over (calculadas en renderGameOver)
 	int gameOverButtonsY;
 	bool gameOverButtonsPositionValid;
-	bool isColorblindMode;	// NUEVO: Flag para el modo colorblind
+	bool isColorblindMode;	// Flag para el modo colorblind
+	
+	// Options state
+	bool debugEnabled;
+	bool soundEnabled;
+	bool musicEnabled;
+	float musicVolume;
+	float soundVolume;
 	
 	// Audio
 	AudioManager audioManager;

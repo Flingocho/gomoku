@@ -3,39 +3,40 @@ SFML_HOME := $(HOME)/sfml-2.5.1
 RUST_LIB_DIR := gomoku_ai_rust/target/release
 INCLUDES := -I$(SFML_HOME)/include -Igomoku_ai_rust/src
 LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lgomoku_ai_rust -ldl -lpthread
-CXXFLAGS := -Wall -Wextra -Werror -O3 -std=c++17 $(INCLUDES)
+CXXFLAGS := -Wall -Wextra -Werror -g3 -O3 -std=c++17 $(INCLUDES)
 
-SRCS = src/main.cpp\
-		src/core/game_engine.cpp\
-		src/core/game_types.cpp\
-		src/ui/audio_manager.cpp\
-		src/ui/display.cpp\
-		src/utils/zobrist_hasher.cpp\
-		src/gui/gui_renderer_core.cpp\
-		src/gui/gui_renderer_menu.cpp\
-		src/gui/gui_renderer_game.cpp\
-		src/gui/gui_renderer_board.cpp\
-		src/gui/gui_renderer_ui.cpp\
-		src/gui/gui_renderer_gameover.cpp\
-		src/gui/gui_renderer_effects.cpp\
-		src/ai_engine/ai_engine_core.cpp\
-		src/ai_engine/evaluator_position.cpp\
-		src/ai_engine/evaluator_patterns.cpp\
-		src/ai_engine/evaluator_threats.cpp\
-		src/ai_engine/suggestion_engine.cpp\
-		src/ai_engine/search_minimax.cpp\
-		src/ai_engine/search_transposition.cpp\
-		src/ai_engine/search_ordering.cpp\
-		src/rule_engine/rules_core.cpp\
-		src/rule_engine/rules_capture.cpp\
-		src/rule_engine/rules_win.cpp\
-		src/rule_engine/rules_validation.cpp\
-		src/debug/debug_core.cpp\
-		src/debug/debug_formatter.cpp\
-		src/debug/debug_analyzer.cpp
+# Source files organized by folder
+SRCS = src/main.cpp \
+	src/ai_engine/ai_engine_core.cpp \
+	src/ai_engine/evaluator_patterns.cpp \
+	src/ai_engine/evaluator_position.cpp \
+	src/ai_engine/evaluator_threats.cpp \
+	src/ai_engine/search_minimax.cpp \
+	src/ai_engine/search_ordering.cpp \
+	src/ai_engine/search_transposition.cpp \
+	src/ai_engine/suggestion_engine.cpp \
+	src/core/game_engine.cpp \
+	src/core/game_types.cpp \
+	src/debug/debug_analyzer.cpp \
+	src/debug/debug_core.cpp \
+	src/debug/debug_formatter.cpp \
+	src/gui/gui_renderer_board.cpp \
+	src/gui/gui_renderer_core.cpp \
+	src/gui/gui_renderer_effects.cpp \
+	src/gui/gui_renderer_game.cpp \
+	src/gui/gui_renderer_gameover.cpp \
+	src/gui/gui_renderer_menu.cpp \
+	src/gui/gui_renderer_ui.cpp \
+	src/rule_engine/rules_capture.cpp \
+	src/rule_engine/rules_core.cpp \
+	src/rule_engine/rules_validation.cpp \
+	src/rule_engine/rules_win.cpp \
+	src/ui/audio_manager.cpp \
+	src/ui/display.cpp \
+	src/utils/zobrist_hasher.cpp
 
 OBJ_DIR = objects
-OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
+OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 EXEC = gomoku
 
@@ -53,13 +54,6 @@ $(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
-	mkdir -p $(OBJ_DIR)/core
-	mkdir -p $(OBJ_DIR)/ui
-	mkdir -p $(OBJ_DIR)/utils
-	mkdir -p $(OBJ_DIR)/gui
-	mkdir -p $(OBJ_DIR)/ai_engine
-	mkdir -p $(OBJ_DIR)/rule_engine
-	mkdir -p $(OBJ_DIR)/debug
 
 clean:
 	rm -rf $(OBJ_DIR)

@@ -33,7 +33,12 @@ GuiRenderer::GuiRenderer()
       invalidMovePosition(-1, -1),
       gameOverButtonsY(0),
       gameOverButtonsPositionValid(false),
-      isColorblindMode(false)
+      isColorblindMode(false),
+      debugEnabled(false),
+      soundEnabled(true),
+      musicEnabled(true),
+      musicVolume(30.0f),
+      soundVolume(70.0f)
 {
     // Inicializar partículas para efectos visuales
     particles.resize(50);
@@ -150,6 +155,9 @@ void GuiRenderer::processEvents() {
                         case GAME_OVER:
                             handleGameOverClick(x, y);
                             break;
+                        case OPTIONS:
+                            handleOptionsClick(x, y);
+                            break;
                     }
                 }
                 break;
@@ -193,6 +201,9 @@ void GuiRenderer::render(const GameState& state, int aiTimeMs) {
             break;
         case GAME_OVER:
             renderGameOver(state);
+            break;
+        case OPTIONS:
+            renderOptions();
             break;
     }
     

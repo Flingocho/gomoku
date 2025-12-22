@@ -295,45 +295,90 @@ void GuiRenderer::renderGameOver(const GameState& state) {
 
 void GuiRenderer::handleMouseMove(int x, int y) {
     if (currentState == MENU) {
-        // CORREGIDO: Usar hoveredMenuOption para efectos visuales
         int buttonWidth = 250;
-        int buttonHeight = 50;  // ACTUALIZADO
+        int buttonHeight = 45;
         int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
-        int buttonSpacing = 65;  // ACTUALIZADO
+        int buttonSpacing = 55;
         
         // Reset hover state
-        int previousHover = hoveredMenuOption;
         hoveredMenuOption = -1;
         
         // Check each button
         if (x >= buttonX && x <= buttonX + buttonWidth) {
-            if (y >= 230 && y <= 230 + buttonHeight) {
+            if (y >= 220 && y <= 220 + buttonHeight) {
                 hoveredMenuOption = 0; // VS AI hover
-            } else if (y >= 230 + buttonSpacing && y <= 230 + buttonSpacing + buttonHeight) {
+            } else if (y >= 220 + buttonSpacing && y <= 220 + buttonSpacing + buttonHeight) {
                 hoveredMenuOption = 1; // VS Human hover
-            } else if (y >= 230 + buttonSpacing * 2 && y <= 230 + buttonSpacing * 2 + buttonHeight) {
+            } else if (y >= 220 + buttonSpacing * 2 && y <= 220 + buttonSpacing * 2 + buttonHeight) {
                 hoveredMenuOption = 2; // Colorblind hover
-            } else if (y >= 230 + buttonSpacing * 3 && y <= 230 + buttonSpacing * 3 + buttonHeight) {
+            } else if (y >= 220 + buttonSpacing * 3 && y <= 220 + buttonSpacing * 3 + buttonHeight) {
                 hoveredMenuOption = 3; // Rust AI hover
-            } else if (y >= 230 + buttonSpacing * 4 && y <= 230 + buttonSpacing * 4 + buttonHeight) {
-                hoveredMenuOption = 4; // Quit hover
+            } else if (y >= 220 + buttonSpacing * 4 && y <= 220 + buttonSpacing * 4 + buttonHeight) {
+                hoveredMenuOption = 4; // Options hover
+            } else if (y >= 220 + buttonSpacing * 5 && y <= 220 + buttonSpacing * 5 + buttonHeight) {
+                hoveredMenuOption = 5; // Quit hover
             }
         }
+    }
+    
+    if (currentState == OPTIONS) {
+        int buttonWidth = 300;
+        int buttonHeight = 40;
+        int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
+        int startY = 150;
+        int spacing = 50;
         
-        // Solo logear si cambió el hover (evitar spam)
-        if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
-            std::string options[] = {"VS AI", "VS Human", "Colorblind Mode", "Rust AI", "Quit"};
-            std::cout << "Hover: " << options[hoveredMenuOption] << std::endl;
+        hoveredMenuOption = -1;
+        
+        // Music toggle
+        if (x >= buttonX && x <= buttonX + buttonWidth && 
+            y >= startY && y <= startY + buttonHeight) {
+            hoveredMenuOption = 0;
+        }
+        // Music volume down
+        else if (x >= buttonX && x <= buttonX + 60 && 
+                 y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+            hoveredMenuOption = 1;
+        }
+        // Music volume up
+        else if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
+                 y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+            hoveredMenuOption = 2;
+        }
+        // Sound FX toggle
+        else if (x >= buttonX && x <= buttonX + buttonWidth && 
+                 y >= startY + spacing * 3 && y <= startY + spacing * 3 + buttonHeight) {
+            hoveredMenuOption = 3;
+        }
+        // FX volume down
+        else if (x >= buttonX && x <= buttonX + 60 && 
+                 y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+            hoveredMenuOption = 4;
+        }
+        // FX volume up
+        else if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
+                 y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+            hoveredMenuOption = 5;
+        }
+        // Debug toggle
+        else if (x >= buttonX && x <= buttonX + buttonWidth && 
+                 y >= startY + spacing * 6 + 10 && y <= startY + spacing * 6 + 10 + buttonHeight) {
+            hoveredMenuOption = 6;
+        }
+        // Back button
+        else if (x >= buttonX && x <= buttonX + buttonWidth && 
+                 y >= startY + spacing * 7 + 30 && y <= startY + spacing * 7 + 30 + buttonHeight) {
+            hoveredMenuOption = 7;
         }
     }
     
     if (currentState == PLAYING) {
-        // NUEVO: Actualizar hover position en el tablero
+        // Actualizar hover position en el tablero
         if (isPointInBoard(x, y)) {
             auto [boardX, boardY] = pixelToBoardPosition(x, y);
             hoverPosition = Move(boardX, boardY);
         } else {
-            hoverPosition = Move(-1, -1); // Fuera del tablero
+            hoverPosition = Move(-1, -1);
         }
     }
 
@@ -345,12 +390,9 @@ void GuiRenderer::handleMouseMove(int x, int y) {
         int buttonHeight = 50;
         int buttonX = panelX + 15;
         
-        // Usar posición exacta guardada desde renderGameOver
         int button1Y = gameOverButtonsY;
         int button2Y = gameOverButtonsY + buttonHeight + 15;
         
-        // Reset hover
-        int previousHover = hoveredMenuOption;
         hoveredMenuOption = -1;
         
         // Check botón NEW GAME
@@ -363,16 +405,11 @@ void GuiRenderer::handleMouseMove(int x, int y) {
                  y >= button2Y && y <= button2Y + buttonHeight) {
             hoveredMenuOption = 1;
         }
-        
-        // Debug hover (solo si cambió)
-        if (previousHover != hoveredMenuOption && hoveredMenuOption != -1) {
-            std::cout << "Game Over Hover: " << (hoveredMenuOption == 0 ? "New Game" : "Main Menu") << std::endl;
-        }
     }
 }
 
 void GuiRenderer::handleGameOverClick(int x, int y) {
-    if (!gameOverButtonsPositionValid) return; // No hay posiciones válidas aún
+    if (!gameOverButtonsPositionValid) return;
     
     int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
     int panelWidth = 280;
@@ -381,16 +418,14 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     int buttonHeight = 50;
     int buttonX = panelX + 15;
     
-    // Usar posición exacta guardada desde renderGameOver
     int button1Y = gameOverButtonsY;
     int button2Y = gameOverButtonsY + buttonHeight + 15;
     
     // Click en "NEW GAME"
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button1Y && y <= button1Y + buttonHeight) {
-        audioManager.playSound("click_menu"); // Play click sound
+        audioManager.playSound("click_menu");
         selectedMenuOption = 0;
-        std::cout << "✓ Seleccionado: Nuevo Juego" << std::endl;
         return;
     }
     
@@ -398,17 +433,13 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button2Y && y <= button2Y + buttonHeight) {
         audioManager.playSound("click_menu");
-        // Limpiar todo el estado visual al volver al menú
         clearSuggestion();
         clearInvalidMoveError();
         setWinningLine(std::vector<Move>());
         setState(MENU);
         selectedMenuOption = -1;
-        std::cout << "✓ Returned to menu from game over - all state cleaned" << std::endl;
         return;
     }
-    
-    std::cout << "✗ Click fuera de los botones" << std::endl;
 }
 
 // ===============================================

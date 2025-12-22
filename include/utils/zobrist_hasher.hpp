@@ -24,6 +24,7 @@ public:
 	 * CRÍTICO: Esta tabla debe ser consistente durante toda la ejecución
 	 */
 	ZobristHasher();
+	~ZobristHasher();
 
 	/**
 	 * Computa hash completo para un estado (usar solo para inicialización)

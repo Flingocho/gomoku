@@ -69,6 +69,11 @@ struct GameState {
     static void initializeHasher();
     
     /**
+     * Cleans up the static hasher (call once at program end)
+     */
+    static void cleanupHasher();
+    
+    /**
      * Updates the hash after applying a move
      * MUST be called after modifying board state
      */
