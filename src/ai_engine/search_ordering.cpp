@@ -432,7 +432,10 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
     int searchRadius = getSearchRadiusForGamePhase(state.turnCount);
     
     // OPTIMIZACIÓN: Pre-marcar zonas relevantes
-    bool relevantZone[GameState::BOARD_SIZE][GameState::BOARD_SIZE] = {{false}};
+    bool relevantZone[GameState::BOARD_SIZE][GameState::BOARD_SIZE];
+    for(int r=0; r<GameState::BOARD_SIZE; r++)
+        for(int c=0; c<GameState::BOARD_SIZE; c++)
+            relevantZone[r][c] = false;
     
     // PASO 1: Marcar casillas alrededor de piezas existentes
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {

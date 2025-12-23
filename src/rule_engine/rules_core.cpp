@@ -50,17 +50,19 @@ RuleEngine::MoveResult RuleEngine::applyMove(GameState &state, const Move &move)
     // 7. Actualizar hash Zobrist
     int newMyCaptures = state.captures[currentPlayer - 1];
     
-    state.zobristHash = state.hasher->updateHashAfterMove(
-        state.zobristHash,
-        move,
-        currentPlayer,
-        result.myCapturedPieces,
-        result.opponentCapturedPieces, // Vacío
-        oldMyCaptures,
-        newMyCaptures,
-        state.captures[state.getOpponent(currentPlayer) - 1], // No cambió
-        state.captures[state.getOpponent(currentPlayer) - 1]  // No cambió
-    );
+    if (state.hasher) {
+        state.zobristHash = state.hasher->updateHashAfterMove(
+            state.zobristHash,
+            move,
+            currentPlayer,
+            result.myCapturedPieces,
+            result.opponentCapturedPieces, // Vacío
+            oldMyCaptures,
+            newMyCaptures,
+            state.captures[state.getOpponent(currentPlayer) - 1], // No cambió
+            state.captures[state.getOpponent(currentPlayer) - 1]  // No cambió
+        );
+    }
 
     // 8. Avanzar turno
     state.currentPlayer = state.getOpponent(state.currentPlayer);
