@@ -1,8 +1,8 @@
 CXX = c++
-SFML_HOME := $(HOME)/sfml-2.5.1
+SFML_HOME := ./external/sfml
 RUST_LIB_DIR := gomoku_ai_rust/target/release
 INCLUDES := -I$(SFML_HOME)/include -Igomoku_ai_rust/src
-LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lgomoku_ai_rust -ldl -lpthread
+LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lgomoku_ai_rust -ldl -lpthread -lopenal -lvorbisenc -lvorbisfile -lvorbis -logg -lFLAC -lsndio
 CXXFLAGS := -Wall -Wextra -Werror -g3 -O3 -std=c++17 $(INCLUDES)
 
 # Source files organized by folder
@@ -40,7 +40,11 @@ OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 EXEC = gomoku
 
-all: rust_lib $(EXEC)
+all: setup rust_lib $(EXEC)
+
+setup:
+	@echo "Checking dependencies..."
+	@bash scripts/setup.sh
 
 rust_lib:
 	cd gomoku_ai_rust && cargo build --release
@@ -59,12 +63,13 @@ clean:
 	rm -rf $(OBJ_DIR)
 	cd gomoku_ai_rust && cargo clean
 
-.PHONY: run
-run: $(EXEC)
-	LD_LIBRARY_PATH=$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(EXEC)
 fclean: clean
 	rm -f $(EXEC)
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: run
+run: $(EXEC)
+	LD_LIBRARY_PATH=$(SFML_HOME)/lib:$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(EXEC)
+
+.PHONY: all clean fclean re setup run

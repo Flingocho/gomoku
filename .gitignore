@@ -1,21 +1,5 @@
-.vscode/
-gomoku_debug.log
-
-# Build artifacts
-gomoku
-objects/
-*.o
-
-# SFML and OpenAL build files
-SFML-*/
-SFML-*.zip
-openal-soft-*/
-openal-soft-*.tar.bz2
-
-# Rust build artifacts
+tests/test_ai
+external/
 gomoku_ai_rust/target/
-gomoku_ai_rust/Cargo.lock
-
-# Built libraries (if any)
-sfml-*/
-openal/
+objects/
+gomoku
