@@ -38,9 +38,9 @@ SRCS = src/main.cpp \
 OBJ_DIR = objects
 OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
-EXEC = gomoku
+NAME = Gomoku
 
-all: setup rust_lib $(EXEC)
+all: setup rust_lib $(NAME)
 
 setup:
 	@echo "Checking dependencies..."
@@ -49,8 +49,8 @@ setup:
 rust_lib:
 	cd gomoku_ai_rust && cargo build --release
 
-$(EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $(EXEC) $(LIBS)
+$(NAME): $(OBJS)
+	$(CXX) $(OBJS) -o $(NAME) $(LIBS)
 
 $(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
@@ -64,12 +64,12 @@ clean:
 	cd gomoku_ai_rust && cargo clean
 
 fclean: clean
-	rm -f $(EXEC)
+	rm -f $(NAME)
 
 re: fclean all
 
 .PHONY: run
-run: $(EXEC)
-	LD_LIBRARY_PATH=$(SFML_HOME)/lib:$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(EXEC)
+run: $(NAME)
+	LD_LIBRARY_PATH=$(SFML_HOME)/lib:$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(NAME)
 
 .PHONY: all clean fclean re setup run

@@ -1,6 +1,6 @@
 // ============================================
 // SEARCH_TRANSPOSITION.CPP
-// Gestión de la tabla de transposición (cache con Zobrist hashing)
+// Transposition table management (cache with Zobrist hashing)
 // ============================================
 
 #include "../../include/ai/transposition_search.hpp"
@@ -16,12 +16,12 @@ TranspositionSearch::TranspositionSearch(size_t tableSizeMB)
 
 void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB)
 {
-	// Calcular número de entradas: cada CacheEntry ~40 bytes
+	// Calculate number of entries: each CacheEntry ~40 bytes
 	size_t bytesPerEntry = sizeof(CacheEntry);
 	size_t totalBytes = sizeInMB * 1024 * 1024;
 	size_t numEntries = totalBytes / bytesPerEntry;
 
-	// Redondear a la potencia de 2 más cercana (para usar & en lugar de %)
+	// Round to nearest power of 2 (to use & instead of %)
 	size_t powerOf2 = 1;
 	while (powerOf2 < numEntries)
 	{
@@ -29,13 +29,32 @@ void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB)
 	}
 	if (powerOf2 > numEntries)
 	{
-		powerOf2 >>= 1; // Usar la potencia menor si nos pasamos
+		powerOf2 >>= 1; // Use lower power if we overshoot
 	}
 
-	transpositionTable.resize(powerOf2);
-	tableSizeMask = powerOf2 - 1; // Para hacer index = hash & tableSizeMask
+	try {
+		transpositionTable.resize(powerOf2);
+	} catch (const std::bad_alloc&) {
+		// If not enough memory for desired size, try with half
+		while (powerOf2 > 1024) {
+			powerOf2 >>= 1;
+			try {
+				transpositionTable.resize(powerOf2);
+				std::cerr << "Warning: Transposition table reduced to "
+				          << (powerOf2 * bytesPerEntry / (1024 * 1024)) << "MB" << std::endl;
+				break;
+			} catch (const std::bad_alloc&) {
+				continue;
+			}
+		}
+		if (transpositionTable.empty()) {
+			transpositionTable.resize(1024); // Absolute minimum
+			std::cerr << "Warning: Transposition table at minimum size" << std::endl;
+		}
+	}
+	tableSizeMask = transpositionTable.size() - 1; // For index = hash & tableSizeMask
 
-	// Inicialización de TranspositionTable se loggeará desde main
+	// TranspositionTable initialization will be logged from main
 }
 
 bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &entry)
@@ -43,18 +62,18 @@ bool TranspositionSearch::lookupTransposition(uint64_t zobristKey, CacheEntry &e
 	size_t index = zobristKey & tableSizeMask;
 	const CacheEntry &candidate = transpositionTable[index];
 
-	// OPTIMIZACIÓN: Early return si está vacía (caso más común)
+	// Early return if empty (most common case)
 	if (candidate.zobristKey == 0)
 	{
 		return false;
 	}
 
-	// OPTIMIZACIÓN: Verificación exacta
+	// Exact key verification
 	if (candidate.zobristKey == zobristKey)
 	{
 		entry = candidate;
 
-		// OPTIMIZACIÓN: Solo actualizar generación si es diferente
+		// Only update generation if different
 		if (candidate.generation != currentGeneration)
 		{
 			transpositionTable[index].generation = currentGeneration;
@@ -71,39 +90,39 @@ void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int
 	size_t index = zobristKey & tableSizeMask;
 	CacheEntry &existing = transpositionTable[index];
 
-	// NUEVA ESTRATEGIA: Reemplazo inteligente basado en importancia
+	// Smart replacement based on importance
 	bool shouldReplace = false;
 
 	if (existing.zobristKey == 0)
 	{
-		// Entrada vacía - siempre reemplazar
+		// Empty entry - always replace
 		shouldReplace = true;
 	}
 	else if (existing.zobristKey == zobristKey)
 	{
-		// Misma posición - actualizar si profundidad es mayor o igual
+		// Same position - update if depth is greater or equal
 		shouldReplace = (depth >= existing.depth);
 	}
 	else
 	{
-		// Colisión de hash - usar estrategia de reemplazo sofisticada
+		// Hash collision - use sophisticated replacement strategy
 		CacheEntry newEntry(zobristKey, score, depth, bestMove, type, currentGeneration);
 
-		// Calcular valores de importancia
+		// Calculate importance values
 		int existingImportance = existing.getImportanceValue();
 		int newImportance = newEntry.getImportanceValue();
 
-		// Factor de aging: entradas más viejas tienen menor prioridad
+		// Aging factor: older entries have lower priority
 		uint32_t ageDiff = currentGeneration - existing.generation;
 		if (ageDiff > 0)
 		{
-			existingImportance -= (ageDiff * 10); // Penalizar entradas viejas
+			existingImportance -= (ageDiff * 10); // Penalize old entries
 		}
 
-		// Reemplazar si la nueva entrada es más importante
+		// Replace if new entry is more important
 		shouldReplace = (newImportance > existingImportance);
 
-		// Bias hacia entradas EXACT si hay empate
+		// Bias towards EXACT entries on tie
 		if (newImportance == existingImportance && type == CacheEntry::EXACT)
 		{
 			shouldReplace = true;
@@ -119,8 +138,8 @@ void TranspositionSearch::storeTransposition(uint64_t zobristKey, int score, int
 void TranspositionSearch::clearCache()
 {
 	std::fill(transpositionTable.begin(), transpositionTable.end(), CacheEntry());
-	currentGeneration = 1; // NUEVO: Reset generación
-	std::cout << "TranspositionTable: Cache limpiada (" << transpositionTable.size() << " entradas)" << std::endl;
+	currentGeneration = 1; // Reset generation
+	std::cout << "TranspositionTable: Cache cleared (" << transpositionTable.size() << " entries)" << std::endl;
 }
 
 TranspositionSearch::CacheStats TranspositionSearch::getCacheStats() const

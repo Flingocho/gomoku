@@ -18,28 +18,28 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
                            bool highlighted) {
     float time = animationClock.getElapsedTime().asSeconds();
     
-    // 1. Sombra suave y moderna
+    // 1. Soft modern shadow
     sf::RectangleShape buttonShadow(sf::Vector2f(width + 8, height + 8));
     buttonShadow.setPosition(x + 4, y + 4);
     buttonShadow.setFillColor(sf::Color(0, 0, 0, 60));
     window.draw(buttonShadow);
     
-    // 2. Fondo del botón con gradiente
+    // 2. Button background with gradient
     sf::RectangleShape buttonBg(sf::Vector2f(width, height));
     buttonBg.setPosition(x, y);
     
     if (highlighted) {
-        // Efecto hover animado
+        // Animated hover effect
         float pulse = sin(time * 4.0f) * 0.2f + 0.8f;
         sf::Uint8 brightness = static_cast<sf::Uint8>(pulse * 255);
-        buttonBg.setFillColor(sf::Color(30, 144, 255, brightness)); // Azul brillante
+        buttonBg.setFillColor(sf::Color(30, 144, 255, brightness)); // Bright blue
         
-        // Borde con brillo
+        // Glowing border
         buttonBg.setOutlineThickness(3);
         sf::Color glowBorder = sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 200));
         buttonBg.setOutlineColor(glowBorder);
         
-        // Efecto de partículas en hover
+        // Particle effect on hover
         for (int i = 0; i < 8; i++) {
             float angle = (time * 2.0f + i * 0.785f);
             float sparkX = x + width/2 + cos(angle) * (width/2 + 10);
@@ -51,17 +51,17 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
             window.draw(spark);
         }
     } else {
-        // Estilo moderno normal con gradiente sutil
-        buttonBg.setFillColor(sf::Color(45, 45, 65, 220)); // Azul oscuro translúcido
+        // Normal modern style with subtle gradient
+        buttonBg.setFillColor(sf::Color(45, 45, 65, 220)); // Dark translucent blue
         buttonBg.setOutlineThickness(2);
         buttonBg.setOutlineColor(sf::Color(100, 149, 237, 150)); // Cornflower blue
     }
     
     window.draw(buttonBg);
     
-    // 3. Efecto biselado (borde 3D)
+    // 3. Bevel effect (3D border)
     if (!highlighted) {
-        // Highlight superior e izquierdo
+        // Top and left highlight
         sf::RectangleShape topHighlight(sf::Vector2f(width, 2));
         topHighlight.setPosition(x, y);
         topHighlight.setFillColor(sf::Color(200, 200, 200));
@@ -72,7 +72,7 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
         leftHighlight.setFillColor(sf::Color(200, 200, 200));
         window.draw(leftHighlight);
         
-        // Sombra inferior y derecha
+        // Bottom and right shadow
         sf::RectangleShape bottomShadow(sf::Vector2f(width, 2));
         bottomShadow.setPosition(x, y + height - 2);
         bottomShadow.setFillColor(sf::Color(30, 30, 30));
@@ -84,11 +84,11 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
         window.draw(rightShadow);
     }
     
-    // 4. Texto del botón (centrado perfectamente)
+    // 4. Button text (perfectly centered)
     sf::Color textColor = highlighted ? sf::Color::Yellow : sf::Color::White;
     int textSize = 20;
     
-    // Centrado perfecto usando setOrigin
+    // Perfect centering using setOrigin
     sf::Text buttonText;
     if (font.getInfo().family != "") {
         buttonText.setFont(font);
@@ -124,50 +124,50 @@ void GuiRenderer::drawText(const std::string& text, int x, int y, int size, sf::
 // ===============================================
 
 void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
-    // Panel lateral derecho con información del juego
+    // Right side panel with game information
     int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
     int panelY = BOARD_OFFSET_Y;
     int panelWidth = 280;
     int panelHeight = 650; // Increased height to fit all content
     
-    // 1. Fondo del panel con efectos modernos
+    // 1. Panel background with modern effects
     float time = animationClock.getElapsedTime().asSeconds();
     
-    // Sombra suave y amplia
+    // Soft wide shadow
     sf::RectangleShape panelShadow(sf::Vector2f(panelWidth + 12, panelHeight + 12));
     panelShadow.setPosition(panelX + 6, panelY + 6);
     panelShadow.setFillColor(sf::Color(0, 0, 0, 80));
     window.draw(panelShadow);
     
-    // Fondo translúcido con efecto de cristal
+    // Translucent background with glass effect
     sf::RectangleShape panelBg(sf::Vector2f(panelWidth, panelHeight));
     panelBg.setPosition(panelX, panelY);
-    panelBg.setFillColor(sf::Color(20, 25, 40, 200)); // Azul oscuro translúcido
+    panelBg.setFillColor(sf::Color(20, 25, 40, 200)); // Dark translucent blue
     
-    // Borde con brillo animado
+    // Animated glowing border
     panelBg.setOutlineThickness(3);
     float pulse = sin(time * 1.5f) * 0.3f + 0.7f;
     sf::Color glowBorder = sf::Color(100, 149, 237, static_cast<sf::Uint8>(pulse * 180));
     panelBg.setOutlineColor(glowBorder);
     window.draw(panelBg);
     
-    // Línea de brillo superior
+    // Top glow line
     sf::RectangleShape topGlow(sf::Vector2f(panelWidth - 20, 2));
     topGlow.setPosition(panelX + 10, panelY + 5);
     topGlow.setFillColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 100)));
     window.draw(topGlow);
     
-    // 2. Título del panel con efectos de brillo
+    // 2. Panel title with glow effects
     sf::Text statusTitle;
     if (font.getInfo().family != "") {
         statusTitle.setFont(font);
     }
     statusTitle.setString("=== STATUS ===");
     statusTitle.setCharacterSize(18);
-    statusTitle.setFillColor(sf::Color(255, 215, 0)); // Dorado
+    statusTitle.setFillColor(sf::Color(255, 215, 0)); // Gold
     statusTitle.setPosition(panelX + 10, panelY + 15);
     
-    // Efecto de brillo para el título del panel
+    // Glow effect for panel title
     sf::Color titleGlow = sf::Color(255, 255, 0, static_cast<sf::Uint8>(pulse * 80));
     drawGlowEffect(statusTitle, titleGlow);
     window.draw(statusTitle);
@@ -175,12 +175,12 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     int yOffset = panelY + 50;
     int lineHeight = 22;
     
-    // 3. Información básica del juego
+    // 3. Basic game information
     std::string turnInfo = "Turn: " + std::to_string(state.turnCount);
     drawText(turnInfo, panelX + 10, yOffset, 16, sf::Color::White);
     yOffset += lineHeight;
     
-    // Jugador actual
+    // Current player
     std::string currentPlayerStr = (state.currentPlayer == GameState::PLAYER1) ? "Player 1 (O)" : "Player 2 (X)";
     sf::Color playerColor = (state.currentPlayer == GameState::PLAYER1) ? player1Color : player2Color;
     drawText("Player:", panelX + 10, yOffset, 16, sf::Color::White);
@@ -188,24 +188,24 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     drawText(currentPlayerStr, panelX + 10, yOffset, 16, playerColor);
     yOffset += lineHeight + 15;
     
-    // Separador
+    // Separator
     sf::RectangleShape separator1(sf::Vector2f(panelWidth - 20, 2));
     separator1.setPosition(panelX + 10, yOffset);
     separator1.setFillColor(sf::Color(100, 100, 100));
     window.draw(separator1);
     yOffset += 20;
     
-    // NUEVO: Mostrar mensaje de error si está activo
+    // Display error message if active
     if (showError && errorTimer.getElapsedTime().asSeconds() < 3.0f) {
-        // Fondo rojo para el mensaje de error
+        // Red background for error message
         sf::RectangleShape errorBg(sf::Vector2f(panelWidth - 20, 50));
         errorBg.setPosition(panelX + 10, yOffset - 5);
-        errorBg.setFillColor(sf::Color(150, 0, 0, 100)); // Rojo semi-transparente
+        errorBg.setFillColor(sf::Color(150, 0, 0, 100)); // Semi-transparent red
         errorBg.setOutlineThickness(1);
         errorBg.setOutlineColor(sf::Color::Red);
         window.draw(errorBg);
         
-        // Texto del error con efecto pulsante
+        // Error text with pulsing effect
         float pulseTime = errorTimer.getElapsedTime().asSeconds();
         float alpha = (sin(pulseTime * 6.0f) + 1.0f) * 0.3f + 0.7f; // Oscila entre 0.7 y 1.0
         sf::Color errorColor(255, 100, 100, (sf::Uint8)(alpha * 255));
@@ -213,7 +213,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText("! " + errorMessage, panelX + 15, yOffset, 14, errorColor);
         yOffset += 20;
         
-        // Coordenada del movimiento inválido si está disponible
+        // Invalid move coordinate if available
         if (invalidMovePosition.isValid()) {
             std::string posText = "Position: ";
             posText += char('A' + invalidMovePosition.y);
@@ -223,7 +223,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         
         yOffset += 30;
         
-        // Separador
+        // Separator
         sf::RectangleShape separator2(sf::Vector2f(panelWidth - 20, 2));
         separator2.setPosition(panelX + 10, yOffset);
         separator2.setFillColor(sf::Color(100, 100, 100));
@@ -231,13 +231,13 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += 20;
     }
     
-    // NUEVO: Mostrar sugerencia si está activa
+    // Display suggestion if active
     if (showSuggestion && currentSuggestion.isValid()) {
-        // Título de sugerencia con icono
+        // Suggestion title with icon
         drawText("AI SUGGESTION:", panelX + 10, yOffset, 16, sf::Color(255, 215, 0));
         yOffset += lineHeight + 5;
         
-        // Coordenada sugerida
+        // Suggested coordinate
         std::string suggestionText = "Move to: ";
         suggestionText += char('A' + currentSuggestion.y);
         suggestionText += std::to_string(currentSuggestion.x + 1);
@@ -245,11 +245,11 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText(suggestionText, panelX + 15, yOffset, 16, sf::Color::White);
         yOffset += lineHeight;
         
-        // Nota informativa
+        // Informational note
         drawText("(You can ignore it)", panelX + 15, yOffset, 11, sf::Color(150, 150, 150));
         yOffset += lineHeight + 15;
         
-        // Separador
+        // Separator
         sf::RectangleShape separator3(sf::Vector2f(panelWidth - 20, 2));
         separator3.setPosition(panelX + 10, yOffset);
         separator3.setFillColor(sf::Color(100, 100, 100));
@@ -257,11 +257,11 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += 20;
     }
     
-    // 5. Capturas
+    // 5. Captures
     drawText("CAPTURES:", panelX + 10, yOffset, 16, sf::Color::Yellow);
     yOffset += lineHeight + 5;
     
-    // Capturas del humano
+    // Human captures
     std::string humanCaptures = "You: " + std::to_string(state.captures[0]) + "/10";
     drawText(humanCaptures, panelX + 15, yOffset, 14, player1Color);
     if (state.captures[0] >= 8) {
@@ -269,7 +269,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     }
     yOffset += lineHeight;
     
-    // Capturas de la IA
+    // AI captures
     std::string aiCaptures = "AI: " + std::to_string(state.captures[1]) + "/10";
     drawText(aiCaptures, panelX + 15, yOffset, 14, player2Color);
     if (state.captures[1] >= 8) {
@@ -277,7 +277,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     }
     yOffset += lineHeight + 15;
     
-    // Separador
+    // Separator
     sf::RectangleShape separator4(sf::Vector2f(panelWidth - 20, 2));
     separator4.setPosition(panelX + 10, yOffset);
     separator4.setFillColor(sf::Color(100, 100, 100));
@@ -289,7 +289,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText("AI STATS:", panelX + 10, yOffset, 16, sf::Color::Yellow);
         yOffset += lineHeight + 5;
         
-        // Tiempo de pensamiento actual
+        // Current thinking time
         std::string timeStr = "Last: " + std::to_string(aiTimeMs) + "ms";
         sf::Color timeColor = sf::Color::White;
         if (aiTimeMs < 100) timeColor = sf::Color::Green;
@@ -297,7 +297,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         drawText(timeStr, panelX + 15, yOffset, 14, timeColor);
         yOffset += lineHeight;
         
-        // Tiempo promedio de la IA
+        // Average AI time
         if (aiMoveCount > 0) {
             float avgTime = getAverageAiTime();
             std::string avgTimeStr = "Avg: " + std::to_string(static_cast<int>(avgTime)) + "ms";
@@ -307,13 +307,13 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
             drawText(avgTimeStr, panelX + 15, yOffset, 14, avgColor);
             yOffset += lineHeight;
             
-            // Mostrar número de movimientos evaluados
+            // Number of evaluated moves
             std::string movesStr = "Moves: " + std::to_string(aiMoveCount);
             drawText(movesStr, panelX + 15, yOffset, 12, sf::Color(180, 180, 180));
             yOffset += lineHeight;
         }
         
-        // Indicador de rendimiento (basado en último tiempo)
+        // Performance indicator (based on last time)
         std::string perfStr;
         if (aiTimeMs < 50) perfStr = "Ultra Fast";
         else if (aiTimeMs < 200) perfStr = "Fast"; 
@@ -324,7 +324,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
         yOffset += lineHeight + 10;
     }
     
-    // 7. Controles
+    // 7. Controls
     sf::RectangleShape separator5(sf::Vector2f(panelWidth - 20, 2));
     separator5.setPosition(panelX + 10, yOffset);
     separator5.setFillColor(sf::Color(100, 100, 100));
@@ -339,7 +339,7 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     drawText("- ESC to return to menu", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
     
-    // 8. Hash del estado (para debug)
+    // 8. State hash (for debug)
     if (state.getZobristHash() != 0) {
         yOffset += 10;
         drawText("DEBUG:", panelX + 10, yOffset, 14, sf::Color(100, 100, 100));

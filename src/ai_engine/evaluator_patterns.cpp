@@ -156,7 +156,7 @@ int Evaluator::patternToScore(const PatternInfo &pattern)
 	if (consecutiveCount >= 5)
 		return WIN;
 
-	// NEW: Victory with gaps - X-XXXX, XX-XXX, etc.
+	// Victory with gaps - X-XXXX, XX-XXX, etc.
 	if (totalPieces >= 5 && hasGaps && freeEnds >= 1)
 	{
 		return WIN; // Also victory

@@ -35,20 +35,20 @@ public:
     DebugAnalyzer(DebugLevel level = DEBUG_TOP_MOVES);
     ~DebugAnalyzer();
     
-    // Control del sistema
+    // System control
     void setDebugLevel(DebugLevel level) { currentLevel = level; }
     void enableFileLogging(const std::string& filename = "gomoku_debug.log");
     void disableFileLogging();
     
-    // Funciones principales de análisis
+    // Core analysis functions
     void analyzeRootMove(const Move& move, int score, const EvaluationBreakdown& breakdown);
     void setChosenMove(const Move& move, int finalScore);
     void createSnapshot(const GameState& state, int totalTime, int totalNodes);
     
-    // Evaluación con breakdown
+    // Evaluation with detailed breakdown
     static EvaluationBreakdown evaluateWithBreakdown(const GameState& state, const Move& move, int player);
     
-    // NUEVO: Análisis detallado de patrones para debug de heurística
+    // Detailed heuristic pattern analysis for debug output
     static void analyzeHeuristicPatterns(const GameState& state, int player, EvaluationBreakdown::HeuristicDebug& debug);
     
     // Utilidades
@@ -62,7 +62,7 @@ public:
     void saveSnapshotToFile(const std::string& filename) const { lastSnapshot.saveToFile(filename); }
     void logToFile(const std::string& message) const;
     std::string formatBoard(const GameState& state) const;
-    std::string formatMove(const Move& move) const;  // NUEVO: Hacer público para debug
+    std::string formatMove(const Move& move) const;
     
     // Centralized logging functions
     void logInfo(const std::string& message) const;
@@ -78,10 +78,10 @@ private:
     std::string findCriticalThreats(const GameState& state) const;
 };
 
-// Instancia global para fácil acceso
+// Global instance for easy access
 extern DebugAnalyzer* g_debugAnalyzer;
 
-// Macros para facilitar el uso
+// Convenience macros
 #define DEBUG_ROOT_MOVE(move, score, breakdown) \
     if (g_debugAnalyzer) g_debugAnalyzer->analyzeRootMove(move, score, breakdown)
 

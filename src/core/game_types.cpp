@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 
-// Inicialización del hasher estático
+// Static hasher initialization
 const ZobristHasher* GameState::hasher = nullptr;
 
 GameState::GameState() {
@@ -13,22 +13,22 @@ GameState::GameState() {
         }
     }
     
-    // Inicializar último movimiento humano como inválido
+    // Initialize last human move as invalid
     lastHumanMove = Move(-1, -1);
     
-    // Resetear capturas y jugador actual
+    // Reset captures and current player
     captures[0] = 0;
     captures[1] = 0;
     currentPlayer = PLAYER1;
     turnCount = 0;
     depth = 0;
     
-    // Resetear sistema de capturas forzadas
+    // Reset forced capture system
     forcedCaptureMoves.clear();
     forcedCapturePlayer = 0;
     pendingWinPlayer = 0;
     
-    // Calcular hash inicial si el hasher está disponible
+    // Calculate initial hash if hasher is available
     if (hasher) {
         zobristHash = hasher->computeFullHash(*this);
     }
@@ -49,7 +49,7 @@ GameState& GameState::operator=(const GameState& other) {
         zobristHash = other.zobristHash;
         lastHumanMove = other.lastHumanMove;
         
-        // Copiar sistema de capturas forzadas
+        // Copy forced capture system
         forcedCaptureMoves = other.forcedCaptureMoves;
         forcedCapturePlayer = other.forcedCapturePlayer;
         pendingWinPlayer = other.pendingWinPlayer;
@@ -76,7 +76,7 @@ int GameState::getOpponent(int player) const {
 void GameState::initializeHasher() {
     if (!hasher) {
         hasher = new ZobristHasher();
-        // Hasher Zobrist inicializado - se loggeará desde main
+        // Zobrist hasher initialized - logged from main
     }
 }
 
@@ -110,5 +110,5 @@ void GameState::recalculateHash() {
     
     zobristHash = hasher->computeFullHash(*this);
     
-    // Debug del hash eliminado para evitar spam en consola
+    // Hash debug removed to avoid console spam
 }

@@ -11,17 +11,17 @@
 #include <iostream>
 
 Move SuggestionEngine::getSuggestion(const GameState& state, int depth) {
-    // Usar la IA principal con profundidad especificada
+    // Use the main AI with the specified depth
     AI suggestionAI(depth);
     
-    // Obtener el mejor movimiento de la IA
+    // Get the best move from the AI
     Move bestMove = suggestionAI.getBestMove(state);
     
     if (bestMove.isValid()) {
         return bestMove;
     }
     
-    // Fallback a sugerencia rápida si algo falla
+    // Fallback to quick suggestion if something fails
     return getQuickSuggestion(state);
 }
 
@@ -29,7 +29,7 @@ Move SuggestionEngine::getQuickSuggestion(const GameState& state) {
     std::vector<Move> candidates = generateCandidates(state);
     
     if (candidates.empty()) {
-        // Fallback: centro del tablero
+        // Fallback: center of the board
         return Move(GameState::BOARD_CENTER, GameState::BOARD_CENTER);
     }
     
@@ -37,7 +37,7 @@ Move SuggestionEngine::getQuickSuggestion(const GameState& state) {
     int bestScore = std::numeric_limits<int>::min();
     int currentPlayer = state.currentPlayer;
     
-    // Evaluar cada candidato
+    // Evaluate each candidate
     for (const Move& move : candidates) {
         int score = evaluateMove(state, move, currentPlayer);
         
@@ -54,60 +54,60 @@ int SuggestionEngine::evaluateMove(const GameState& state, const Move& move, int
     int score = 0;
     int opponent = state.getOpponent(player);
     
-    // PRIORIDAD 1: ¿Gana inmediatamente? (MÁXIMA PRIORIDAD)
+    // Check for immediate win
     int winScore = checkWinningMove(state, move, player);
     if (winScore > 0) {
-        return 10000000;  // Victoria inmediata
+        return 10000000;  // Immediate win
     }
     
-    // PRIORIDAD 2: ¿Bloquea victoria del oponente? (CRÍTICO)
+    // Block opponent's winning move
     int blockScore = checkBlockingMove(state, move, player);
     if (blockScore > 0) {
-        return 5000000;  // Debe bloquear
+        return 5000000;  // Must block
     }
     
-    // PRIORIDAD 3: ¿Crea amenaza de 4 en línea? (MUY ALTO)
+    // Check if it creates a four-in-a-row threat
     GameState testState = state;
     testState.board[move.x][move.y] = player;
     
     if (createsFourInRow(testState, move, player)) {
-        score += 500000;  // Amenaza muy fuerte
+        score += 500000;  // Very strong threat
     }
     
-    // PRIORIDAD 4: ¿Bloquea amenaza de 4 del oponente?
+    // Block opponent's four-in-a-row threat
     testState = state;
     testState.board[move.x][move.y] = opponent;
     if (createsFourInRow(testState, move, opponent)) {
-        score += 300000;  // Bloquear amenaza de 4
+        score += 300000;  // Block four-in-a-row threat
     }
     
-    // Volver al estado con nuestra pieza
+    // Restore state with our piece
     testState = state;
     testState.board[move.x][move.y] = player;
     
-    // PRIORIDAD 5: ¿Crea amenaza de 3 abierto?
+    // Check if it creates an open three threat
     if (createsThreeOpen(testState, move, player)) {
         score += 100000;
     }
     
-    // PRIORIDAD 6: ¿Bloquea 3 abierto del oponente?
+    // Block opponent's open three
     testState.board[move.x][move.y] = opponent;
     if (createsThreeOpen(testState, move, opponent)) {
         score += 50000;
     }
     
-    // PRIORIDAD 7: Capturas (menos importante que patrones)
+    // Capture bonus (less important than patterns)
     int captureScore = checkCaptureMove(state, move, player);
     score += captureScore * 10000;
     
-    // PRIORIDAD 8: Valor de patrones generales
+    // General pattern value
     int patternScore = checkPatternValue(state, move, player);
     score += patternScore;
     
-    // PRIORIDAD 9: Conectividad (estar cerca de otras piezas)
+    // Connectivity bonus (proximity to other pieces)
     score += calculateConnectivity(state, move, player);
     
-    // PRIORIDAD 10: Centralidad (bonus leve por posiciones centrales)
+    // Centrality bonus (slight preference for central positions)
     int centerDist = std::max(std::abs(move.x - GameState::BOARD_CENTER), std::abs(move.y - GameState::BOARD_CENTER));
     score += (GameState::BOARD_CENTER - centerDist) * 10;
     
@@ -117,7 +117,7 @@ int SuggestionEngine::evaluateMove(const GameState& state, const Move& move, int
 std::vector<Move> SuggestionEngine::generateCandidates(const GameState& state) {
     std::vector<Move> candidates;
     
-    // Estrategia: generar movimientos en radio 2 de piezas existentes
+    // Generate moves within radius 2 of existing pieces
     bool hasPieces = false;
     
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
@@ -125,7 +125,7 @@ std::vector<Move> SuggestionEngine::generateCandidates(const GameState& state) {
             if (!state.isEmpty(i, j)) {
                 hasPieces = true;
                 
-                // Generar candidatos alrededor
+                // Generate candidates around this piece
                 for (int di = -2; di <= 2; di++) {
                     for (int dj = -2; dj <= 2; dj++) {
                         int ni = i + di;
@@ -134,7 +134,7 @@ std::vector<Move> SuggestionEngine::generateCandidates(const GameState& state) {
                         if (state.isValid(ni, nj) && state.isEmpty(ni, nj)) {
                             Move candidate(ni, nj);
                             
-                            // Evitar duplicados
+                            // Avoid duplicates
                             bool exists = false;
                             for (const Move& m : candidates) {
                                 if (m.x == ni && m.y == nj) {
@@ -153,7 +153,7 @@ std::vector<Move> SuggestionEngine::generateCandidates(const GameState& state) {
         }
     }
     
-    // Si no hay piezas (primer movimiento), sugerir centro
+    // If no pieces on board (first move), suggest center
     if (!hasPieces) {
         candidates.push_back(Move(GameState::BOARD_CENTER, GameState::BOARD_CENTER));
     }
@@ -166,7 +166,7 @@ int SuggestionEngine::checkWinningMove(const GameState& state, const Move& move,
     testState.board[move.x][move.y] = player;
     
     if (RuleEngine::checkWin(testState, player)) {
-        return 100;  // Victoria inmediata
+        return 100;  // Immediate win
     }
     
     return 0;
@@ -175,12 +175,12 @@ int SuggestionEngine::checkWinningMove(const GameState& state, const Move& move,
 int SuggestionEngine::checkBlockingMove(const GameState& state, const Move& move, int player) {
     int opponent = state.getOpponent(player);
     
-    // Simular que el oponente juega aquí
+    // Simulate opponent playing here
     GameState testState = state;
     testState.board[move.x][move.y] = opponent;
     
     if (RuleEngine::checkWin(testState, opponent)) {
-        return 100;  // Bloquea victoria del oponente
+        return 100;  // Blocks opponent's win
     }
     
     return 0;
@@ -188,7 +188,7 @@ int SuggestionEngine::checkBlockingMove(const GameState& state, const Move& move
 
 int SuggestionEngine::checkCaptureMove(const GameState& state, const Move& move, int player) {
     auto captures = RuleEngine::findCaptures(state, move, player);
-    return captures.size() / 2;  // Número de pares capturados
+    return captures.size() / 2;  // Number of captured pairs
 }
 
 int SuggestionEngine::checkPatternValue(const GameState& state, const Move& move, int player) {
@@ -198,14 +198,14 @@ int SuggestionEngine::checkPatternValue(const GameState& state, const Move& move
     int score = 0;
     int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
     
-    // Contar patrones en las 4 direcciones
+    // Count patterns in all 4 directions
     for (int d = 0; d < 4; d++) {
         int dx = directions[d][0];
         int dy = directions[d][1];
         
-        int count = 1;  // La pieza que acabamos de colocar
+        int count = 1;  // The piece we just placed
         
-        // Contar hacia adelante
+        // Count forward
         int x = move.x + dx, y = move.y + dy;
         while (testState.isValid(x, y) && testState.getPiece(x, y) == player) {
             count++;
@@ -213,7 +213,7 @@ int SuggestionEngine::checkPatternValue(const GameState& state, const Move& move
             y += dy;
         }
         
-        // Contar hacia atrás
+        // Count backward
         x = move.x - dx;
         y = move.y - dy;
         while (testState.isValid(x, y) && testState.getPiece(x, y) == player) {
@@ -222,15 +222,13 @@ int SuggestionEngine::checkPatternValue(const GameState& state, const Move& move
             y -= dy;
         }
         
-        // Scoring según el patrón (reducido porque ya se evalúa arriba)
-        if (count == 2) score += 100;   // Dos en línea
-        else if (count == 1) score += 10;  // Pieza individual
+        // Score based on pattern (reduced since higher priorities are evaluated above)
+        if (count == 2) score += 100;   // Two in a row
+        else if (count == 1) score += 10;  // Single piece
     }
     
     return score;
 }
-
-// NUEVAS FUNCIONES AUXILIARES
 
 bool SuggestionEngine::createsFourInRow(const GameState& state, const Move& move, int player) {
     int directions[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
@@ -239,9 +237,9 @@ bool SuggestionEngine::createsFourInRow(const GameState& state, const Move& move
         int dx = directions[d][0];
         int dy = directions[d][1];
         
-        int count = 1;  // La pieza en move
+        int count = 1;  // The piece at move position
         
-        // Contar hacia adelante
+        // Count forward
         int x = move.x + dx, y = move.y + dy;
         int forward = 0;
         while (state.isValid(x, y) && state.getPiece(x, y) == player && forward < 4) {
@@ -251,7 +249,7 @@ bool SuggestionEngine::createsFourInRow(const GameState& state, const Move& move
             y += dy;
         }
         
-        // Contar hacia atrás
+        // Count backward
         x = move.x - dx;
         y = move.y - dy;
         int backward = 0;
@@ -262,9 +260,9 @@ bool SuggestionEngine::createsFourInRow(const GameState& state, const Move& move
             y -= dy;
         }
         
-        // ¿Tiene exactamente 4 y al menos un extremo libre?
+        // Check if exactly 4 with at least one free end
         if (count == 4) {
-            // Verificar extremos libres
+            // Check if endpoints are free
             int frontX = move.x + (forward + 1) * dx;
             int frontY = move.y + (forward + 1) * dy;
             int backX = move.x - (backward + 1) * dx;
@@ -274,7 +272,7 @@ bool SuggestionEngine::createsFourInRow(const GameState& state, const Move& move
             bool backFree = state.isValid(backX, backY) && state.isEmpty(backX, backY);
             
             if (frontFree || backFree) {
-                return true;  // 4 en línea con al menos un extremo libre
+                return true;  // Four in a row with at least one free end
             }
         }
     }
@@ -291,7 +289,7 @@ bool SuggestionEngine::createsThreeOpen(const GameState& state, const Move& move
         
         int count = 1;
         
-        // Contar hacia adelante
+        // Count forward
         int x = move.x + dx, y = move.y + dy;
         int forward = 0;
         while (state.isValid(x, y) && state.getPiece(x, y) == player && forward < 3) {
@@ -301,7 +299,7 @@ bool SuggestionEngine::createsThreeOpen(const GameState& state, const Move& move
             y += dy;
         }
         
-        // Contar hacia atrás
+        // Count backward
         x = move.x - dx;
         y = move.y - dy;
         int backward = 0;
@@ -312,7 +310,7 @@ bool SuggestionEngine::createsThreeOpen(const GameState& state, const Move& move
             y -= dy;
         }
         
-        // ¿Tiene exactamente 3 y AMBOS extremos libres?
+        // Check if exactly 3 with both ends free
         if (count == 3) {
             int frontX = move.x + (forward + 1) * dx;
             int frontY = move.y + (forward + 1) * dy;
@@ -323,7 +321,7 @@ bool SuggestionEngine::createsThreeOpen(const GameState& state, const Move& move
             bool backFree = state.isValid(backX, backY) && state.isEmpty(backX, backY);
             
             if (frontFree && backFree) {
-                return true;  // 3 abierto (ambos extremos libres)
+                return true;  // Open three (both ends free)
             }
         }
     }
@@ -334,7 +332,7 @@ bool SuggestionEngine::createsThreeOpen(const GameState& state, const Move& move
 int SuggestionEngine::calculateConnectivity(const GameState& state, const Move& move, int player) {
     int connectivity = 0;
     
-    // Verificar las 8 direcciones adyacentes
+    // Check all 8 adjacent directions
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
             if (dx == 0 && dy == 0) continue;
@@ -344,9 +342,9 @@ int SuggestionEngine::calculateConnectivity(const GameState& state, const Move& 
             
             if (state.isValid(adjX, adjY)) {
                 if (state.getPiece(adjX, adjY) == player) {
-                    connectivity += 50;  // Bonus por estar cerca de nuestras piezas
+                    connectivity += 50;  // Bonus for proximity to own pieces
                 } else if (state.getPiece(adjX, adjY) == state.getOpponent(player)) {
-                    connectivity += 20;  // Bonus menor por estar cerca del oponente
+                    connectivity += 20;  // Minor bonus for proximity to opponent
                 }
             }
         }

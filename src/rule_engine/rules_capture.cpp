@@ -1,7 +1,7 @@
 // ============================================
 // RULES_CAPTURE.CPP
-// Lógica de detección y aplicación de capturas
-// Incluye verificación de rupturas de líneas por captura
+// Capture detection and application logic
+// Includes line break verification by capture
 // ============================================
 
 #include "../../include/rules/rule_engine.hpp"
@@ -14,14 +14,15 @@ RuleEngine::CaptureInfo RuleEngine::findAllCaptures(const GameState &state, cons
     CaptureInfo info;
     int opponent = state.getOpponent(player);
 
-    // Buscar en las 8 direcciones SOLO capturas que YO hago (X-O-O-X)
+    // Search all 8 directions for captures by the current player (X-O-O-X)
     for (int d = 0; d < ALL_COUNT; d++)
     {
         int dx = ALL[d][0];
         int dy = ALL[d][1];
 
-        // Patrón 1: NUEVA(move)-OPP-OPP-MIA
-        // Esto es: X(nueva)-O-O-X(existente)
+        // Pattern: move-OPP-OPP-MINE
+        // All 8 directions cover both directions of each axis,
+        // so a single forward pattern is sufficient.
         Move opp1(move.x + dx, move.y + dy);
         Move opp2(move.x + 2 * dx, move.y + 2 * dy);
         Move myOther(move.x + 3 * dx, move.y + 3 * dy);
@@ -34,35 +35,14 @@ RuleEngine::CaptureInfo RuleEngine::findAllCaptures(const GameState &state, cons
                 state.getPiece(opp2.x, opp2.y) == opponent &&
                 state.getPiece(myOther.x, myOther.y) == player)
             {
-                // Captura válida hacia adelante
                 info.myCapturedPieces.push_back(opp1);
                 info.myCapturedPieces.push_back(opp2);
             }
         }
-
-        // Patrón 2: MIA-OPP-OPP-NUEVA(move)
-        // Esto es: X(existente)-O-O-X(nueva)
-        Move opp1_back(move.x - dx, move.y - dy);
-        Move opp2_back(move.x - 2 * dx, move.y - 2 * dy);
-        Move myOther_back(move.x - 3 * dx, move.y - 3 * dy);
-
-        if (state.isValid(opp1_back.x, opp1_back.y) && 
-            state.isValid(opp2_back.x, opp2_back.y) && 
-            state.isValid(myOther_back.x, myOther_back.y))
-        {
-            if (state.getPiece(opp1_back.x, opp1_back.y) == opponent &&
-                state.getPiece(opp2_back.x, opp2_back.y) == opponent &&
-                state.getPiece(myOther_back.x, myOther_back.y) == player)
-            {
-                // Captura válida hacia atrás
-                info.myCapturedPieces.push_back(opp1_back);
-                info.myCapturedPieces.push_back(opp2_back);
-            }
-        }
     }
 
-    // opponentCapturedPieces se queda VACÍO
-    // (NO se aplican capturas del oponente - solo se calculan para heurística si se necesita)
+    // opponentCapturedPieces remains empty
+    // (Opponent captures are not applied - only computed for heuristics if needed)
     
     return info;
 }
@@ -71,7 +51,7 @@ std::vector<Move> RuleEngine::findCaptures(const GameState &state, const Move &m
 {
 	std::vector<Move> allCaptures;
 
-	// Buscar en las 8 direcciones
+	// Search all 8 directions
 	for (int d = 0; d < ALL_COUNT; d++)
 	{
 		auto dirCaptures = findCapturesInDirection(state, move, player,
@@ -113,14 +93,14 @@ std::vector<Move> RuleEngine::findCapturesInDirection(const GameState &state,
 
 bool RuleEngine::canBreakLineByCapture(
     const GameState &state, 
-    const Move &lineStart,  // Primera ficha de la línea de 5
-    int dx, int dy,         // Dirección de la línea
+    const Move &lineStart,  // First piece of the line of 5
+    int dx, int dy,         // Direction of the line
     int winningPlayer,
     std::vector<Move>* outCaptureMoves  // OUT: positions where opponent can capture
 ) {
     int opponent = state.getOpponent(winningPlayer);
     
-    // Recopilar todas las posiciones de la línea de 5
+    // Collect all positions in the line of 5
     std::vector<Move> linePositions;
     for (int i = 0; i < 5; i++) {
         linePositions.push_back(Move(lineStart.x + i*dx, lineStart.y + i*dy));
@@ -128,22 +108,22 @@ bool RuleEngine::canBreakLineByCapture(
     
     bool foundCapture = false;
     
-    // Para cada pieza en la línea, verificar si el oponente puede capturarla
-    // en CUALQUIER dirección (no solo en la dirección de la línea)
+    // For each piece in the line, check if the opponent can capture it
+    // in any direction (not just the line direction)
     for (const Move& piece : linePositions) {
         
-        // Probar las 8 direcciones para capturas
+        // Try all 8 directions for captures
         for (int d = 0; d < ALL_COUNT; d++) {
             int cdx = ALL[d][0];
             int cdy = ALL[d][1];
             
-            // Buscar patrón X-O-O-? donde X=oponente, O=pieza actual
-            // La pieza actual debe ser la primera O del par
+            // Look for pattern X-O-O-? where X=opponent, O=current piece
+            // The current piece must be the first O of the pair
             Move secondPiece(piece.x + cdx, piece.y + cdy);
             Move before(piece.x - cdx, piece.y - cdy);
             Move after(secondPiece.x + cdx, secondPiece.y + cdy);
             
-            // Verificar patrón: OPP-PIECE-SECOND-EMPTY
+            // Check pattern: OPP-PIECE-SECOND-EMPTY
             if (state.isValid(before.x, before.y) && 
                 state.getPiece(before.x, before.y) == opponent &&
                 state.isValid(secondPiece.x, secondPiece.y) &&
@@ -157,7 +137,7 @@ bool RuleEngine::canBreakLineByCapture(
                 }
             }
             
-            // También verificar patrón: EMPTY-PIECE-SECOND-OPP
+            // Also check pattern: EMPTY-PIECE-SECOND-OPP
             if (state.isValid(after.x, after.y) &&
                 state.getPiece(after.x, after.y) == opponent &&
                 state.isValid(secondPiece.x, secondPiece.y) &&
@@ -173,10 +153,6 @@ bool RuleEngine::canBreakLineByCapture(
         }
     }
     
-    if (!foundCapture) {
-        std::cout << "  -> No capture pattern found for any piece in the line" << std::endl;
-    }
-    
     return foundCapture;
 }
 
@@ -184,16 +160,16 @@ bool RuleEngine::opponentCanCaptureNextTurn(
     const GameState &state, 
     int opponent
 ) {
-    // Probar cada casilla vacía
+    // Try each empty cell
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             if (state.isEmpty(i, j)) {
                 Move testMove(i, j);
                 
-                // ¿Este movimiento crea capturas?
+                // Does this move create captures?
                 auto captures = findCaptures(state, testMove, opponent);
                 if (!captures.empty()) {
-                    return true;  // Sí puede capturar en su próximo turno
+                    return true;  // Opponent can capture on the next turn
                 }
             }
         }

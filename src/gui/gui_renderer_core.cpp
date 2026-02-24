@@ -5,7 +5,7 @@
 
 #include "../../include/gui/gui_renderer.hpp"
 #include <iostream>
-#include <cstdlib>  // Para rand() en efectos visuales
+#include <cstdlib>  // For rand() in visual effects
 
 // ============================================================================
 // CONSTRUCTOR & DESTRUCTOR
@@ -42,7 +42,7 @@ GuiRenderer::GuiRenderer()
       musicVolume(30.0f),
       soundVolume(70.0f)
 {
-    // Inicializar partículas para efectos visuales
+    // Initialize particles for visual effects
     particles.resize(50);
     particleLife.resize(50);
     for (int i = 0; i < 50; i++) {
@@ -50,16 +50,16 @@ GuiRenderer::GuiRenderer()
         particleLife[i] = static_cast<float>(rand() % 100) / 100.0f;
     }
     
-    // Cargar fuente personalizada
+    // Load custom font
     if (!font.loadFromFile("fonts/LEMONMILK-Medium.otf")) {
         std::cout << "Warning: Could not load font fonts/LEMONMILK-Medium.otf, using default" << std::endl;
     } else {
         std::cout << "✓ Custom font loaded: fonts/LEMONMILK-Medium.otf" << std::endl;
     }
     
-    // Cargar frames de animación de victoria
+    // Load victory animation frames
     currentWinFrame = 0;
-    const int numWinFrames = 115; // El nuevo GIF de victoria tiene 115 frames
+    const int numWinFrames = 115; // Victory GIF has 115 frames
     winAnimationFrames.resize(numWinFrames);
     
     bool allWinFramesLoaded = true;
@@ -75,14 +75,14 @@ GuiRenderer::GuiRenderer()
     if (allWinFramesLoaded) {
         std::cout << "✓ Victory animation loaded: " << numWinFrames << " frames" << std::endl;
         winAnimationSprite.setTexture(winAnimationFrames[0]);
-        // Ajustar tamaño del sprite
-        float scale = 300.0f / winAnimationFrames[0].getSize().x; // Escalar a 300px de ancho
+        // Adjust sprite size
+        float scale = 300.0f / winAnimationFrames[0].getSize().x; // Scale to 300px width
         winAnimationSprite.setScale(scale, scale);
     }
     
-    // Cargar frames de animación de derrota
+    // Load defeat animation frames
     currentDefeatFrame = 0;
-    const int numDefeatFrames = 41; // El GIF de derrota tiene 41 frames
+    const int numDefeatFrames = 41; // Defeat GIF has 41 frames
     defeatAnimationFrames.resize(numDefeatFrames);
     
     bool allDefeatFramesLoaded = true;
@@ -98,8 +98,8 @@ GuiRenderer::GuiRenderer()
     if (allDefeatFramesLoaded) {
         std::cout << "✓ Defeat animation loaded: " << numDefeatFrames << " frames" << std::endl;
         defeatAnimationSprite.setTexture(defeatAnimationFrames[0]);
-        // Ajustar tamaño del sprite
-        float defeatScale = 300.0f / defeatAnimationFrames[0].getSize().x; // Escalar a 300px de ancho
+        // Adjust sprite size
+        float defeatScale = 300.0f / defeatAnimationFrames[0].getSize().x; // Scale to 300px width
         defeatAnimationSprite.setScale(defeatScale, defeatScale);
     }
     
@@ -171,12 +171,12 @@ void GuiRenderer::processEvents() {
             case sf::Event::KeyPressed:
                 if (event.key.code == sf::Keyboard::Escape) {
                     if (currentState != MENU) {
-                        // Limpiar todo el estado visual al volver al menú
+                        // Clear all visual state when returning to menu
                         resetColorblindMode();
                         clearSuggestion();
                         clearInvalidMoveError();
                         setWinningLine(std::vector<Move>());
-                        showGameOverAnimation = true;  // Reset para la próxima partida
+                        showGameOverAnimation = true;  // Reset for the next game
                         selectedMenuOption = -1;
                         setState(MENU);
                         std::cout << "✓ Returned to menu - all state cleaned" << std::endl;

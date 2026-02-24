@@ -1,7 +1,7 @@
 // ============================================
 // RULES_WIN.CPP
-// Lógica de detección de victoria
-// Victoria por 5-en-línea y por capturas
+// Win detection logic
+// Win by five-in-a-row and by captures
 // ============================================
 
 #include "../../include/rules/rule_engine.hpp"
@@ -13,27 +13,27 @@ bool RuleEngine::checkWin(const GameState &state, int player)
 {
     int opponent = state.getOpponent(player);
     
-    // 1. Victoria por capturas (esta no cambia)
+    // 1. Win by captures
     if (state.captures[player - 1] >= 10)
     {
         return true;
     }
 
-    // 2. Victoria por 5 en línea (AHORA CON VERIFICACIÓN)
+    // 2. Win by five in a row (with verification)
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             if (state.board[i][j] == player) {
                 Move pos(i, j);
                 
-                // Buscar línea de 5 en cada dirección
+                // Check for a line of 5 in each direction
                 for (int d = 0; d < MAIN_COUNT; d++) {
                     int dx = MAIN[d][0];
                     int dy = MAIN[d][1];
                     
                     if (checkLineWinInDirection(state, pos, dx, dy, player)) {
-                        // ✅ Encontramos 5 en línea
+                        // Found a line of 5
                         
-                        // NUEVA VERIFICACIÓN 1: ¿Oponente puede romperla?
+                        // Verification 1: Can the opponent break it via capture?
                         // This will be handled by the game engine setting forced captures
                         std::vector<Move> captureMoves;
                         bool canBreak = canBreakLineByCapture(state, pos, dx, dy, player, &captureMoves);
@@ -44,16 +44,16 @@ bool RuleEngine::checkWin(const GameState &state, int player)
                             continue;
                         }
                         
-                        // NUEVA VERIFICACIÓN 2: ¿Estoy en peligro de perder por captura?
+                        // Verification 2: Is the winning player at risk of losing by capture?
                         if (state.captures[opponent - 1] >= 8) {
-                            // Tengo 4+ pares capturados en mi contra
-                            // ¿El oponente puede capturar uno más?
+                            // 4+ pairs captured against the winning player
+                            // Can the opponent capture one more?
                             if (opponentCanCaptureNextTurn(state, opponent)) {
-                                return false;  // No gano, el oponente puede ganar por captura
+                                return false;  // No win, opponent can win by capture
                             }
                         }
                         
-                        // Si llegamos aquí, es victoria legítima
+                        // If we reach here, it's a legitimate win
                         return true;
                     }
                 }
@@ -66,13 +66,13 @@ bool RuleEngine::checkWin(const GameState &state, int player)
 
 bool RuleEngine::checkLineWin(const GameState &state, const Move &move, int player)
 {
-	// Verificar las 4 direcciones principales (sin duplicados)
+	// Check the 4 main directions (no duplicates)
 	for (int d = 0; d < MAIN_COUNT; d++)
 	{
 		int dx = MAIN[d][0];
 		int dy = MAIN[d][1];
 
-		int count = 1; // La pieza actual
+		int count = 1; // The current piece
 		count += countInDirection(state, move, dx, dy, player);
 		count += countInDirection(state, move, -dx, -dy, player);
 
@@ -86,19 +86,19 @@ bool RuleEngine::checkLineWin(const GameState &state, const Move &move, int play
 bool RuleEngine::checkLineWinInDirection(const GameState &state, const Move &start, 
                                          int dx, int dy, int player)
 {
-    // Verificar si desde 'start' hay exactamente 5 o más en línea en dirección (dx, dy)
+    // Check if there are 5 or more in a line from 'start' in direction (dx, dy)
     
-    // IMPORTANTE: Solo contar si 'start' es realmente el inicio de la línea
-    // (para evitar contar la misma línea múltiples veces)
+    // Only count if 'start' is the actual beginning of the line
+    // (to avoid counting the same line multiple times)
     
-    // Verificar que no hay pieza del mismo jugador ANTES de start
+    // Verify there is no piece of the same player before start
     Move before(start.x - dx, start.y - dy);
     if (state.isValid(before.x, before.y) && state.getPiece(before.x, before.y) == player) {
-        return false;  // No es el inicio real de la línea
+        return false;  // Not the actual start of the line
     }
     
-    // Contar cuántas fichas consecutivas hay desde start
-    int count = 1;  // La ficha en 'start'
+    // Count consecutive pieces from start
+    int count = 1;  // The piece at 'start'
     Move current(start.x + dx, start.y + dy);
     
     while (state.isValid(current.x, current.y) && 
@@ -108,6 +108,6 @@ bool RuleEngine::checkLineWinInDirection(const GameState &state, const Move &sta
         current.y += dy;
     }
     
-    // ¿Hay 5 o más?
+    // Are there 5 or more?
     return (count >= 5);
 }

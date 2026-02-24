@@ -15,12 +15,12 @@ public:
     AI(int searchDepth = 10, AIImplementation impl = CPP_IMPLEMENTATION)
         : depth(searchDepth), implementation(impl) {}
     
-    // Obtener mejor movimiento para el estado actual
+    // Get best move for the current state
     Move getBestMove(const GameState& state);
 
 	int getDepthForGamePhase(const GameState &state);
 
-	// Configurar profundidad de búsqueda
+	// Set search depth
     void setDepth(int newDepth) { depth = newDepth; }
     int getDepth() const { return depth; }
     
@@ -38,7 +38,7 @@ public:
     // Cache management
     void clearCache() { searchEngine.clearCache(); }
     
-    // Funciones adicionales para game_engine
+    // Additional functions for game engine integration
     TranspositionSearch::SearchResult findBestMoveIterative(const GameState& state, int maxDepth);
     std::vector<Move> generateOrderedMoves(const GameState& state);
     int quickEvaluateMove(const GameState& state, const Move& move);

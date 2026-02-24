@@ -16,53 +16,53 @@
 
 void GuiRenderer::renderGameOver(const GameState& state) {
     // ============================================
-    // PASO 0: Fondo moderno espectacular
+    // Draw modern background
     // ============================================
     drawModernBackground();
     
     // ============================================
-    // PASO 1: Renderizar el tablero normal (izquierda)
+    // Render the board (left side)
     // ============================================
     drawBoard();
     drawPieces(state);
 	int PIECE_RADIUS = (CELL_SIZE / 2) - 4;
     
     // ============================================
-    // PASO 2: Resaltar la línea ganadora
+    // Highlight the winning line
     // ============================================
     if (!winningLine.empty()) {
         for (const Move& move : winningLine) {
             sf::Vector2i pos = boardPositionToPixel(move.x, move.y);
             
-            // Halo brillante dorado
+            // Bright golden halo
             sf::CircleShape highlight(PIECE_RADIUS + 8);
             highlight.setPosition(pos.x - PIECE_RADIUS - 8, pos.y - PIECE_RADIUS - 8);
             highlight.setFillColor(sf::Color::Transparent);
             highlight.setOutlineThickness(5);
-            highlight.setOutlineColor(sf::Color(255, 215, 0, 255)); // Dorado sólido
+            highlight.setOutlineColor(sf::Color(255, 215, 0, 255)); // Solid gold
             window.draw(highlight);
             
-            // Segundo halo más grande
+            // Second larger halo
             sf::CircleShape highlight2(PIECE_RADIUS + 14);
             highlight2.setPosition(pos.x - PIECE_RADIUS - 14, pos.y - PIECE_RADIUS - 14);
             highlight2.setFillColor(sf::Color::Transparent);
             highlight2.setOutlineThickness(3);
-            highlight2.setOutlineColor(sf::Color(255, 255, 0, 150)); // Amarillo brillante
+            highlight2.setOutlineColor(sf::Color(255, 255, 0, 150)); // Bright yellow
             window.draw(highlight2);
         }
         
-        // Línea conectando las fichas
+        // Line connecting the pieces
         if (winningLine.size() >= 2) {
             sf::Vector2i start = boardPositionToPixel(winningLine.front().x, winningLine.front().y);
             sf::Vector2i end = boardPositionToPixel(winningLine.back().x, winningLine.back().y);
             
-            // Calcular grosor basado en ángulo
+            // Calculate thickness based on angle
             float dx = end.x - start.x;
             float dy = end.y - start.y;
             float length = std::sqrt(dx*dx + dy*dy);
             float angle = std::atan2(dy, dx) * 180.0f / 3.14159f;
             
-            // Rectángulo como línea gruesa
+            // Rectangle as thick line
             sf::RectangleShape line(sf::Vector2f(length, 6));
             line.setPosition(start.x, start.y);
             line.setRotation(angle);
@@ -72,42 +72,30 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     }
     
     // ============================================
-    // PASO 2.5: Determinar ganador ANTES de mostrar animación
+    // Determine winner using storedWinner (set by showGameResult)
     // ============================================
-    bool player1Wins = false;
-    
-    if (state.captures[0] >= 10) {
-        player1Wins = true;
-    } else if (state.captures[1] >= 10) {
-        player1Wins = false;
-    } else {
-        if (state.currentPlayer == GameState::PLAYER1) {
-            player1Wins = false; // AI ganó
-        } else {
-            player1Wins = true; // Jugador ganó
-        }
-    }
+    bool player1Wins = (storedWinner == GameState::PLAYER1);
     
     // ============================================
-    // PASO 2.6: Mostrar animación apropiada ENCIMA del highlighter (si está activa)
+    // Show appropriate animation on top of the highlighter (if active)
     // ============================================
     if (showGameOverAnimation) {
         if (player1Wins && !winAnimationFrames.empty()) {
-            // VICTORIA - Mostrar animación de victoria
-            // Actualizar frame de animación (cambiar cada 50ms para 115 frames - animación fluida)
+            // VICTORY - Show victory animation
+            // Update animation frame (change every 50ms for 115 frames - smooth animation)
             if (winAnimationClock.getElapsedTime().asMilliseconds() > 50) {
                 currentWinFrame = (currentWinFrame + 1) % winAnimationFrames.size();
                 winAnimationSprite.setTexture(winAnimationFrames[currentWinFrame]);
                 winAnimationClock.restart();
             }
             
-            // Calcular posición centrada con el tablero
+            // Calculate position centered with the board
             sf::Vector2u frameSize = winAnimationFrames[currentWinFrame].getSize();
             float scale = winAnimationSprite.getScale().x;
             float frameWidth = frameSize.x * scale;
             float frameHeight = frameSize.y * scale;
             
-            // Posición: centrado horizontalmente y verticalmente con el tablero
+            // Centered horizontally and vertically with the board
             float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
             float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
             
@@ -116,21 +104,21 @@ void GuiRenderer::renderGameOver(const GameState& state) {
             
             window.draw(winAnimationSprite);
         } else if (!player1Wins && !defeatAnimationFrames.empty()) {
-            // DERROTA - Mostrar animación de derrota
-            // Actualizar frame de animación (cambiar cada 50ms para animación más fluida - 41 frames)
+            // DEFEAT - Show defeat animation
+            // Update animation frame (change every 50ms for smoother animation - 41 frames)
             if (defeatAnimationClock.getElapsedTime().asMilliseconds() > 50) {
                 currentDefeatFrame = (currentDefeatFrame + 1) % defeatAnimationFrames.size();
                 defeatAnimationSprite.setTexture(defeatAnimationFrames[currentDefeatFrame]);
                 defeatAnimationClock.restart();
             }
             
-            // Calcular posición centrada con el tablero
+            // Calculate position centered with the board
             sf::Vector2u frameSize = defeatAnimationFrames[currentDefeatFrame].getSize();
             float scale = defeatAnimationSprite.getScale().x;
             float frameWidth = frameSize.x * scale;
             float frameHeight = frameSize.y * scale;
             
-            // Posición: centrado horizontalmente y verticalmente con el tablero
+            // Centered horizontally and vertically with the board
             float gifX = BOARD_OFFSET_X + (BOARD_SIZE_PX - frameWidth) / 2.0f;
             float gifY = BOARD_OFFSET_Y + (BOARD_SIZE_PX - frameHeight) / 2.0f;
             
@@ -141,37 +129,37 @@ void GuiRenderer::renderGameOver(const GameState& state) {
         }
         
         // ============================================
-        // PASO 2.7: Botón NEXT para saltar animación
+        // NEXT button to skip animation
         // ============================================
         nextButtonWidth = 120;
         nextButtonHeight = 45;
         nextButtonX = BOARD_OFFSET_X + (BOARD_SIZE_PX - nextButtonWidth) / 2;
         nextButtonY = BOARD_OFFSET_Y + BOARD_SIZE_PX - nextButtonHeight - 30;
         
-        // Fondo semi-transparente para el botón
+        // Semi-transparent button background
         sf::RectangleShape buttonBg(sf::Vector2f(nextButtonWidth, nextButtonHeight));
         buttonBg.setPosition(nextButtonX, nextButtonY);
         buttonBg.setFillColor(sf::Color(40, 40, 40, 220));
         buttonBg.setOutlineThickness(2);
         
         // Hover effect
-        bool nextHover = (hoveredMenuOption == 10);  // Usamos 10 para el botón NEXT
+        bool nextHover = (hoveredMenuOption == 10);  // 10 is used for the NEXT button
         if (nextHover) {
-            buttonBg.setOutlineColor(sf::Color(255, 215, 0));  // Dorado en hover
+            buttonBg.setOutlineColor(sf::Color(255, 215, 0));  // Gold on hover
             buttonBg.setFillColor(sf::Color(60, 60, 60, 240));
         } else {
             buttonBg.setOutlineColor(sf::Color(200, 200, 200));
         }
         window.draw(buttonBg);
         
-        // Texto del botón
+        // Button text
         sf::Text nextText;
         nextText.setFont(font);
         nextText.setString("NEXT");
         nextText.setCharacterSize(20);
         nextText.setFillColor(nextHover ? sf::Color(255, 215, 0) : sf::Color::White);
         
-        // Centrar texto en el botón
+        // Center text in the button
         sf::FloatRect textBounds = nextText.getLocalBounds();
         nextText.setPosition(
             nextButtonX + (nextButtonWidth - textBounds.width) / 2 - textBounds.left,
@@ -181,39 +169,39 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     }
     
     // ============================================
-    // PASO 3: Panel lateral derecho (donde va el info panel)
+    // Right side panel (info panel area)
     // ============================================
     int panelX = BOARD_OFFSET_X + BOARD_SIZE_PX + 30;
     int panelY = BOARD_OFFSET_Y;
     int panelWidth = 280;
-    int panelHeight = BOARD_SIZE_PX; // Mismo alto que el tablero
+    int panelHeight = BOARD_SIZE_PX; // Same height as the board
     
-    // Overlay oscuro solo en el panel derecho
+    // Dark overlay only on the right panel
     sf::RectangleShape overlay(sf::Vector2f(panelWidth + 20, panelHeight));
     overlay.setPosition(panelX - 10, panelY);
     overlay.setFillColor(sf::Color(0, 0, 0, 200));
     window.draw(overlay);
     
-    // Fondo del panel
+    // Panel background
     sf::RectangleShape panelBg(sf::Vector2f(panelWidth, panelHeight));
     panelBg.setPosition(panelX, panelY);
     panelBg.setFillColor(sf::Color(30, 30, 30, 250));
     panelBg.setOutlineThickness(4);
-    panelBg.setOutlineColor(sf::Color(255, 215, 0)); // Borde dorado
+    panelBg.setOutlineColor(sf::Color(255, 215, 0)); // Gold border
     window.draw(panelBg);
     
     // ============================================
-    // PASO 4: Contenido del panel
+    // Panel content
     // ============================================
     int yOffset = panelY + 20;
     int centerX = panelX + panelWidth / 2;
     
-    // Título GAME OVER
+    // GAME OVER title
     drawText("GAME OVER", centerX - 90, yOffset, 32, sf::Color(255, 100, 100));
     yOffset += 50;
     
     // ============================================
-    // PASO 5: Determinar razón de victoria (player1Wins ya determinado arriba)
+    // Determine win reason (player1Wins already determined above)
     // ============================================
     std::string winReason = "";
     std::string winDetails = "";
@@ -246,7 +234,7 @@ void GuiRenderer::renderGameOver(const GameState& state) {
         }
     }
     
-    // Resultado principal
+    // Main result
     if (player1Wins) {
         drawText("YOU WIN!", centerX - 70, yOffset, 28, sf::Color(100, 255, 100));
         yOffset += 35;
@@ -259,14 +247,14 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     
     yOffset += 35;
     
-    // Razón de victoria (centrada)
+    // Win reason (centered)
     drawText(winReason, centerX - winReason.length() * 6, yOffset, 20, sf::Color::White);
     yOffset += 25;
     drawText(winDetails, centerX - winDetails.length() * 4, yOffset, 14, sf::Color(180, 180, 180));
     
     yOffset += 40;
     
-    // Separador
+    // Separator
     sf::RectangleShape separator(sf::Vector2f(panelWidth - 30, 2));
     separator.setPosition(panelX + 15, yOffset);
     separator.setFillColor(sf::Color(255, 215, 0));
@@ -275,12 +263,12 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     yOffset += 25;
     
     // ============================================
-    // PASO 6: Estadísticas finales
+    // Final statistics
     // ============================================
     drawText("FINAL STATS", centerX - 60, yOffset, 18, sf::Color(255, 215, 0));
     yOffset += 30;
     
-    // Stats compactas
+    // Compact stats
     drawText("Your Captures:", panelX + 15, yOffset, 14, sf::Color::White);
     drawText(std::to_string(state.captures[0]), panelX + panelWidth - 40, yOffset, 14, sf::Color(150, 255, 150));
     yOffset += 22;
@@ -294,7 +282,7 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     
     yOffset += 35;
     
-    // Otro separador
+    // Another separator
     sf::RectangleShape separator2(sf::Vector2f(panelWidth - 30, 2));
     separator2.setPosition(panelX + 15, yOffset);
     separator2.setFillColor(sf::Color(100, 100, 100));
@@ -303,30 +291,30 @@ void GuiRenderer::renderGameOver(const GameState& state) {
     yOffset += 25;
     
     // ============================================
-    // PASO 7: Botones con hover effect
+    // Buttons with hover effect
     // ============================================
     int buttonWidth = panelWidth - 30;
     int buttonHeight = 50;
     int buttonX = panelX + 15;
     
-    // GUARDAR posición exacta de botones para usar en mouse events
+    // Save exact button positions for use in mouse events
     gameOverButtonsY = yOffset;
     gameOverButtonsPositionValid = true;
     
-    // Botón "New Game" con hover
+    // "New Game" button with hover
     bool newGameHover = (hoveredMenuOption == 0);
     drawButton("NEW GAME", buttonX, gameOverButtonsY, buttonWidth, buttonHeight, newGameHover);
     
-    // Botón "Main Menu" con hover
+    // "Main Menu" button with hover
     bool menuHover = (hoveredMenuOption == 1);
     drawButton("MAIN MENU", buttonX, gameOverButtonsY + buttonHeight + 15, buttonWidth, buttonHeight, menuHover);
     
-    // Instrucción (usar posición calculada)
+    // Instruction (use calculated position)
     yOffset = gameOverButtonsY + (buttonHeight + 15) * 2 + 20;
     
     yOffset += buttonHeight + 20;
     
-    // Instrucción
+    // Instruction
     drawText("Press ESC for menu", centerX - 80, yOffset, 12, sf::Color(120, 120, 120));
 }
 
@@ -414,7 +402,7 @@ void GuiRenderer::handleMouseMove(int x, int y) {
     }
     
     if (currentState == PLAYING) {
-        // Actualizar hover position en el tablero
+        // Update hover position on the board
         if (isPointInBoard(x, y)) {
             auto [boardX, boardY] = pixelToBoardPosition(x, y);
             hoverPosition = Move(boardX, boardY);
@@ -436,7 +424,7 @@ void GuiRenderer::handleMouseMove(int x, int y) {
         
         hoveredMenuOption = -1;
         
-        // Check botón NEXT (solo si la animación está activa)
+        // Check NEXT button (only if animation is active)
         if (showGameOverAnimation && nextButtonWidth > 0) {
             if (x >= nextButtonX && x <= nextButtonX + nextButtonWidth && 
                 y >= nextButtonY && y <= nextButtonY + nextButtonHeight) {
@@ -445,12 +433,12 @@ void GuiRenderer::handleMouseMove(int x, int y) {
             }
         }
         
-        // Check botón NEW GAME
+        // Check NEW GAME button
         if (x >= buttonX && x <= buttonX + buttonWidth && 
             y >= button1Y && y <= button1Y + buttonHeight) {
             hoveredMenuOption = 0;
         }
-        // Check botón MAIN MENU
+        // Check MAIN MENU button
         else if (x >= buttonX && x <= buttonX + buttonWidth && 
                  y >= button2Y && y <= button2Y + buttonHeight) {
             hoveredMenuOption = 1;
@@ -461,12 +449,12 @@ void GuiRenderer::handleMouseMove(int x, int y) {
 void GuiRenderer::handleGameOverClick(int x, int y) {
     if (!gameOverButtonsPositionValid) return;
     
-    // Check click en botón NEXT (saltar animación)
+    // Check click on NEXT button (skip animation)
     if (showGameOverAnimation && nextButtonWidth > 0) {
         if (x >= nextButtonX && x <= nextButtonX + nextButtonWidth && 
             y >= nextButtonY && y <= nextButtonY + nextButtonHeight) {
             audioManager.playSound("click_menu");
-            showGameOverAnimation = false;  // Ocultar animación
+            showGameOverAnimation = false;  // Hide animation
             return;
         }
     }
@@ -481,20 +469,20 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     int button1Y = gameOverButtonsY;
     int button2Y = gameOverButtonsY + buttonHeight + 15;
     
-    // Click en "NEW GAME"
+    // Click on "NEW GAME"
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button1Y && y <= button1Y + buttonHeight) {
         audioManager.playSound("click_menu");
-        showGameOverAnimation = true;  // Reset para la próxima partida
+        showGameOverAnimation = true;  // Reset for next game
         selectedMenuOption = 0;
         return;
     }
     
-    // Click en "MAIN MENU"
+    // Click on "MAIN MENU"
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button2Y && y <= button2Y + buttonHeight) {
         audioManager.playSound("click_menu");
-        showGameOverAnimation = true;  // Reset para la próxima partida
+        showGameOverAnimation = true;  // Reset for next game
         clearSuggestion();
         clearInvalidMoveError();
         setWinningLine(std::vector<Move>());
@@ -508,6 +496,7 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
 // UTILITY FUNCTIONS
 // ===============================================
 
-void GuiRenderer::showGameResult(int) {
+void GuiRenderer::showGameResult(int winner) {
+    storedWinner = winner;
     setState(GAME_OVER);
 }

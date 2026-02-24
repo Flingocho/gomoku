@@ -1,7 +1,7 @@
 // ============================================
 // SEARCH_ORDERING.CPP
-// Generación y ordenamiento de movimientos candidatos
-// Incluye heurísticas de evaluación rápida y filtrado adaptativo
+// Candidate move generation and ordering
+// Includes quick evaluation heuristics and adaptive filtering
 // ============================================
 
 #include "../../include/ai/transposition_search.hpp"
@@ -16,7 +16,7 @@ using namespace Directions;
 
 std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState &state)
 {
-	// NUEVO: Generar candidatos con filtrado adaptativo por fase de juego
+	// Generate candidates with adaptive filtering by game phase
 	std::vector<Move> candidates = generateCandidatesAdaptiveRadius(state);
 
 	return candidates;
@@ -24,7 +24,7 @@ std::vector<Move> TranspositionSearch::generateOrderedMoves(const GameState &sta
 
 void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move> &moves, const GameState &state)
 {
-	// Si tenemos mejor movimiento de iteración anterior, ponerlo primero
+	// If we have the best move from previous iteration, place it first
 	if (previousBestMove.isValid())
 	{
 		auto it = std::find_if(moves.begin(), moves.end(),
@@ -35,10 +35,10 @@ void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move> &moves, c
 
 		if (it != moves.end())
 		{
-			// Mover al frente
+			// Move to front
 			std::iter_swap(moves.begin(), it);
 
-			// Ordenar el resto normalmente
+			// Sort the rest normally
 			if (moves.size() > 1)
 			{
 				std::sort(moves.begin() + 1, moves.end(), [&](const Move &a, const Move &b)
@@ -49,22 +49,22 @@ void TranspositionSearch::orderMovesWithPreviousBest(std::vector<Move> &moves, c
 		}
 	}
 
-	// Si no hay movimiento anterior, orden normal
+	// No previous best move found, use standard ordering
 	orderMoves(moves, state);
 }
 
 void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &state)
 {
-	// OPTIMIZACIÓN: Para pocos movimientos, el orden importa menos
+	// For very few moves, ordering has minimal impact
 	if (moves.size() <= 2)
 	{
-		return; // Skip sorting completamente
+		return; // Skip sorting entirely
 	}
 
-	// OPTIMIZACIÓN: Para movimientos medianos, sorting parcial
+	// For medium-sized move lists, use partial sorting
 	if (moves.size() <= 4)
 	{
-		// Insertion sort más rápido para arrays pequeños
+		// Insertion sort is faster for small arrays
 		for (size_t i = 1; i < moves.size(); ++i)
 		{
 			Move key = moves[i];
@@ -81,7 +81,7 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 		return;
 	}
 
-	// Para arrays grandes, usar std::sort normal
+	// For large arrays, use standard std::sort
 	std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b)
 			  { return quickEvaluateMove(state, a) > quickEvaluateMove(state, b); });
 }
@@ -96,15 +96,15 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
     int opponent = state.getOpponent(currentPlayer);
     
     // ============================================
-    // 1. CENTRALIDAD (O(1) - trivial)
+    // 1. CENTRALITY (O(1) - trivial)
     // ============================================
     int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
-    score += (9 - centerDist) * 10;  // 0-90 puntos
+    score += (9 - centerDist) * 10;  // 0-90 points
     
     // ============================================
-    // 2. CONECTIVIDAD INMEDIATA (O(8) - barato)
+    // 2. IMMEDIATE CONNECTIVITY (O(8) - cheap)
     // ============================================
-    // ¿Cuántas fichas propias hay adyacentes?
+    // Count own and opponent adjacent pieces
     int myAdjacent = 0;
     int oppAdjacent = 0;
     
@@ -120,13 +120,13 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         }
     }
     
-    score += myAdjacent * 50;      // 0-400 puntos
-    score += oppAdjacent * 20;     // Bonus menor por bloqueo
+    score += myAdjacent * 50;      // 0-400 points
+    score += oppAdjacent * 20;     // Minor bonus for blocking
     
     // ============================================
-    // 3. PRIORIDAD POR ZONA ACTIVA (O(1) - trivial)
+    // 3. ACTIVE ZONE PRIORITY (O(1) - trivial)
     // ============================================
-    // ¿Está cerca del último movimiento del oponente?
+    // Is this near the opponent's last move?
     if (state.lastHumanMove.isValid()) {
         int distToLast = std::max(
             std::abs(move.x - state.lastHumanMove.x),
@@ -134,14 +134,14 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         );
         
         if (distToLast <= 2) {
-            score += 500;  // Respuesta táctica
+            score += 500;  // Tactical response
         }
     }
     
     // ============================================
-    // 4. PATRONES SIMPLES (O(4) - muy barato)
+    // 4. SIMPLE PATTERNS (O(4) - very cheap)
     // ============================================
-    // Solo contar piezas consecutivas SIN verificar extremos libres
+    // Count consecutive pieces without checking open ends
     int maxMyLine = 0;
     int maxOppLine = 0;
     
@@ -150,37 +150,37 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
         int dy = MAIN[d][1];
         
         // Contar hacia ambos lados
-        int myCount = 1;  // La que voy a colocar
+        int myCount = 1;  // The piece being placed
         myCount += countConsecutiveInDirection(state, move.x, move.y, dx, dy, currentPlayer, 4);
         myCount += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, currentPlayer, 4);
         maxMyLine = std::max(maxMyLine, myCount);
         
-        // Contar líneas del oponente (para bloqueo)
+        // Count opponent lines (for blocking evaluation)
         int oppCount = 0;
         oppCount += countConsecutiveInDirection(state, move.x, move.y, dx, dy, opponent, 4);
         oppCount += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, opponent, 4);
         maxOppLine = std::max(maxOppLine, oppCount);
     }
     
-    // Scoring exponencial para líneas largas
-    if (maxMyLine >= 5) score += 100000;      // Victoria
-    else if (maxMyLine == 4) score += 10000;  // Muy peligroso
-    else if (maxMyLine == 3) score += 1000;   // Peligroso
-    else if (maxMyLine == 2) score += 100;    // Desarrollo
+    // Exponential scoring for long lines
+    if (maxMyLine >= 5) score += 100000;      // Win
+    else if (maxMyLine == 4) score += 10000;  // Very dangerous
+    else if (maxMyLine == 3) score += 1000;   // Dangerous
+    else if (maxMyLine == 2) score += 100;    // Development
     
-    // Bloqueo
-    if (maxOppLine >= 4) score += 8000;       // Bloqueo crítico
-    else if (maxOppLine == 3) score += 800;   // Bloqueo importante
+    // Blocking
+    if (maxOppLine >= 4) score += 8000;       // Critical block
+    else if (maxOppLine == 3) score += 800;   // Important block
     
     // ============================================
-    // 5. CAPTURA RÁPIDA (O(8) - barato)
+    // 5. QUICK CAPTURE CHECK (O(8) - cheap)
     // ============================================
-    // Solo verificar si HAY captura, sin evaluar contexto
+    // Only check if a capture exists, without evaluating context
     for (int d = 0; d < ALL_COUNT; d++) {
         int dx = ALL[d][0];
         int dy = ALL[d][1];
         
-        // Patrón: NUEVA + OPP + OPP + MIA
+        // Pattern: NEW + OPP + OPP + OWN
         int x1 = move.x + dx, y1 = move.y + dy;
         int x2 = move.x + 2*dx, y2 = move.y + 2*dy;
         int x3 = move.x + 3*dx, y3 = move.y + 3*dy;
@@ -189,8 +189,8 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             if (state.getPiece(x1, y1) == opponent &&
                 state.getPiece(x2, y2) == opponent &&
                 state.getPiece(x3, y3) == currentPlayer) {
-                score += 2000;  // Hay captura
-                break;  // No seguir buscando
+                score += 2000;  // Capture available
+                break;  // Stop searching
             }
         }
     }
@@ -203,11 +203,11 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
 // ============================================
 
 bool TranspositionSearch::wouldCreateFiveInRow(const GameState& state, const Move& move, int player) {
-    // Chequear 4 direcciones principales
+    // Check 4 main directions
     for (int d = 0; d < MAIN_COUNT; d++) {
         int dx = MAIN[d][0], dy = MAIN[d][1];
         
-        int count = 1; // La pieza que vamos a colocar
+        int count = 1; // The piece being placed
         count += countConsecutiveInDirection(state, move.x, move.y, dx, dy, player, 4);
         count += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, player, 4);
         
@@ -226,7 +226,7 @@ bool TranspositionSearch::createsFourInRow(const GameState& state, const Move& m
         count += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, player, 3);
         
         if (count == 4) {
-            // Verificar que al menos un extremo esté libre (para que sea amenaza real)
+            // Verify at least one end is open (to be a real threat)
             int startX = move.x - (count - 1) * dx;
             int startY = move.y - (count - 1) * dy;
             int endX = move.x + (count - 1) * dx;
@@ -253,7 +253,7 @@ bool TranspositionSearch::createsThreeInRow(const GameState& state, const Move& 
         count += countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, player, 2);
         
         if (count == 3) {
-            // Verificar que ambos extremos estén libres (free-three)
+            // Verify both ends are open (free-three)
             int forward = countConsecutiveInDirection(state, move.x, move.y, dx, dy, player, 2);
             int backward = countConsecutiveInDirection(state, move.x, move.y, -dx, -dy, player, 2);
             
@@ -277,11 +277,11 @@ bool TranspositionSearch::createsThreeInRow(const GameState& state, const Move& 
 bool TranspositionSearch::hasImmediateCapture(const GameState& state, const Move& move, int player) {
     int opponent = state.getOpponent(player);
     
-    // Verificar patrón de captura en 8 direcciones: NUEVA + OPP + OPP + MIA
+    // Check capture pattern in 8 directions: NEW + OPP + OPP + OWN
     for (int d = 0; d < ALL_COUNT; d++) {
         int dx = ALL[d][0], dy = ALL[d][1];
         
-        // Patrón hacia adelante: NUEVA + OPP + OPP + MIA
+        // Forward pattern: NEW + OPP + OPP + OWN
         if (state.isValid(move.x + dx, move.y + dy) &&
             state.isValid(move.x + 2*dx, move.y + 2*dy) &&
             state.isValid(move.x + 3*dx, move.y + 3*dy)) {
@@ -293,7 +293,7 @@ bool TranspositionSearch::hasImmediateCapture(const GameState& state, const Move
             }
         }
         
-        // Patrón hacia atrás: MIA + OPP + OPP + NUEVA
+        // Backward pattern: OWN + OPP + OPP + NEW
         if (state.isValid(move.x - dx, move.y - dy) &&
             state.isValid(move.x - 2*dx, move.y - 2*dy) &&
             state.isValid(move.x - 3*dx, move.y - 3*dy)) {
@@ -310,7 +310,7 @@ bool TranspositionSearch::hasImmediateCapture(const GameState& state, const Move
 }
 
 bool TranspositionSearch::isNearExistingPieces(const GameState& state, const Move& move) {
-    // Verificar si hay piezas en radio 2
+    // Check for pieces within radius 2
     for (int dx = -2; dx <= 2; dx++) {
         for (int dy = -2; dy <= 2; dy++) {
             if (dx == 0 && dy == 0) continue;
@@ -324,7 +324,7 @@ bool TranspositionSearch::isNearExistingPieces(const GameState& state, const Mov
 }
 
 bool TranspositionSearch::blocksOpponentWin(const GameState& state, const Move& move, int opponent) {
-    // Simular que el oponente tiene el turno y verificar si ese movimiento crearía victoria
+    // Check if this position would create a win for the opponent
     return wouldCreateFiveInRow(state, move, opponent);
 }
 
@@ -362,11 +362,11 @@ bool TranspositionSearch::isBlocked(const GameState &state, int x, int y, int dx
 
 	if (!state.isValid(nx, ny))
 	{
-		return true; // Bloqueado por borde
+		return true; // Blocked by board edge
 	}
 
 	int piece = state.getPiece(nx, ny);
-	return (piece != GameState::EMPTY && piece != player); // Bloqueado por oponente
+	return (piece != GameState::EMPTY && piece != player); // Blocked by opponent
 }
 
 int TranspositionSearch::countThreats(const GameState &state, int player)
@@ -395,7 +395,7 @@ int TranspositionSearch::countLinesFromPosition(const GameState &state, int x, i
 	{
 		int dx = MAIN[d][0], dy = MAIN[d][1];
 
-		int count = 1; // La pieza actual
+		int count = 1; // The current piece
 		count += countInDirection(state, x, y, dx, dy, player);
 		count += countInDirection(state, x, y, -dx, -dy, player);
 
@@ -431,17 +431,17 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
     std::vector<Move> candidates;
     int searchRadius = getSearchRadiusForGamePhase(state.turnCount);
     
-    // OPTIMIZACIÓN: Pre-marcar zonas relevantes
+    // Pre-mark relevant zones
     bool relevantZone[GameState::BOARD_SIZE][GameState::BOARD_SIZE];
     for(int r=0; r<GameState::BOARD_SIZE; r++)
         for(int c=0; c<GameState::BOARD_SIZE; c++)
             relevantZone[r][c] = false;
     
-    // PASO 1: Marcar casillas alrededor de piezas existentes
+    // Mark cells around existing pieces
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             if (state.board[i][j] != GameState::EMPTY) {
-                // Marcar radio alrededor de esta pieza
+                // Mark radius around this piece
                 for (int di = -searchRadius; di <= searchRadius; di++) {
                     for (int dj = -searchRadius; dj <= searchRadius; dj++) {
                         int ni = i + di, nj = j + dj;
@@ -454,9 +454,9 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
         }
     }
     
-    // PASO 2: Marcar zona alrededor del último movimiento humano (prioridad táctica)
+    // Mark zone around opponent's last move (tactical priority)
     if (state.lastHumanMove.isValid()) {
-        int extendedRadius = searchRadius + 1; // Radio mayor para respuestas
+        int extendedRadius = searchRadius + 1; // Larger radius for responses
         for (int di = -extendedRadius; di <= extendedRadius; di++) {
             for (int dj = -extendedRadius; dj <= extendedRadius; dj++) {
                 int ni = state.lastHumanMove.x + di;
@@ -468,7 +468,7 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
         }
     }
     
-    // PASO 3: Solo agregar candidatos de zonas marcadas
+    // Collect candidates from marked zones
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             if (relevantZone[i][j]) {
@@ -477,10 +477,10 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
         }
     }
     
-    // Ordenar con move ordering
+    // Sort with move ordering
     orderMovesWithPreviousBest(candidates, state);
     
-    // Limitar número de candidatos
+    // Limit number of candidates
     int maxCandidates = getMaxCandidatesForGamePhase(state);
     if (candidates.size() > (size_t)maxCandidates) {
         candidates.resize(maxCandidates);
@@ -491,9 +491,9 @@ std::vector<Move> TranspositionSearch::generateCandidatesAdaptiveRadius(const Ga
 
 int TranspositionSearch::getSearchRadiusForGamePhase(int pieceCount)
 {
-	if (pieceCount > 0)
-		return 1;
-	return 1;
+	if (pieceCount <= 6)
+		return 2; // Opening: wide radius for exploration
+	return 1;     // Mid/late game: narrow radius, dense play
 }
 
 int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
@@ -502,21 +502,21 @@ int TranspositionSearch::getMaxCandidatesForGamePhase(const GameState &state)
 
 	if (pieceCount <= 4)
 	{
-		return 3; // Opening: muy selectivo para evitar explosion combinatoria
+		return 3; // Opening: very selective to avoid combinatorial explosion
 	}
 	else if (pieceCount <= 10)
 	{
-		return 4; // Early game: moderadamente selectivo
+		return 4; // Early game: moderately selective
 	}
 	else
 	{
-		return 5; // Mid/late game: más opciones disponibles
+		return 5; // Mid/late game: more options available
 	}
 }
 
 void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &candidates, const GameState &state)
 {
-	// Si no hay último movimiento humano válido, no hacer nada
+	// If no valid last human move exists, do nothing
 	if (!state.lastHumanMove.isValid())
 	{
 		return;
@@ -525,25 +525,25 @@ void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &ca
 	int lastX = state.lastHumanMove.x;
 	int lastY = state.lastHumanMove.y;
 
-	// Generar todas las casillas vacías en un radio de 2 alrededor del último movimiento humano
-	int radius = 2; // Radio de respuesta defensiva
+	// Generate all empty cells within radius 2 of the last human move
+	int radius = 2; // Defensive response radius
 
 	for (int dx = -radius; dx <= radius; dx++)
 	{
 		for (int dy = -radius; dy <= radius; dy++)
 		{
 			if (dx == 0 && dy == 0)
-				continue; // Saltar la posición del último movimiento
+				continue; // Skip the last move's position
 
 			int newX = lastX + dx;
 			int newY = lastY + dy;
 
-			// Verificar que esté dentro del tablero y sea una casilla vacía
+			// Verify it's within the board and is an empty cell
 			if (state.isValid(newX, newY) && state.isEmpty(newX, newY))
 			{
 				Move candidate(newX, newY);
 
-				// Verificar si ya está en la lista de candidatos
+				// Check if already in the candidate list
 				bool alreadyAdded = false;
 				for (const Move &existing : candidates)
 				{
@@ -554,7 +554,7 @@ void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &ca
 					}
 				}
 
-				// Si no está ya agregado y es un movimiento legal, agregarlo
+				// If not already added and is a legal move, add it
 				if (!alreadyAdded && RuleEngine::isLegalMove(state, candidate))
 				{
 					candidates.push_back(candidate);
@@ -570,7 +570,7 @@ void TranspositionSearch::addCandidatesAroundLastHumanMove(std::vector<Move> &ca
 
 void TranspositionSearch::orderMovesByGeometricValue(std::vector<Move> &moves, const GameState &state)
 {
-	// Ordenar usando evaluación basada en patrones geométricos
+	// Sort using geometric pattern evaluation
 	std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b)
 			  { return calculateGeometricMoveValue(state, a) > calculateGeometricMoveValue(state, b); });
 }
@@ -581,31 +581,31 @@ int TranspositionSearch::calculateGeometricMoveValue(const GameState &state, con
 	int currentPlayer = state.currentPlayer;
 	int opponent = state.getOpponent(currentPlayer);
 
-	// 1. VALOR POSICIONAL: Proximidad al centro (importante en opening)
+	// 1. POSITIONAL VALUE: Proximity to center (important in opening)
 	int centralityBonus = calculateCentralityBonus(move);
 	value += centralityBonus;
 
-	// 2. ANÁLISIS DE PATRONES: Evaluar alineaciones potenciales en 4 direcciones
+	// 2. PATTERN ANALYSIS: Evaluate potential alignments in 4 directions
 	for (int d = 0; d < MAIN_COUNT; d++)
 	{
 		int dx = MAIN[d][0], dy = MAIN[d][1];
 
 		// Contar piezas propias que se alinearían con este movimiento
-		int myAlignment = 1; // La pieza que vamos a colocar
+		int myAlignment = 1; // The piece being placed
 		myAlignment += countPiecesInDirection(state, move.x, move.y, dx, dy, currentPlayer);
 		myAlignment += countPiecesInDirection(state, move.x, move.y, -dx, -dy, currentPlayer);
 
-		// Contar piezas del oponente para evaluar interrupciones
+		// Count opponent pieces to evaluate disruptions
 		int opponentInterruption = 0;
 		opponentInterruption += countPiecesInDirection(state, move.x, move.y, dx, dy, opponent);
 		opponentInterruption += countPiecesInDirection(state, move.x, move.y, -dx, -dy, opponent);
 
-		// SCORING basado en valor táctico de las alineaciones
+		// Score based on tactical alignment value
 		value += calculateAlignmentValue(myAlignment);
 		value += calculateInterruptionValue(opponentInterruption);
 	}
 
-	// 3. CONECTIVIDAD: Bonus por estar adyacente a piezas propias
+	// 3. CONNECTIVITY: Bonus for being adjacent to own pieces
 	int connectivityBonus = calculateConnectivityBonus(state, move, currentPlayer);
 	value += connectivityBonus;
 
@@ -623,13 +623,13 @@ int TranspositionSearch::calculateAlignmentValue(int alignmentLength)
 	switch (alignmentLength)
 	{
 	case 5:
-		return 10000; // Victoria inmediata
+		return 10000; // Immediate win
 	case 4:
-		return 5000; // Amenaza crítica
+		return 5000; // Critical threat
 	case 3:
-		return 1000; // Amenaza fuerte
+		return 1000; // Strong threat
 	case 2:
-		return 100; // Desarrollo básico
+		return 100; // Basic development
 	default:
 		return 0;
 	}
@@ -640,11 +640,11 @@ int TranspositionSearch::calculateInterruptionValue(int interruptionLength)
 	switch (interruptionLength)
 	{
 	case 4:
-		return 80000; // AUMENTADO: Bloqueo crítico debe superar ataque propio (70000)
+		return 80000; // Critical block must outweigh own attack
 	case 3:
-		return 15000; // AUMENTADO: Bloqueo de amenaza fuerte
+		return 15000; // Block strong threat
 	case 2:
-		return 1000; // AUMENTADO: Prevención temprana
+		return 1000; // Early prevention
 	default:
 		return 0;
 	}
@@ -654,7 +654,7 @@ int TranspositionSearch::calculateConnectivityBonus(const GameState &state, cons
 {
 	int connectivity = 0;
 
-	// Verificar las 8 direcciones adyacentes
+	// Check all 8 adjacent directions
 	for (int dx = -1; dx <= 1; dx++)
 	{
 		for (int dy = -1; dy <= 1; dy++)
@@ -673,11 +673,11 @@ int TranspositionSearch::calculateConnectivityBonus(const GameState &state, cons
 	return connectivity;
 }
 
-// Método auxiliar optimizado para contar piezas consecutivas
+// Optimized helper to count consecutive pieces in a direction
 int TranspositionSearch::countPiecesInDirection(const GameState &state, int x, int y,
 												int dx, int dy, int player)
 {
-	// OPTIMIZACIÓN: Unroll manual para casos comunes (1-4 piezas)
+	// Manual unroll for common cases (1-4 pieces)
 	x += dx;
 	y += dy;
 

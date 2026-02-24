@@ -47,8 +47,7 @@ int Evaluator::evaluate(const GameState &state, int maxDepth, int currentDepth)
 }
 
 /**
- * Legacy evaluation (without mate distance)
- * Kept for compatibility
+ * Evaluate position without mate distance scoring
  */
 int Evaluator::evaluate(const GameState &state)
 {
@@ -164,7 +163,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
     // PART 2: CAPTURE EVALUATION (OPTIMIZED)
     // ============================================
     
-    // ✅ OFFENSIVE CAPTURES: Find opponent pairs I CAN capture
+    // OFFENSIVE CAPTURES: Find opponent pairs player can capture
     auto myOpportunities = findAllCaptureOpportunities(state, player);
     for (const auto& opp : myOpportunities) {
         int captureCount = opp.captured.size() / 2;
@@ -176,7 +175,7 @@ int Evaluator::analyzePosition(const GameState& state, int player) {
         );
     }
     
-    // ✅ DEFENSIVE CAPTURES: Find MY pairs opponent can capture
+    // DEFENSIVE CAPTURES: Find player's pairs opponent can capture
     auto oppThreats = findAllCaptureOpportunities(state, opponent);
     for (const auto& threat : oppThreats) {
         int captureCount = threat.captured.size() / 2;

@@ -15,14 +15,14 @@
 // ===============================================
 
 void GuiRenderer::drawHoverIndicator() {
-    // Solo mostrar hover si estamos en una posición válida
+    // Only show hover on a valid position
     if (!hoverPosition.isValid()) return;
     
     sf::Vector2i pos = boardPositionToPixel(hoverPosition.x, hoverPosition.y);
     int cellSize = CELL_SIZE - 4;
     float time = animationClock.getElapsedTime().asSeconds();
     
-    // 1. Efecto de ondas expandiéndose
+    // 1. Expanding wave effect
     for (int i = 1; i <= 3; i++) {
         float wavePhase = fmod(time * 3.0f + i * 0.5f, 2.0f);
         float waveSize = cellSize/2 + wavePhase * 15;
@@ -32,18 +32,18 @@ void GuiRenderer::drawHoverIndicator() {
         wave.setPosition(pos.x - waveSize, pos.y - waveSize);
         wave.setFillColor(sf::Color::Transparent);
         wave.setOutlineThickness(2);
-        wave.setOutlineColor(sf::Color(0, 255, 255, static_cast<sf::Uint8>(waveAlpha))); // Cian brillante
+        wave.setOutlineColor(sf::Color(0, 255, 255, static_cast<sf::Uint8>(waveAlpha))); // Bright cyan
         window.draw(wave);
     }
     
-    // 2. Fondo pulsante
+    // 2. Pulsating background
     float pulse = sin(time * 4.0f) * 0.3f + 0.7f;
     sf::RectangleShape hoverBg(sf::Vector2f(cellSize, cellSize));
     hoverBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     hoverBg.setFillColor(sf::Color(100, 200, 255, static_cast<sf::Uint8>(pulse * 80)));
     window.draw(hoverBg);
     
-    // 3. Borde con brillo giratorio
+    // 3. Border with rotating glow
     sf::RectangleShape hoverBorder(sf::Vector2f(cellSize, cellSize));
     hoverBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     hoverBorder.setFillColor(sf::Color::Transparent);
@@ -51,9 +51,9 @@ void GuiRenderer::drawHoverIndicator() {
     hoverBorder.setOutlineColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 200)));
     window.draw(hoverBorder);
     
-    // 4. Partículas giratorias alrededor del centro
+    // 4. Rotating particles around center
     for (int i = 0; i < 6; i++) {
-        float angle = time * 2.0f + i * 1.047f; // 60 grados entre partículas
+        float angle = time * 2.0f + i * 1.047f; // 60 degrees between particles
         float radius = 15;
         float sparkX = pos.x + cos(angle) * radius;
         float sparkY = pos.y + sin(angle) * radius;
@@ -64,7 +64,7 @@ void GuiRenderer::drawHoverIndicator() {
         window.draw(spark);
     }
     
-    // 5. Círculo central brillante
+    // 5. Bright center circle
     sf::CircleShape hoverIndicator(8 + pulse * 3);
     hoverIndicator.setPosition(pos.x - (8 + pulse * 3), pos.y - (8 + pulse * 3));
     hoverIndicator.setFillColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(pulse * 150)));
@@ -78,43 +78,43 @@ void GuiRenderer::drawHoverIndicator() {
 // ===============================================
 
 void GuiRenderer::drawSuggestionIndicator() {
-    // Solo mostrar si hay una sugerencia válida
+    // Only show if there is a valid suggestion
     if (!showSuggestion || !currentSuggestion.isValid()) return;
     
     sf::Vector2i pos = boardPositionToPixel(currentSuggestion.x, currentSuggestion.y);
     int cellSize = CELL_SIZE - 4;
     
-    // 1. Fondo de la celda con color distintivo (amarillo/dorado)
+    // 1. Cell background with distinctive color (yellow/gold)
     sf::RectangleShape suggestionBg(sf::Vector2f(cellSize, cellSize));
     suggestionBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
-    suggestionBg.setFillColor(sf::Color(255, 215, 0, 80)); // Dorado semi-transparente
+    suggestionBg.setFillColor(sf::Color(255, 215, 0, 80)); // Semi-transparent gold
     window.draw(suggestionBg);
     
-    // 2. Borde pulsante más grueso
+    // 2. Thicker pulsating border
     sf::RectangleShape suggestionBorder(sf::Vector2f(cellSize, cellSize));
     suggestionBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     suggestionBorder.setFillColor(sf::Color::Transparent);
     suggestionBorder.setOutlineThickness(3);
     
-    // Efecto pulsante usando el tiempo
+    // Pulsating effect using time
     static sf::Clock pulseClock;
     float pulseTime = pulseClock.getElapsedTime().asSeconds();
-    float alpha = (sin(pulseTime * 4.0f) + 1.0f) * 0.4f + 0.2f; // Oscila entre 0.2 y 1.0
-    suggestionBorder.setOutlineColor(sf::Color(255, 215, 0, (sf::Uint8)(alpha * 255))); // Dorado pulsante
+    float alpha = (sin(pulseTime * 4.0f) + 1.0f) * 0.4f + 0.2f; // Oscillates between 0.2 and 1.0
+    suggestionBorder.setOutlineColor(sf::Color(255, 215, 0, (sf::Uint8)(alpha * 255))); // Pulsating gold
     window.draw(suggestionBorder);
     
-    // 3. Icono de bombilla en el centro
+    // 3. Light bulb icon in center
     sf::CircleShape bulbOuter(8);
     bulbOuter.setPosition(pos.x - 8, pos.y - 8);
-    bulbOuter.setFillColor(sf::Color(255, 255, 0, 200)); // Amarillo brillante
+    bulbOuter.setFillColor(sf::Color(255, 255, 0, 200)); // Bright yellow
     window.draw(bulbOuter);
     
     sf::CircleShape bulbInner(5);
     bulbInner.setPosition(pos.x - 5, pos.y - 5);
-    bulbInner.setFillColor(sf::Color(255, 255, 255, 250)); // Blanco brillante (centro)
+    bulbInner.setFillColor(sf::Color(255, 255, 255, 250)); // Bright white (center)
     window.draw(bulbInner);
     
-    // 4. Texto "?" en el centro
+    // 4. "?" text in center
     drawText("?", pos.x - 5, pos.y - 8, 14, sf::Color(50, 50, 50));
 }
 
@@ -139,9 +139,9 @@ void GuiRenderer::clearInvalidMoveError() {
 }
 
 void GuiRenderer::drawInvalidMoveIndicator() {
-    // Solo mostrar si hay un error activo y han pasado menos de 2 segundos
+    // Only show if there is an active error and less than 2 seconds have passed
     if (!showError || errorTimer.getElapsedTime().asSeconds() > 2.0f) {
-        if (showError) clearInvalidMoveError(); // Auto-limpiar después de 2 segundos
+        if (showError) clearInvalidMoveError(); // Auto-clear after 2 seconds
         return;
     }
     
@@ -150,22 +150,22 @@ void GuiRenderer::drawInvalidMoveIndicator() {
     sf::Vector2i pos = boardPositionToPixel(invalidMovePosition.x, invalidMovePosition.y);
     int cellSize = CELL_SIZE - 4;
     
-    // 1. Fondo rojo pulsante
+    // 1. Pulsating red background
     sf::RectangleShape errorBg(sf::Vector2f(cellSize, cellSize));
     errorBg.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     
-    // Efecto pulsante rojo usando el tiempo
+    // Pulsating red effect using time
     float pulseTime = errorTimer.getElapsedTime().asSeconds();
-    float alpha = (sin(pulseTime * 8.0f) + 1.0f) * 0.3f + 0.1f; // Oscila más rápido
-    errorBg.setFillColor(sf::Color(255, 0, 0, (sf::Uint8)(alpha * 255))); // Rojo pulsante
+    float alpha = (sin(pulseTime * 8.0f) + 1.0f) * 0.3f + 0.1f; // Oscillates faster
+    errorBg.setFillColor(sf::Color(255, 0, 0, (sf::Uint8)(alpha * 255))); // Pulsating red
     window.draw(errorBg);
     
-    // 2. Borde rojo grueso
+    // 2. Thick red border
     sf::RectangleShape errorBorder(sf::Vector2f(cellSize, cellSize));
     errorBorder.setPosition(pos.x - cellSize/2 + 2, pos.y - cellSize/2 + 2);
     errorBorder.setFillColor(sf::Color::Transparent);
     errorBorder.setOutlineThickness(4);
-    errorBorder.setOutlineColor(sf::Color(255, 0, 0, 200)); // Rojo sólido
+    errorBorder.setOutlineColor(sf::Color(255, 0, 0, 200)); // Solid red
     window.draw(errorBorder);
 }
 
@@ -174,10 +174,10 @@ void GuiRenderer::drawInvalidMoveIndicator() {
 // ===============================================
 
 void GuiRenderer::drawModernBackground() {
-    // 1. Fondo con gradiente dinámico
+    // 1. Dynamic gradient background
     float time = animationClock.getElapsedTime().asSeconds();
     
-    // Gradiente vertical animado
+    // Animated vertical gradient
     for (int y = 0; y < WINDOW_HEIGHT; y += 4) {
         float ratio = static_cast<float>(y) / WINDOW_HEIGHT;
         float wave = sin(time * 0.5f + ratio * 3.14159f) * 0.3f + 0.7f;
@@ -192,7 +192,7 @@ void GuiRenderer::drawModernBackground() {
         window.draw(gradientLine);
     }
     
-    // 2. Partículas flotantes
+    // 2. Floating particles
     updateParticles();
     for (size_t i = 0; i < particles.size(); i++) {
         float alpha = particleLife[i] * 100;
@@ -202,7 +202,7 @@ void GuiRenderer::drawModernBackground() {
         window.draw(particle);
     }
     
-    // 3. Grid de puntos brillantes de fondo
+    // 3. Background grid of bright dots
     for (int x = 50; x < WINDOW_WIDTH; x += 80) {
         for (int y = 50; y < WINDOW_HEIGHT; y += 80) {
             float distance = sqrt((x - WINDOW_WIDTH/2) * (x - WINDOW_WIDTH/2) + 
@@ -225,14 +225,14 @@ void GuiRenderer::updateParticles() {
     float deltaTime = 0.016f; // ~60 FPS
     
     for (size_t i = 0; i < particles.size(); i++) {
-        // Movimiento flotante
+        // Floating movement
         particles[i].y -= 20 * deltaTime;
         particles[i].x += sin(animationClock.getElapsedTime().asSeconds() + i) * 10 * deltaTime;
         
-        // Actualizar vida
+        // Update lifetime
         particleLife[i] -= deltaTime * 0.3f;
         
-        // Resetear partícula si murió
+        // Reset particle if expired
         if (particleLife[i] <= 0 || particles[i].y < 0) {
             particles[i] = sf::Vector2f(rand() % WINDOW_WIDTH, WINDOW_HEIGHT + 10);
             particleLife[i] = 1.0f;
@@ -245,7 +245,7 @@ void GuiRenderer::updateParticles() {
 // ===============================================
 
 void GuiRenderer::drawGlowEffect(const sf::Text& text, sf::Color glowColor) {
-    // Efecto de glow/brillo alrededor del texto
+    // Glow/shine effect around text
     for (int i = 1; i <= 5; i++) {
         sf::Text glowText = text;
         glowText.setFillColor(sf::Color(glowColor.r, glowColor.g, glowColor.b, 50 - i * 8));

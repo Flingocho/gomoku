@@ -16,50 +16,37 @@ using namespace Directions;
 
 /**
  * Evaluate immediate threats for a player
- * Combines pattern-based threats and capture threats
+ * 
+ * IMPORTANT: Only evaluates threats for THIS player, not the opponent.
+ * The opponent's threats are naturally accounted for when evaluateForPlayer
+ * is called for the opponent, and the final score = aiScore - humanScore
+ * handles the cross-comparison. Evaluating both sides here would cause
+ * double-counting that inflates scores past the mate-detection threshold.
  */
 int Evaluator::evaluateImmediateThreats(const GameState &state, int player)
 {
-	int opponent = state.getOpponent(player);
 	int threatScore = 0;
 
-	// EFFICIENT LOGIC: Detect threats using existing patterns
-	bool myHasWinThreats = hasWinningThreats(state, player);
-	bool oppHasWinThreats = hasWinningThreats(state, opponent);
+	int fourOpen = countPatternType(state, player, 4, 2);
+	int fourHalf = countPatternType(state, player, 4, 1);
+	int threeOpen = countPatternType(state, player, 3, 2);
 
-	// 1. If I have mate-in-1 threats
-	if (myHasWinThreats)
+	// FOUR_OPEN: Unstoppable - opponent cannot block both ends
+	if (fourOpen > 0)
 	{
-		threatScore += 90000; // Very good - I can win
-	}
-
-	// 2. CRITICAL: If opponent has mate-in-1 threats
-	if (oppHasWinThreats)
-	{
-		threatScore -= 105000; // Very bad - must defend
+		threatScore += 90000;
 	}
 
-	// 3. ORIGINAL LOGIC: Count four-patterns (as backup)
-	int myFourOpen = countPatternType(state, player, 4, 2);
-	int oppFourOpen = countPatternType(state, opponent, 4, 2);
-	int myFourHalf = countPatternType(state, player, 4, 1);
-	int oppFourHalf = countPatternType(state, opponent, 4, 1);
-
-	if (oppFourOpen > 0)
-	{
-		threatScore -= 80000;
-	}
-	if (oppFourHalf > 0)
-	{
-		threatScore -= 60000;
-	}
-	if (myFourOpen > 0)
-	{
-		threatScore += 70000;
-	}
-	if (myFourHalf > 0)
+	// FOUR_HALF: Strong forced threat - opponent must block
+	if (fourHalf > 0)
 	{
 		threatScore += 40000;
+	}
+
+	// Multiple THREE_OPEN: Creates unblockable dual threat
+	if (threeOpen >= 2)
+	{
+		threatScore += 50000;
 	}
 
 	return threatScore;
@@ -323,7 +310,7 @@ std::vector<Evaluator::CaptureOpportunity> Evaluator::findAllCaptureOpportunitie
                 if (!state.isValid(x2, y2) || state.board[x2][y2] != opponent) 
                     continue;
                 
-                // ✅ Found a PAIR: (i,j) - (x2,y2)
+                // Found opponent pair: (i,j) - (x2,y2)
                 
                 // OPTION 1: Flank from FRONT
                 int xFront = x2 + dx, yFront = y2 + dy;
@@ -331,7 +318,7 @@ std::vector<Evaluator::CaptureOpportunity> Evaluator::findAllCaptureOpportunitie
                     // Do I have MY piece behind the pair?
                     int xBack = i - dx, yBack = j - dy;
                     if (state.isValid(xBack, yBack) && state.board[xBack][yBack] == player) {
-                        // ✅ Pattern: X-OO-[EMPTY] → I can play at EMPTY
+                        // Pattern: PLAYER-OO-[EMPTY] → capture by playing at EMPTY
                         CaptureOpportunity opp;
                         opp.position = Move(xFront, yFront);
                         opp.captured = {Move(i, j), Move(x2, y2)};
@@ -345,7 +332,7 @@ std::vector<Evaluator::CaptureOpportunity> Evaluator::findAllCaptureOpportunitie
                     // Do I have MY piece in front of the pair?
                     int xFront2 = x2 + dx, yFront2 = y2 + dy;
                     if (state.isValid(xFront2, yFront2) && state.board[xFront2][yFront2] == player) {
-                        // ✅ Pattern: [EMPTY]-OO-X → I can play at EMPTY
+                        // Pattern: [EMPTY]-OO-PLAYER → capture by playing at EMPTY
                         CaptureOpportunity opp;
                         opp.position = Move(xBack, yBack);
                         opp.captured = {Move(i, j), Move(x2, y2)};

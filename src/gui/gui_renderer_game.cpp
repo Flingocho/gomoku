@@ -18,15 +18,15 @@ Move GuiRenderer::waitForUserMove(const GameState& state) {
     auto timeout = std::chrono::milliseconds(100); // 100ms timeout
     auto startTime = std::chrono::steady_clock::now();
     
-    // Este será el método "blocking" que espera hasta que el usuario haga click
+    // Blocking method that waits until the user clicks
     while (isWindowOpen() && !moveReady) {
         processEvents();
         render(state);
         
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         if (elapsed > timeout) {
-            // No bloquear más - permitir que el main loop continue
-            return Move(-1, -1); // Señal de "aún esperando"
+            // Stop blocking - allow the main loop to continue
+            return Move(-1, -1); // Signal for "still waiting"
         }
     }
     
@@ -34,7 +34,7 @@ Move GuiRenderer::waitForUserMove(const GameState& state) {
 }
 
 Move GuiRenderer::getUserMove() {
-    // Versión non-blocking
+    // Non-blocking version
     if (moveReady) {
         Move move = pendingMove;
         clearUserMove();
@@ -48,7 +48,7 @@ Move GuiRenderer::getUserMove() {
 // ============================================================================
 
 void GuiRenderer::renderGame(const GameState& state, int aiTimeMs) {
-    // Fondo moderno igual que el menú
+    // Modern background matching the menu style
     drawModernBackground();
     
     drawBoard();
@@ -70,5 +70,5 @@ void GuiRenderer::handleGameClick(int x, int y) {
     pendingMove = Move(boardX, boardY);
     moveReady = true;
     
-    std::cout << "Movimiento capturado: " << char('A' + boardY) << (boardX + 1) << std::endl;
+    std::cout << "Move captured: " << char('A' + boardY) << (boardX + 1) << std::endl;
 }

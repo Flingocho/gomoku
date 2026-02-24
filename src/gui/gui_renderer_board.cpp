@@ -13,19 +13,19 @@
 // ============================================================================
 
 void GuiRenderer::drawBoard() {
-    // 1. Sombra del tablero (efecto 3D)
+    // 1. Board shadow (3D effect)
     sf::RectangleShape boardShadow(sf::Vector2f(BOARD_SIZE_PX + 8, BOARD_SIZE_PX + 8));
     boardShadow.setPosition(BOARD_OFFSET_X + 4, BOARD_OFFSET_Y + 4);
     boardShadow.setFillColor(sf::Color(0, 0, 0, 80));
     window.draw(boardShadow);
     
-    // 2. Fondo principal del tablero
+    // 2. Main board background
     sf::RectangleShape boardBg(sf::Vector2f(BOARD_SIZE_PX, BOARD_SIZE_PX));
     boardBg.setPosition(BOARD_OFFSET_X, BOARD_OFFSET_Y);
     boardBg.setFillColor(sf::Color(245, 222, 179)); // Wheat
     window.draw(boardBg);
     
-    // 3. Borde biselado (efecto 3D)
+    // 3. Beveled border (3D effect)
     sf::RectangleShape topBevel(sf::Vector2f(BOARD_SIZE_PX, 3));
     topBevel.setPosition(BOARD_OFFSET_X, BOARD_OFFSET_Y);
     topBevel.setFillColor(sf::Color(255, 248, 220));
@@ -46,7 +46,7 @@ void GuiRenderer::drawBoard() {
     rightBevel.setFillColor(sf::Color(160, 130, 98));
     window.draw(rightBevel);
     
-    // 4. Celdas individuales con efecto hundido
+    // 4. Individual cells with inset effect
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             int cellX = BOARD_OFFSET_X + j * CELL_SIZE + 2;
@@ -58,7 +58,7 @@ void GuiRenderer::drawBoard() {
             cell.setFillColor(sf::Color(210, 180, 140));
             window.draw(cell);
             
-            // Efecto hundido - sombra interior
+            // Inset effect - inner shadow
             sf::RectangleShape innerShadowTop(sf::Vector2f(cellSize, 1));
             innerShadowTop.setPosition(cellX, cellY);
             innerShadowTop.setFillColor(sf::Color(160, 130, 98));
@@ -69,7 +69,7 @@ void GuiRenderer::drawBoard() {
             innerShadowLeft.setFillColor(sf::Color(160, 130, 98));
             window.draw(innerShadowLeft);
             
-            // Highlight inferior derecho
+            // Bottom-right highlight
             sf::RectangleShape innerHighlightBottom(sf::Vector2f(cellSize, 1));
             innerHighlightBottom.setPosition(cellX, cellY + cellSize - 1);
             innerHighlightBottom.setFillColor(sf::Color(235, 210, 175));
@@ -82,35 +82,35 @@ void GuiRenderer::drawBoard() {
         }
     }
     
-    // 5. Coordenadas del tablero (A-S horizontalmente, 1-19 verticalmente)
+    // 5. Board coordinates (A-S horizontal, 1-19 vertical)
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         char letter = 'A' + j;
         std::string coordText(1, letter);
         
-        // Coordenada superior
+        // Top coordinate
         drawText(coordText, 
                 BOARD_OFFSET_X + j * CELL_SIZE + CELL_SIZE/2 - 6, 
                 BOARD_OFFSET_Y - 25, 
                 16, sf::Color(220, 220, 220));
         
-        // Coordenada inferior
+        // Bottom coordinate
         drawText(coordText, 
                 BOARD_OFFSET_X + j * CELL_SIZE + CELL_SIZE/2 - 6, 
                 BOARD_OFFSET_Y + BOARD_SIZE_PX + 8, 
                 16, sf::Color(220, 220, 220));
     }
     
-    // Números verticales (1-19)
+    // Vertical numbers (1-19)
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         std::string coordText = std::to_string(i + 1);
         
-        // Coordenada izquierda
+        // Left coordinate
         drawText(coordText, 
                 BOARD_OFFSET_X - 25, 
                 BOARD_OFFSET_Y + i * CELL_SIZE + CELL_SIZE/2 - 8, 
                 16, sf::Color(220, 220, 220));
         
-        // Coordenada derecha
+        // Right coordinate
         drawText(coordText, 
                 BOARD_OFFSET_X + BOARD_SIZE_PX + 8, 
                 BOARD_OFFSET_Y + i * CELL_SIZE + CELL_SIZE/2 - 8, 
@@ -133,23 +133,23 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 sf::CircleShape pieceMain(pieceRadius);
                 pieceMain.setPosition(pos.x - pieceRadius, pos.y - pieceRadius);
                 
-                // En modo colorblind, todas las piezas tienen el mismo color, EXCEPTO cuando el juego terminó
+                // In colorblind mode, all pieces share the same color, EXCEPT when the game is over
                 if (isColorblindMode && currentState != GAME_OVER) {
                     pieceMain.setFillColor(sf::Color(128, 128, 128));
                 } else {
                     pieceMain.setFillColor(getPieceColor(piece));
                 }
                 
-                // Sombra de la ficha
+                // Piece shadow
                 sf::CircleShape pieceShadow(pieceRadius);
                 pieceShadow.setPosition(pos.x - pieceRadius + 2, pos.y - pieceRadius + 2);
                 pieceShadow.setFillColor(sf::Color(0, 0, 0, 100));
                 window.draw(pieceShadow);
                 
-                // Ficha principal
+                // Main piece
                 window.draw(pieceMain);
                 
-                // Highlight superior para efecto 3D
+                // Top highlight for 3D effect
                 sf::CircleShape pieceHighlight(pieceRadius - 3);
                 pieceHighlight.setPosition(pos.x - pieceRadius + 3, pos.y - pieceRadius + 3);
                 
@@ -163,13 +163,13 @@ void GuiRenderer::drawPieces(const GameState& state) {
                 
                 window.draw(pieceHighlight);
                 
-                // Brillo pequeño
+                // Small shine
                 sf::CircleShape pieceShine(3);
                 pieceShine.setPosition(pos.x - pieceRadius + 5, pos.y - pieceRadius + 5);
                 pieceShine.setFillColor(sf::Color(255, 255, 255, 180));
                 window.draw(pieceShine);
                 
-                // Resaltado para la última ficha de la IA
+                // Highlight ring for AI's last move
                 if (piece == GameState::PLAYER2 && lastAiMove.x == i && lastAiMove.y == j) {
                     sf::CircleShape lastMoveRing(pieceRadius + 4);
                     lastMoveRing.setPosition(pos.x - pieceRadius - 4, pos.y - pieceRadius - 4);

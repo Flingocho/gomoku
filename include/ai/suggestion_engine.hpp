@@ -7,33 +7,33 @@
 #include <vector>
 
 /**
- * Motor de sugerencias para modo hotseat
- * Usa la IA principal con profundidad reducida para sugerencias rápidas
+ * Suggestion engine for hotseat mode
+ * Uses the main AI with reduced depth for fast suggestions
  */
 class SuggestionEngine {
 public:
     /**
-     * Obtiene la mejor sugerencia usando la IA principal
-     * @param state Estado actual del juego
-     * @param depth Profundidad de búsqueda (por defecto 6 para balance velocidad/calidad)
-     * @return El mejor movimiento sugerido
+     * Get the best suggestion using the main AI engine
+     * @param state Current game state
+     * @param depth Search depth (default 6 for speed/quality balance)
+     * @return Best suggested move
      */
     static Move getSuggestion(const GameState& state, int depth = 6);
     
     /**
-     * Obtiene sugerencia rápida usando heurísticas simples
-     * Útil cuando se necesita velocidad sobre calidad
+     * Get a quick suggestion using simple heuristics
+     * Useful when speed is preferred over quality
      */
     static Move getQuickSuggestion(const GameState& state);
     
 private:
-    // Evaluar un movimiento con heurística simple
+    // Evaluate a move with simple heuristics
     static int evaluateMove(const GameState& state, const Move& move, int player);
     
-    // Generar movimientos candidatos (área local)
+    // Generate candidate moves (local area)
     static std::vector<Move> generateCandidates(const GameState& state);
     
-    // Heurísticas específicas
+    // Specific heuristics
     static int checkWinningMove(const GameState& state, const Move& move, int player);
     static int checkBlockingMove(const GameState& state, const Move& move, int player);
     static int checkCaptureMove(const GameState& state, const Move& move, int player);

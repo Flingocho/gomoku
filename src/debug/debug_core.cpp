@@ -1,6 +1,6 @@
 // ============================================
 // DEBUG_CORE.CPP
-// Sistema de logging y gestión del debug analyzer
+// Logging system and debug analyzer management
 // ============================================
 
 #include "../../include/debug/debug_analyzer.hpp"
@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 
-// NUEVO: Acceso al sistema de debug del evaluador
+// Access to the evaluator's debug system
 extern EvaluationDebugCapture g_evalDebug;
 
 // Instancia global
@@ -79,7 +79,7 @@ void DebugAnalyzer::logInit(const std::string& message) const {
     logMsg << "[INIT] " << message;
     logToFile(logMsg.str());
     
-    // También mostrar mensajes de inicialización en consola para feedback inmediato
+    // Also show initialization messages in console for immediate feedback
     std::cout << "✓ " << message << std::endl;
 }
 
@@ -110,7 +110,7 @@ void DebugAnalyzer::clear() {
 bool DebugAnalyzer::shouldDebug(int depth, int score, bool isRootLevel) const {
     if (currentLevel == DEBUG_OFF) return false;
     
-    return isRootLevel ||                           // Siempre nivel raíz
-           (currentLevel >= DEBUG_CRITICAL && std::abs(score) > 10000) ||  // Crítico
-           (currentLevel >= DEBUG_HEURISTIC && depth <= 2);               // Primeros niveles
+    return isRootLevel ||                           // Always at root level
+           (currentLevel >= DEBUG_CRITICAL && std::abs(score) > 10000) ||  // Critical scores
+           (currentLevel >= DEBUG_HEURISTIC && depth <= 2);               // First levels
 }

@@ -7,12 +7,12 @@
 #include <random>
 
 /**
- * ZobristHasher: Implementación eficiente de hashing para estados de Gomoku
+ * ZobristHasher: Efficient hashing for Gomoku board states
  *
- * Características:
- * - Hash incremental O(1) vs O(n²) recalculo completo
- * - Colisiones prácticamente imposibles (2^64 espacio)
- * - Integración directa con transposition table
+ * Features:
+ * - Incremental O(1) hash updates vs O(n²) full recalculation
+ * - Practically impossible collisions (2^64 key space)
+ * - Direct integration with transposition table
  */
 class ZobristHasher
 {
@@ -20,29 +20,29 @@ public:
 	using ZobristKey = uint64_t;
 
 	/**
-	 * Constructor: Inicializa tabla de números aleatorios
-	 * CRÍTICO: Esta tabla debe ser consistente durante toda la ejecución
+	 * Constructor: Initializes random number table
+	 * The table must remain consistent throughout execution
 	 */
 	ZobristHasher();
 	~ZobristHasher();
 
 	/**
-	 * Computa hash completo para un estado (usar solo para inicialización)
-	 * Complejidad: O(n²) donde n = BOARD_SIZE
+	 * Compute full hash for a state (use only for initialization)
+	 * Complexity: O(n²) where n = BOARD_SIZE
 	 */
 	ZobristKey computeFullHash(const GameState &state) const;
 
 	/**
-	 * Actualiza hash incrementalmente después de un movimiento
-	 * Complejidad: O(1) - máximo 10 operaciones XOR
+	 * Incrementally update hash after a move
+	 * Complexity: O(1) - at most 10 XOR operations
 	 *
-	 * @param currentHash: Hash del estado antes del movimiento
-	 * @param move: Movimiento realizado
-	 * @param player: Jugador que hizo el movimiento
-	 * @param capturedPieces: Piezas capturadas por el movimiento
-	 * @param oldCaptures: Capturas del jugador antes del movimiento
-	 * @param newCaptures: Capturas del jugador después del movimiento
-	 * @return Nuevo hash del estado
+	 * @param currentHash: Hash of state before the move
+	 * @param move: Move made
+	 * @param player: Player who made the move
+	 * @param capturedPieces: Pieces captured by the move
+	 * @param oldCaptures: Player's captures before the move
+	 * @param newCaptures: Player's captures after the move
+	 * @return Updated hash of the new state
 	 */
 	ZobristKey updateHashAfterMove(ZobristKey currentHash,
 								   const Move &move,
@@ -51,7 +51,7 @@ public:
 								   int oldCaptures,
 								   int newCaptures) const;
 
-	// En zobrist_hasher.hpp:
+	// Overload with separate player/opponent capture tracking
 	ZobristKey updateHashAfterMove(ZobristKey currentHash,
 								   const Move &move,
 								   int player,
@@ -62,8 +62,8 @@ public:
 								   int oldOppCaptures,
 								   int newOppCaptures) const;
 	/**
-	 * Revierte un movimiento en el hash (para backtracking)
-	 * Debido a las propiedades del XOR: revertir = aplicar el mismo cambio
+	 * Revert a move in the hash (for backtracking)
+	 * Due to XOR properties: reverting = applying the same change
 	 */
 	ZobristKey revertMove(ZobristKey currentHash,
 						  const Move &move,
@@ -73,37 +73,37 @@ public:
 						  int newCaptures) const;
 
 	/**
-	 * Obtiene el hash para una pieza específica en una posición
-	 * Útil para debugging y verificaciones
+	 * Get the hash for a specific piece at a given position
+	 * Useful for debugging and verification
 	 */
 	ZobristKey getPieceHash(int x, int y, int piece) const;
 
 private:
-	// Tabla principal: [fila][columna][tipo_pieza]
-	// zobristTable[x][y][0] = 0 (EMPTY por convención)
-	// zobristTable[x][y][1] = hash para PLAYER1
-	// zobristTable[x][y][2] = hash para PLAYER2
+	// Main table: [row][col][piece_type]
+	// zobristTable[x][y][0] = 0 (EMPTY by convention)
+	// zobristTable[x][y][1] = hash for PLAYER1
+	// zobristTable[x][y][2] = hash for PLAYER2
 	ZobristKey zobristTable[GameState::BOARD_SIZE][GameState::BOARD_SIZE][3];
 
-	// Hash para indicar turno del jugador
+	// Hash for player turn
 	ZobristKey turnHash;
 
-	// Hash para capturas: [jugador][numero_capturas]
-	// captureHashes[0][5] = hash cuando PLAYER1 tiene 5 capturas
-	ZobristKey captureHashes[2][11]; // 0-10 capturas posibles
+	// Hash for captures: [player_index][capture_count]
+	// captureHashes[0][5] = hash when PLAYER1 has 5 captures
+	ZobristKey captureHashes[2][11]; // 0-10 possible captures
 
 	/**
-	 * Inicializa todas las tablas con números aleatorios de alta calidad
-	 * Usa std::random_device para entropía real del sistema
+	 * Initialize all tables with high-quality random numbers
+	 * Uses std::random_device for real system entropy
 	 */
 	void initializeZobristTable();
 
 	/**
-	 * Genera un número aleatorio de 64 bits usando generador criptográfico
+	 * Generate a 64-bit random number
 	 */
 	ZobristKey generateRandomKey();
 
-	// Generador aleatorio estático para inicialización
+	// Static random generator for initialization
 	static std::mt19937_64 rng;
 	static bool rngInitialized;
 };

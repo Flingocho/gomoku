@@ -10,11 +10,11 @@
 void GameEngine::newGame()
 {
 	state = GameState(); // Reset to initial state
-	lastHumanMove = Move(-1, -1); // También reiniciar el campo local
+	lastHumanMove = Move(-1, -1); // Also reset the local field
 }
 
 bool GameEngine::makeHumanMove(const Move& move) {
-    // En modo VS_HUMAN_SUGGESTED, ambos jugadores son humanos
+    // In VS_HUMAN_SUGGESTED mode, both players are human
     if (currentMode == GameMode::VS_AI && state.currentPlayer != GameState::PLAYER1) {
         return false;
     }
@@ -22,7 +22,8 @@ bool GameEngine::makeHumanMove(const Move& move) {
     // OPTIONAL CAPTURE: If there's a pending 5-in-a-row that can be broken by capture,
     // the player CAN choose to capture, but it's not mandatory.
     // If they don't capture, they simply lose the game.
-    // We just inform the player about the possibility, but don't force it.
+    bool ignoredCapture = false;
+
     if (!state.forcedCaptureMoves.empty() && state.forcedCapturePlayer == state.currentPlayer) {
         bool isCapturingMove = false;
         for (const Move& capturePos : state.forcedCaptureMoves) {
@@ -39,8 +40,7 @@ bool GameEngine::makeHumanMove(const Move& move) {
             std::cout << "CAPTURE IGNORED: Player " << state.currentPlayer 
                       << " chose not to break the 5-in-a-row. Player " 
                       << state.pendingWinPlayer << " wins!" << std::endl;
-            // The player chose not to capture - the game will end with opponent's victory
-            // This will be checked in isGameOver() / getWinner()
+            ignoredCapture = true;
         }
     }
     
@@ -50,9 +50,14 @@ bool GameEngine::makeHumanMove(const Move& move) {
     RuleEngine::MoveResult result = RuleEngine::applyMove(state, move);
     
     if (result.success) {
-        // After the move, check if the opponent just created a 5-in-a-row
-        // that we can break with a capture
-        checkAndSetForcedCaptures();
+        if (ignoredCapture) {
+            // Player chose not to break the 5-in-a-row — pendingWinPlayer
+            // remains set so isGameOver() will detect the loss.
+            state.forcedCaptureMoves.clear();
+            state.forcedCapturePlayer = 0;
+        } else {
+            checkAndSetForcedCaptures();
+        }
     }
     
     return result.success;
@@ -61,12 +66,13 @@ bool GameEngine::makeHumanMove(const Move& move) {
 Move GameEngine::makeAIMove() {
     if (state.currentPlayer != GameState::PLAYER2) return Move();
     
+    bool hadCaptureOpportunity = !state.forcedCaptureMoves.empty() && 
+                                  state.forcedCapturePlayer == state.currentPlayer;
+    
     // CHECK FOR CAPTURE OPPORTUNITY: AI CAN capture to break a 5-in-a-row (optional)
-    if (!state.forcedCaptureMoves.empty() && state.forcedCapturePlayer == state.currentPlayer) {
+    if (hadCaptureOpportunity) {
         std::cout << "AI CAPTURE OPPORTUNITY: Can capture at " << state.forcedCaptureMoves.size() 
                   << " positions to prevent opponent win" << std::endl;
-        // AI will probably choose to capture (evaluated by getBestMove)
-        // but it's not mechanically forced anymore
     }
     
     auto start = std::chrono::high_resolution_clock::now();
@@ -87,7 +93,7 @@ Move GameEngine::makeAIMove() {
             }
         }
         
-        if (!state.forcedCaptureMoves.empty() && state.forcedCapturePlayer == state.currentPlayer) {
+        if (hadCaptureOpportunity) {
             if (isCapture) {
                 std::cout << "AI chose to CAPTURE at (" << bestMove.x << "," << bestMove.y 
                           << ") - preventing opponent win" << std::endl;
@@ -98,8 +104,15 @@ Move GameEngine::makeAIMove() {
         }
         
         RuleEngine::applyMove(state, bestMove);
-        // After AI moves, check if human now has forced captures
-        checkAndSetForcedCaptures();
+        
+        if (hadCaptureOpportunity && !isCapture) {
+            // AI chose not to break the 5-in-a-row — pendingWinPlayer
+            // remains set so isGameOver() will detect the loss.
+            state.forcedCaptureMoves.clear();
+            state.forcedCapturePlayer = 0;
+        } else {
+            checkAndSetForcedCaptures();
+        }
     }
     
     return bestMove;
@@ -133,17 +146,20 @@ int GameEngine::getWinner() const
 std::vector<Move> GameEngine::findWinningLine() const {
     std::vector<Move> line;
     
-    // Determinar quién ganó
+    // Determine the winner
     int winner = 0;
     if (RuleEngine::checkWin(state, GameState::PLAYER1)) {
         winner = GameState::PLAYER1;
     } else if (RuleEngine::checkWin(state, GameState::PLAYER2)) {
         winner = GameState::PLAYER2;
+    } else if (state.pendingWinPlayer != 0) {
+        // Pending win (5-in-a-row not broken by capture)
+        winner = state.pendingWinPlayer;
     } else {
-        return line; // No hay ganador por alineación
+        return line; // No alignment winner found
     }
     
-    // Buscar la línea de 5
+    // Search for the winning line of 5
     int directions[4][2] = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
     
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
@@ -154,7 +170,7 @@ std::vector<Move> GameEngine::findWinningLine() const {
                 int dx = directions[d][0];
                 int dy = directions[d][1];
                 
-                // Contar consecutivas en esta dirección
+                // Count consecutive pieces in this direction
                 int count = 0;
                 std::vector<Move> tempLine;
                 
@@ -171,7 +187,7 @@ std::vector<Move> GameEngine::findWinningLine() const {
                 }
                 
                 if (count >= 5) {
-                    return tempLine; // Encontrada
+                    return tempLine; // Found
                 }
             }
         }

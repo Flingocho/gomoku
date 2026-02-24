@@ -1,6 +1,6 @@
 // ============================================
 // DEBUG_FORMATTER.CPP
-// Formateo de movimientos, scores, tableros y análisis
+// Move, score, board, and analysis formatting
 // ============================================
 
 #include "../../include/debug/debug_analyzer.hpp"
@@ -46,7 +46,7 @@ std::string DebugAnalyzer::analyzeGamePhase(const GameState& state) const {
 std::string DebugAnalyzer::findCriticalThreats(const GameState& state) const {
     std::ostringstream threats;
     
-    // Verificar amenazas de victoria
+    // Check win threats
     if (RuleEngine::checkWin(state, GameState::PLAYER1)) {
         threats << "HUMAN_WINS ";
     }
@@ -54,7 +54,7 @@ std::string DebugAnalyzer::findCriticalThreats(const GameState& state) const {
         threats << "AI_WINS ";
     }
     
-    // Verificar capturas cercanas a victoria
+    // Check captures close to victory
     if (state.captures[0] >= 8) {
         threats << "HUMAN_NEAR_CAPTURE_WIN(" << (10-state.captures[0]) << " more) ";
     }
@@ -68,14 +68,14 @@ std::string DebugAnalyzer::findCriticalThreats(const GameState& state) const {
 std::string DebugAnalyzer::formatBoard(const GameState& state) const {
     std::ostringstream boardStr;
     
-    // Encabezado con letras de columnas
+    // Column letter header
     boardStr << "\n   ";
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         boardStr << std::setw(2) << char('A' + j) << " ";
     }
     boardStr << "\n";
     
-    // Filas del tablero
+    // Board rows
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         boardStr << std::setw(2) << (i + 1) << " ";
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -91,7 +91,7 @@ std::string DebugAnalyzer::formatBoard(const GameState& state) const {
 }
 
 void GameSnapshot::printToConsole() const {
-    // Implementación similar pero para consola con colores si es necesario
+    // Console output with optional color support
     std::cout << "\n📸 GAME SNAPSHOT\n";
     std::cout << "Turn " << state.turnCount << " - " << gamePhase << "\n";
     if (!criticalThreats.empty()) {

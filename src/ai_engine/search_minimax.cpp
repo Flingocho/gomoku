@@ -1,7 +1,7 @@
 // ============================================
 // SEARCH_MINIMAX.CPP
-// Implementa el algoritmo minimax con alpha-beta pruning
-// Incluye búsqueda iterativa con deepening
+// Minimax algorithm with alpha-beta pruning
+// Iterative deepening search
 // ============================================
 
 #include "../../include/ai/transposition_search.hpp"
@@ -18,14 +18,14 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 {
 	nodesEvaluated++;
 
-	// Debug cada 10000 nodos
+	// Log stats every 10000 nodes
 	if (nodesEvaluated % 10000 == 0)
 	{
-		DEBUG_LOG_STATS("Nodos evaluados: " + std::to_string(nodesEvaluated) +
+		DEBUG_LOG_STATS("Nodes evaluated: " + std::to_string(nodesEvaluated) +
 						", Cache hits: " + std::to_string(cacheHits));
 	}
 
-	// ZOBRIST: Verificar transposition table PRIMERO
+	// Check transposition table first
 	uint64_t zobristKey = state.getZobristHash();
 	CacheEntry entry;
 	if (lookupTransposition(zobristKey, entry))
@@ -52,14 +52,14 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			}
 		}
 
-		// Usar movimiento del cache para ordering si estamos en nivel raíz
+		// Use cached move for ordering at root level
 		if (entry.bestMove.isValid())
 		{
 			previousBestMove = entry.bestMove;
 		}
 	}
 
-	// CASOS BASE
+	// Base cases
 	if (depth == 0 || RuleEngine::checkWin(state, GameState::PLAYER1) ||
 		RuleEngine::checkWin(state, GameState::PLAYER2))
 	{
@@ -69,7 +69,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 		return score;
 	}
 
-	// Generar y ordenar movimientos
+	// Generate and order moves
 	std::vector<Move> moves = generateOrderedMoves(state);
 
 	if (moves.empty())
@@ -93,25 +93,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			if (!result.success)
 				continue;
 
-			// NUEVO: Debug de heurística REAL del evaluador (no re-evaluar)
+			// Enable debug capture before recursive evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth)
 			{
-				// Activar captura ANTES de la evaluación recursiva real
 				g_evalDebug.reset();
 				g_evalDebug.active = true;
 				g_evalDebug.currentMove = move;
 			}
 
-			// EVALUACIÓN RECURSIVA: Esta es la única evaluación que cuenta
+			// Recursive evaluation
 			int eval = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth, nullptr);
 
-			// NUEVO: Capturar datos reales DESPUÉS de la evaluación
+			// Capture debug data after evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth && g_evalDebug.active)
 			{
 				std::ostringstream heuristicInfo;
 
-				// Mostrar el tablero después del movimiento
-				heuristicInfo << "\n=== EVALUANDO MOVIMIENTO " << g_debugAnalyzer->formatMove(move) << " ===\n";
+				// Show board state after the move
+				heuristicInfo << "\n=== EVALUATING MOVE " << g_debugAnalyzer->formatMove(move) << " ===\n";
 				heuristicInfo << g_debugAnalyzer->formatBoard(newState);
 
 				heuristicInfo << "Score:" << eval;
@@ -127,24 +126,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 				g_evalDebug.active = false;
 			}
 
-			// Actualizar mejor movimiento basándose SOLO en la evaluación recursiva
+			// Update best move from recursive evaluation
 			if (eval > maxEval)
 			{
 				maxEval = eval;
 				currentBestMove = move;
 			}
 
-			// Actualizar alpha con el resultado correcto
+			// Update alpha
 			alpha = std::max(alpha, eval);
 
-			// Poda alfa-beta
+			// Alpha-beta pruning
 			if (beta <= alpha)
 			{
 				break; // Beta cutoff
 			}
 		}
 
-		// Determinar tipo de entrada para cache
+		// Determine cache entry type
 		CacheEntry::Type entryType = CacheEntry::EXACT;
 		if (maxEval <= originalAlpha)
 		{
@@ -157,7 +156,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 
 		if (!currentBestMove.isValid() && !moves.empty())
 		{
-			currentBestMove = moves[0]; // Al menos el primer movimiento evaluado
+			currentBestMove = moves[0]; // Fallback to first evaluated move
 		}
 		storeTransposition(zobristKey, maxEval, depth, currentBestMove, entryType);
 
@@ -179,25 +178,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			if (!result.success)
 				continue;
 
-			// NUEVO: Debug de heurística REAL del evaluador (no re-evaluar)
+			// Enable debug capture before recursive evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth)
 			{
-				// Activar captura ANTES de la evaluación recursiva real
 				g_evalDebug.reset();
 				g_evalDebug.active = true;
 				g_evalDebug.currentMove = move;
 			}
 
-			// EVALUACIÓN RECURSIVA: Esta es la única evaluación que cuenta
+			// Recursive evaluation
 			int eval = minimax(newState, depth - 1, alpha, beta, true, originalMaxDepth, nullptr);
 
-			// NUEVO: Capturar datos reales DESPUÉS de la evaluación
+			// Capture debug data after evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth && g_evalDebug.active)
 			{
 				std::ostringstream heuristicInfo;
 
-				// Mostrar el tablero después del movimiento
-				heuristicInfo << "\n=== EVALUANDO MOVIMIENTO " << g_debugAnalyzer->formatMove(move) << " ===\n";
+				// Show board state after the move
+				heuristicInfo << "\n=== EVALUATING MOVE " << g_debugAnalyzer->formatMove(move) << " ===\n";
 				heuristicInfo << g_debugAnalyzer->formatBoard(newState);
 
 				heuristicInfo << "Score:" << eval;
@@ -213,24 +211,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 				g_evalDebug.active = false;
 			}
 
-			// Actualizar mejor movimiento basándose SOLO en la evaluación recursiva
+			// Update best move from recursive evaluation
 			if (eval < minEval)
 			{
 				minEval = eval;
 				currentBestMove = move;
 			}
 
-			// Actualizar beta con el resultado correcto
+			// Update beta
 			beta = std::min(beta, eval);
 
-			// Poda alfa-beta
+			// Alpha-beta pruning
 			if (beta <= alpha)
 			{
 				break; // Alpha cutoff
 			}
 		}
 
-		// Determinar tipo de entrada para cache
+		// Determine cache entry type
 		CacheEntry::Type entryType = CacheEntry::EXACT;
 		if (minEval <= originalAlpha)
 		{
@@ -242,7 +240,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 		}
 		if (!currentBestMove.isValid() && !moves.empty())
 		{
-			currentBestMove = moves[0]; // Al menos el primer movimiento evaluado
+			currentBestMove = moves[0]; // Fallback to first evaluated move
 		}
 		storeTransposition(zobristKey, minEval, depth, currentBestMove, entryType);
 
@@ -265,10 +263,10 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     cacheHits = 0;
     currentGeneration++;
 
-    std::cout << "Búsqueda iterativa hasta profundidad " << maxDepth << std::endl;
+    std::cout << "Iterative search up to depth " << maxDepth << std::endl;
 
     // ============================================
-    // NUEVO: PRE-CHECK - Detectar victoria inmediata
+    // Pre-check for immediate victory
     // ============================================
     std::vector<Move> allCandidates = generateCandidatesAdaptiveRadius(state);
     
@@ -278,7 +276,7 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         
         if (!result.success) continue;
         
-        // ¿Este movimiento gana INMEDIATAMENTE?
+        // Check if this move wins immediately
         if (RuleEngine::checkWin(testState, state.currentPlayer) ||
             testState.captures[state.currentPlayer - 1] >= 10) {
             
@@ -288,14 +286,14 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
             
             SearchResult winResult;
             winResult.bestMove = move;
-            winResult.score = Evaluator::WIN; // Usar constante del evaluador
+            winResult.score = Evaluator::WIN;
             winResult.nodesEvaluated = allCandidates.size();
             winResult.cacheHits = 0;
             winResult.cacheHitRate = 0.0f;
             
-            std::cout << "¡VICTORIA INMEDIATA detectada en " 
+            std::cout << "IMMEDIATE VICTORY detected at " 
                       << char('A' + move.y) << (move.x + 1) 
-                      << " en " << elapsedTime << "ms!" << std::endl;
+                      << " in " << elapsedTime << "ms!" << std::endl;
             
             if (g_debugAnalyzer) {
                 DEBUG_CHOSEN_MOVE(move, winResult.score);
@@ -306,10 +304,10 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         }
     }
     
-    std::cout << "No hay victoria inmediata, iniciando búsqueda iterativa..." << std::endl;
+    std::cout << "No immediate victory, starting iterative search..." << std::endl;
     
     // ============================================
-    // Iterative deepening normal
+    // Iterative deepening search
     // ============================================
     for (int depth = 1; depth <= maxDepth; depth++)
     {
@@ -320,7 +318,8 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         }
 
         Move bestMove;
-        int score = minimax(const_cast<GameState &>(state), depth,
+        GameState mutableState = state; // Mutable copy for minimax
+        int score = minimax(mutableState, depth,
                             std::numeric_limits<int>::min(),
                             std::numeric_limits<int>::max(),
                             state.currentPlayer == GameState::PLAYER2,
@@ -337,19 +336,19 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         bestResult.cacheHitRate = nodesEvaluated > 0 ?
             (float)cacheHits / nodesEvaluated : 0.0f;
 
-        std::cout << "Profundidad " << depth
+        std::cout << "Depth " << depth
                   << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
                   << " (score: " << score << ")"
                   << " - " << iterationTime.count() << "ms"
-                  << " (" << nodesEvaluated << " nodos, "
+                  << " (" << nodesEvaluated << " nodes, "
                   << std::fixed << std::setprecision(1) 
                   << (bestResult.cacheHitRate * 100) << "% cache hit)"
                   << std::endl;
 
-        // MANTENER threshold original
+        // Early exit on decisive score
         if (std::abs(score) > 300000) {
-            std::cout << "Mate detectado en profundidad " << depth
-                      << ", completando búsqueda" << std::endl;
+            std::cout << "Mate detected at depth " << depth
+                      << ", completing search" << std::endl;
             break;
         }
     }
@@ -358,7 +357,7 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         totalTime).count();
 
-    std::cout << "Búsqueda completada en " << elapsedTime << "ms total" << std::endl;
+    std::cout << "Search completed in " << elapsedTime << "ms total" << std::endl;
 
     if (g_debugAnalyzer) {
         DEBUG_CHOSEN_MOVE(bestResult.bestMove, bestResult.score);

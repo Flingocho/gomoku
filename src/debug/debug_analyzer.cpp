@@ -1,6 +1,6 @@
 // ============================================
 // DEBUG_ANALYZER.CPP  
-// Análisis de movimientos, evaluación y snapshots del juego
+// Move analysis, evaluation, and game snapshots
 // ============================================
 
 #include "../../include/debug/debug_analyzer.hpp"
@@ -29,7 +29,7 @@ void DebugAnalyzer::analyzeRootMove(const Move& move, int score, const Evaluatio
 void DebugAnalyzer::setChosenMove(const Move& move, int finalScore) {
     if (currentLevel == DEBUG_OFF && finalScore != 0) return;
     
-    // Marcar el movimiento elegido
+    // Mark the chosen move
     for (auto& analysis : rootMoveAnalyses) {
         if (analysis.move.x == move.x && analysis.move.y == move.y) {
             analysis.wasChosenAsRoot = true;
@@ -47,14 +47,14 @@ void DebugAnalyzer::createSnapshot(const GameState& state, int totalTime, int to
     lastSnapshot.gamePhase = analyzeGamePhase(state);
     lastSnapshot.criticalThreats = findCriticalThreats(state);
     
-    // Copiar análisis de movimientos y ordenar por score
+    // Copy move analyses and sort by score
     lastSnapshot.topMoves = rootMoveAnalyses;
     std::sort(lastSnapshot.topMoves.begin(), lastSnapshot.topMoves.end(),
               [](const MoveAnalysis& a, const MoveAnalysis& b) {
                   return a.score > b.score;
               });
     
-    // Encontrar movimiento elegido
+    // Find chosen move
     for (const auto& analysis : rootMoveAnalyses) {
         if (analysis.wasChosenAsRoot) {
             lastSnapshot.chosenMove = analysis.move;
@@ -62,12 +62,12 @@ void DebugAnalyzer::createSnapshot(const GameState& state, int totalTime, int to
         }
     }
     
-    // Imprimir análisis si el nivel lo permite
+    // Print analysis if debug level allows it
     if (currentLevel >= DEBUG_TOP_MOVES) {
         printCurrentAnalysis();
     }
     
-    // Limpiar para próximo turno
+    // Clear for next turn
     clear();
 }
 
@@ -76,11 +76,11 @@ EvaluationBreakdown DebugAnalyzer::evaluateWithBreakdown(
     
     EvaluationBreakdown breakdown(move);
     
-    // Crear estado temporal para evaluación
+    // Create temporary state for evaluation
     GameState tempState = state;
     tempState.board[move.x][move.y] = player;
     
-    // ¡CRÍTICO! Verificar condiciones de victoria PRIMERO
+    // CRITICAL! Check win conditions FIRST
     if (RuleEngine::checkWin(tempState, player)) {
         breakdown.totalScore = 500000;
         breakdown.isWinning = true;
@@ -94,16 +94,16 @@ EvaluationBreakdown DebugAnalyzer::evaluateWithBreakdown(
         return breakdown;
     }
     
-    // 1. Activar captura de debug real del evaluador
+    // 1. Enable real evaluator debug capture
     g_evalDebug.reset();
     g_evalDebug.active = true;
     g_evalDebug.currentMove = move;
     
-    // Evaluar patrones CON CAPTURA DE DEBUG AUTOMÁTICA
+    // Evaluate patterns with automatic debug capture
     breakdown.patternScore = Evaluator::evaluateForPlayer(tempState, player) - 
                            Evaluator::evaluateForPlayer(tempState, state.getOpponent(player));
     
-    // Transferir información capturada del evaluador real
+    // Transfer captured information from the real evaluator
     if (g_evalDebug.active) {
         if (player == GameState::PLAYER2) {
             breakdown.heuristicDebug.threeOpenCount = g_evalDebug.aiThreeOpen;
@@ -144,27 +144,27 @@ EvaluationBreakdown DebugAnalyzer::evaluateWithBreakdown(
         g_evalDebug.active = false;
     }
     
-    // 2. Evaluar capturas
+    // 2. Evaluate captures
     auto captures = RuleEngine::findCaptures(tempState, move, player);
     breakdown.captureScore = captures.size() * 1000;
     
-    // 3. Evaluar amenazas inmediatas
+    // 3. Evaluate immediate threats
     breakdown.threatScore = Evaluator::evaluateImmediateThreats(tempState, player);
     
-    // 4. Evaluar posición
+    // 4. Evaluate position
     int centerDist = std::max(std::abs(move.x - 9), std::abs(move.y - 9));
     breakdown.positionScore = (9 - centerDist) * 10;
     
-    // 5. Total
+    // 5. Total score
     breakdown.totalScore = breakdown.patternScore + breakdown.captureScore + 
                           breakdown.threatScore + breakdown.positionScore;
     
-    // 6. Análisis de criticidad
+    // 6. Criticality analysis
     breakdown.isWinning = breakdown.totalScore > 50000;
     breakdown.isLosing = breakdown.totalScore < -50000;
     breakdown.isCriticalThreat = std::abs(breakdown.totalScore) > 10000;
     
-    // 7. Generar explicación
+    // 7. Generate explanation
     std::ostringstream explanation;
     
     if (breakdown.isWinning) {
@@ -267,13 +267,13 @@ void DebugAnalyzer::printCurrentAnalysis() const {
                 if (h.threeOpenCount > 0 || h.fourHalfCount > 0 || h.fourOpenCount > 0 || h.twoOpenCount > 0) {
                     analysisLog << "        ★ HEURISTIC PATTERNS BREAKDOWN:\n";
                     if (h.fourOpenCount > 0) 
-                        analysisLog << "          └─ FOUR_OPEN: " << h.fourOpenCount << " patterns = " << h.fourOpenScore << " points (valor crítico!)\n";
+                        analysisLog << "          └─ FOUR_OPEN: " << h.fourOpenCount << " patterns = " << h.fourOpenScore << " points (critical value!)\n";
                     if (h.fourHalfCount > 0) 
-                        analysisLog << "          └─ FOUR_HALF (4 cerrado): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points (amenaza forzada)\n";
+                        analysisLog << "          └─ FOUR_HALF (4 closed): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points (forced threat)\n";
                     if (h.threeOpenCount > 0) 
-                        analysisLog << "          └─ THREE_OPEN (3 abierto): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points (amenaza fuerte)\n";
+                        analysisLog << "          └─ THREE_OPEN (3 open): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points (strong threat)\n";
                     if (h.twoOpenCount > 0) 
-                        analysisLog << "          └─ TWO_OPEN: " << h.twoOpenCount << " patterns = " << h.twoOpenScore << " points (desarrollo)\n";
+                        analysisLog << "          └─ TWO_OPEN: " << h.twoOpenCount << " patterns = " << h.twoOpenScore << " points (development)\n";
                 }
             }
         }
@@ -374,9 +374,9 @@ void GameSnapshot::saveToFile(const std::string& filename) const {
                 if (h.fourOpenCount > 0) 
                     file << "          - FOUR_OPEN: " << h.fourOpenCount << " patterns = " << h.fourOpenScore << " points\n";
                 if (h.fourHalfCount > 0) 
-                    file << "          - FOUR_HALF (4 cerrado): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points\n";
+                    file << "          - FOUR_HALF (4 closed): " << h.fourHalfCount << " patterns = " << h.fourHalfScore << " points\n";
                 if (h.threeOpenCount > 0) 
-                    file << "          - THREE_OPEN (3 abierto): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points\n";
+                    file << "          - THREE_OPEN (3 open): " << h.threeOpenCount << " patterns = " << h.threeOpenScore << " points\n";
                 if (h.twoOpenCount > 0) 
                     file << "          - TWO_OPEN: " << h.twoOpenCount << " patterns = " << h.twoOpenScore << " points\n";
                 if (!h.patternDetails.empty())

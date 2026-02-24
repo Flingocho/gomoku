@@ -14,7 +14,7 @@
 GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     setState(MENU);
     
-    // Este método será non-blocking, la elección se captura en handleMenuClick
+    // Non-blocking method, the choice is captured in handleMenuClick
     if (selectedMenuOption == 0) return VS_AI;
     if (selectedMenuOption == 1) return VS_HUMAN;
     if (selectedMenuOption == 2) return COLORBLIND;
@@ -22,7 +22,7 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
     if (selectedMenuOption == 4) return OPTIONS_MENU;
     if (selectedMenuOption == 5) return QUIT;
     
-    return NONE; // Sin selección aún
+    return NONE; // No selection yet
 }
 
 // ============================================================================
@@ -30,10 +30,10 @@ GuiRenderer::MenuOption GuiRenderer::showMenuAndGetChoice() {
 // ============================================================================
 
 void GuiRenderer::renderMenu() {
-    // 0. Fondo moderno con efectos
+    // 0. Modern background with effects
     drawModernBackground();
     
-    // 1. Título principal con efectos de brillo
+    // 1. Main title with glow effects
     std::string mainTitle = "=== GOMOKU AI ===";
     int titleSize = 36;
     
@@ -49,7 +49,7 @@ void GuiRenderer::renderMenu() {
     titleText.setOrigin(titleBounds.width / 2.0f, 0);
     titleText.setPosition(WINDOW_WIDTH / 2.0f, 100);
     
-    // Efecto de brillo pulsante
+    // Pulsing glow effect
     float time = animationClock.getElapsedTime().asSeconds();
     float pulse = sin(time * 2.0f) * 0.3f + 1.0f;
     sf::Color glowColor = sf::Color(255, 215, 0, static_cast<sf::Uint8>(pulse * 100));
@@ -57,7 +57,7 @@ void GuiRenderer::renderMenu() {
     drawGlowEffect(titleText, glowColor);
     window.draw(titleText);
     
-    // 2. Subtítulo centrado
+    // 2. Centered subtitle
     std::string subtitle = "5 in a row with advanced AI";
     int subtitleSize = 18;
     
@@ -74,7 +74,7 @@ void GuiRenderer::renderMenu() {
     subtitleText.setPosition(WINDOW_WIDTH / 2.0f, 150);
     window.draw(subtitleText);
     
-    // 3. Botones del menú
+    // 3. Menu buttons
     int buttonWidth = 250;
     int buttonHeight = 45;
     int buttonX = WINDOW_WIDTH/2.0f - buttonWidth/2.0f;
@@ -87,12 +87,12 @@ void GuiRenderer::renderMenu() {
     drawButton("Options", buttonX, 220 + buttonSpacing * 4, buttonWidth, buttonHeight, hoveredMenuOption == 4);
     drawButton("Exit", buttonX, 220 + buttonSpacing * 5, buttonWidth, buttonHeight, hoveredMenuOption == 5);
     
-    // 4. Información adicional
+    // 4. Additional information
     drawText("Features:", 50, 680, 16, sf::Color::Yellow);
     drawText("- Zobrist Hashing + Alpha-Beta pruning", 70, 705, 14, sf::Color::White);
     drawText("- Adaptive depth + Complete rules", 70, 725, 14, sf::Color::White);
     
-    // 5. Controles
+    // 5. Controls
     drawText("ESC = Exit", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
 }
 
@@ -103,7 +103,7 @@ void GuiRenderer::renderMenu() {
 void GuiRenderer::renderOptions() {
     drawModernBackground();
     
-    // Título
+    // Title
     sf::Text titleText;
     if (font.getInfo().family != "") {
         titleText.setFont(font);
@@ -171,7 +171,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
     int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
     int buttonSpacing = 55;
     
-    // Botón VS AI
+    // VS AI button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 && y <= 220 + buttonHeight) {
         audioManager.playSound("click_menu");
@@ -180,7 +180,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón VS Human (con sugerencias)
+    // VS Human button (with suggestions)
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 + buttonSpacing && y <= 220 + buttonSpacing + buttonHeight) {
         audioManager.playSound("click_menu");
@@ -189,7 +189,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Colorblind Mode
+    // Colorblind Mode button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 + buttonSpacing * 2 && y <= 220 + buttonSpacing * 2 + buttonHeight) {
         audioManager.playSound("click_menu");
@@ -198,7 +198,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Rust AI
+    // Rust AI button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 + buttonSpacing * 3 && y <= 220 + buttonSpacing * 3 + buttonHeight) {
         audioManager.playSound("click_menu");
@@ -206,7 +206,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Options
+    // Options button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 + buttonSpacing * 4 && y <= 220 + buttonSpacing * 4 + buttonHeight) {
         audioManager.playSound("click_menu");
@@ -214,7 +214,7 @@ void GuiRenderer::handleMenuClick(int x, int y) {
         return;
     }
     
-    // Botón Quit
+    // Quit button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= 220 + buttonSpacing * 5 && y <= 220 + buttonSpacing * 5 + buttonHeight) {
         audioManager.playSound("click_menu");

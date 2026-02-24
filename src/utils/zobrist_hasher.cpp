@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <functional>
 
-// Inicialización estática
+// Static initialization
 std::mt19937_64 ZobristHasher::rng;
 bool ZobristHasher::rngInitialized = false;
 
@@ -16,42 +16,42 @@ ZobristHasher::ZobristHasher() {
 ZobristHasher::~ZobristHasher() {}
 
 void ZobristHasher::initializeZobristTable() {
-    // Inicializar generador aleatorio una sola vez
+    // Initialize random generator once
     if (!rngInitialized) {
         std::random_device rd;
-        // Sembrar con múltiples valores para mejor entropía
+        // Seed with multiple values for better entropy
         std::array<uint32_t, std::mt19937_64::state_size> seed_data;
         std::generate(seed_data.begin(), seed_data.end(), std::ref(rd));
         std::seed_seq seq(seed_data.begin(), seed_data.end());
         rng.seed(seq);
         rngInitialized = true;
         
-        // Inicialización exitosa - se loggeará desde main
+        // Successful initialization - will be logged from main
     }
     
-    // Inicializar tabla principal
+    // Initialize main table
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
-            // EMPTY siempre es 0 (por convención Zobrist)
+            // EMPTY is always 0 (by Zobrist convention)
             zobristTable[i][j][GameState::EMPTY] = 0;
             
-            // Generar claves únicas para cada jugador
+            // Generate unique keys for each player
             zobristTable[i][j][GameState::PLAYER1] = generateRandomKey();
             zobristTable[i][j][GameState::PLAYER2] = generateRandomKey();
         }
     }
     
-    // Hash para turno del jugador
+    // Hash for player turn
     turnHash = generateRandomKey();
     
-    // Hash para capturas
+    // Hash for captures
     for (int player = 0; player < 2; player++) {
         for (int captures = 0; captures <= 10; captures++) {
             captureHashes[player][captures] = generateRandomKey();
         }
     }
     
-    // Estadísticas de Zobrist - se loggeará desde main si es necesario
+    // Zobrist statistics - will be logged from main if needed
 }
 
 ZobristHasher::ZobristKey ZobristHasher::generateRandomKey() {
@@ -62,7 +62,7 @@ ZobristHasher::ZobristKey ZobristHasher::generateRandomKey() {
 ZobristHasher::ZobristKey ZobristHasher::computeFullHash(const GameState& state) const {
     ZobristKey hash = 0;
     
-    // Hash de todas las piezas en el tablero
+    // Hash all pieces on the board
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
             int piece = state.getPiece(i, j);
@@ -72,15 +72,15 @@ ZobristHasher::ZobristKey ZobristHasher::computeFullHash(const GameState& state)
         }
     }
     
-    // Hash del turno actual (solo si es PLAYER2)
-    // Convención: PLAYER1 = hash base, PLAYER2 = hash base ^ turnHash
+    // Hash current turn (only if PLAYER2)
+    // Convention: PLAYER1 = base hash, PLAYER2 = base hash ^ turnHash
     if (state.currentPlayer == GameState::PLAYER2) {
         hash ^= turnHash;
     }
     
-    // Hash de capturas para ambos jugadores
-    hash ^= captureHashes[0][state.captures[0]]; // PLAYER1 captures
-    hash ^= captureHashes[1][state.captures[1]]; // PLAYER2 captures
+    // Hash captures for both players
+    hash ^= captureHashes[0][std::min(state.captures[0], 10)]; // PLAYER1 captures
+    hash ^= captureHashes[1][std::min(state.captures[1], 10)]; // PLAYER2 captures
     
     return hash;
 }
@@ -95,26 +95,26 @@ ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
     
     ZobristKey newHash = currentHash;
     
-    // 1. Colocar nueva pieza
+    // 1. Place new piece
     newHash ^= zobristTable[move.x][move.y][player];
     
-    // 2. Remover piezas capturadas
+    // 2. Remove captured pieces
     int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
     for (const Move& captured : capturedPieces) {
         newHash ^= zobristTable[captured.x][captured.y][opponent];
     }
     
-    // 3. Cambiar turno (siempre alternamos)
+    // 3. Switch turn (always alternate)
     newHash ^= turnHash;
     
-    // 4. Actualizar hash de capturas
+    // 4. Update capture hash
     int playerIndex = player - 1; // PLAYER1=0, PLAYER2=1
     
-    // Quitar hash de capturas anteriores
-    newHash ^= captureHashes[playerIndex][oldCaptures];
+    // Remove previous capture hash (clamped for safety)
+    newHash ^= captureHashes[playerIndex][std::min(oldCaptures, 10)];
     
-    // Agregar hash de capturas nuevas
-    newHash ^= captureHashes[playerIndex][newCaptures];
+    // Add new capture hash (clamped for safety)
+    newHash ^= captureHashes[playerIndex][std::min(newCaptures, 10)];
     
     return newHash;
 }
@@ -127,10 +127,10 @@ ZobristHasher::ZobristKey ZobristHasher::revertMove(
     int oldCaptures,
     int newCaptures) const {
     
-    // Debido a las propiedades del XOR: A ^ B ^ B = A
-    // Revertir es exactamente el mismo proceso que aplicar
+    // Due to XOR properties: A ^ B ^ B = A
+    // Reverting is exactly the same process as applying
     return updateHashAfterMove(currentHash, move, player, capturedPieces, 
-                              newCaptures, oldCaptures); // Nota: intercambiamos oldCaptures y newCaptures
+                              newCaptures, oldCaptures); // Note: we swap oldCaptures and newCaptures
 }
 
 ZobristHasher::ZobristKey ZobristHasher::getPieceHash(int x, int y, int piece) const {
@@ -143,7 +143,7 @@ ZobristHasher::ZobristKey ZobristHasher::getPieceHash(int x, int y, int piece) c
     return zobristTable[x][y][piece];
 }
 
-// En zobrist_hasher.cpp:
+// Overloaded updateHashAfterMove with separate capture tracking
 ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
     ZobristKey currentHash,
     const Move& move,
@@ -158,32 +158,32 @@ ZobristHasher::ZobristKey ZobristHasher::updateHashAfterMove(
     ZobristKey newHash = currentHash;
     int opponent = (player == GameState::PLAYER1) ? GameState::PLAYER2 : GameState::PLAYER1;
     
-    // 1. Colocar nueva pieza
+    // 1. Place new piece
     newHash ^= zobristTable[move.x][move.y][player];
     
-    // 2. Remover capturas propias (piezas del oponente)
+    // 2. Remove own captures (opponent's pieces)
     for (const Move& captured : myCapturedPieces) {
         newHash ^= zobristTable[captured.x][captured.y][opponent];
     }
     
-    // 3. Remover capturas del oponente (mis piezas)
+    // 3. Remove opponent's captures (own pieces)
     for (const Move& captured : opponentCapturedPieces) {
         newHash ^= zobristTable[captured.x][captured.y][player];
     }
     
-    // 4. Cambiar turno
+    // 4. Switch turn
     newHash ^= turnHash;
     
-    // 5. Actualizar capturas propias
+    // 5. Update own captures (clamped for safety)
     int playerIndex = player - 1;
-    newHash ^= captureHashes[playerIndex][oldMyCaptures];
-    newHash ^= captureHashes[playerIndex][newMyCaptures];
+    newHash ^= captureHashes[playerIndex][std::min(oldMyCaptures, 10)];
+    newHash ^= captureHashes[playerIndex][std::min(newMyCaptures, 10)];
     
-    // 6. Actualizar capturas del oponente
+    // 6. Update opponent's captures (clamped for safety)
     int opponentIndex = opponent - 1;
     if (oldOppCaptures != newOppCaptures) {
-        newHash ^= captureHashes[opponentIndex][oldOppCaptures];
-        newHash ^= captureHashes[opponentIndex][newOppCaptures];
+        newHash ^= captureHashes[opponentIndex][std::min(oldOppCaptures, 10)];
+        newHash ^= captureHashes[opponentIndex][std::min(newOppCaptures, 10)];
     }
     
     return newHash;

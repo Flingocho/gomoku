@@ -6,7 +6,7 @@
 #include "../core/audio_manager.hpp"
 #include <string>
 #include <chrono>
-#include <vector> // NUEVO: Para vector de tiempos de IA
+#include <vector>
 
 class GuiRenderer
 {
@@ -35,23 +35,23 @@ private:
 	sf::RenderWindow window;
 	sf::Font font;
 	sf::Event event;
-	std::vector<sf::Texture> winAnimationFrames;    // Frames de la animación de victoria
-	sf::Sprite winAnimationSprite;                  // Sprite para mostrar la animación de victoria
-	int currentWinFrame;                            // Frame actual de la animación de victoria
-	sf::Clock winAnimationClock;                    // Reloj para controlar la animación de victoria
-	std::vector<sf::Texture> defeatAnimationFrames; // Frames de la animación de derrota
-	sf::Sprite defeatAnimationSprite;               // Sprite para mostrar la animación de derrota
-	int currentDefeatFrame;                         // Frame actual de la animación de derrota
-	sf::Clock defeatAnimationClock;                 // Reloj para controlar la animación de derrota
+	std::vector<sf::Texture> winAnimationFrames;    // Win animation frames
+	sf::Sprite winAnimationSprite;                  // Win animation sprite
+	int currentWinFrame;                            // Current win animation frame
+	sf::Clock winAnimationClock;                    // Win animation timer
+	std::vector<sf::Texture> defeatAnimationFrames; // Defeat animation frames
+	sf::Sprite defeatAnimationSprite;               // Defeat animation sprite
+	int currentDefeatFrame;                         // Current defeat animation frame
+	sf::Clock defeatAnimationClock;                 // Defeat animation timer
 
 	// App state
 	AppState currentState;
-	int selectedMenuOption; // Para clicks reales
-	int hoveredMenuOption;	// NUEVO: Para hover effects
-	Move pendingMove;		// Para capturar clicks del usuario
+	int selectedMenuOption; // Selected via click
+	int hoveredMenuOption;	// For hover visual effects
+	Move pendingMove;		// Captures user clicks
 	bool moveReady;
-	Move hoverPosition; // NUEVO: Para hover en el tablero
-	Move lastAiMove;	// NUEVO: Última ficha colocada por la IA
+	Move hoverPosition; // Current board hover position
+	Move lastAiMove;	// Last AI piece placement
 	std::vector<Move> winningLine;
 
 	// Visual constants
@@ -65,7 +65,7 @@ private:
 	// Colors
 	sf::Color backgroundColor;
 	sf::Color boardLineColor;
-	sf::Color player1Color; // Humano
+	sf::Color player1Color; // Human
 	sf::Color player2Color; // AI
 	sf::Color hoverColor;
 
@@ -80,7 +80,7 @@ public:
 
 	// Core functionality - reemplaza Display
 	bool isWindowOpen() const;
-	void processEvents(); // Procesa eventos sin bloquear
+	void processEvents(); // Process events without blocking
 	void render(const GameState &state, int aiTimeMs = 0);
 
 	// Game flow control
@@ -92,7 +92,7 @@ public:
 	void setState(AppState newState) { 
         currentState = newState; 
         if (newState == GAME_OVER) {
-            showGameOverAnimation = true;  // Mostrar animación al entrar en GAME_OVER
+            showGameOverAnimation = true;  // Show animation on entering GAME_OVER
         } else {
             gameOverButtonsPositionValid = false; // Reset cuando salimos de game over
         }
@@ -102,13 +102,13 @@ public:
 	Move getUserMove(); // Non-blocking, returns pending move
 	void clearUserMove() { moveReady = false; }
 	void refreshSelectedMenuOption() { selectedMenuOption = -1; }
-	void setLastAiMove(const Move &move) { lastAiMove = move; } // NUEVO: Para resaltar la última jugada de la IA
-	void resetColorblindMode() { isColorblindMode = false; } // NUEVO: Resetear modo colorblind
+	void setLastAiMove(const Move &move) { lastAiMove = move; } // Highlight the AI's last move
+	void resetColorblindMode() { isColorblindMode = false; } // Reset colorblind mode
 
-	// NUEVO: Métodos para estadísticas de tiempo de IA
+	// AI time statistics
 	    void addAiTime(int timeMs);     // Add a new AI time
-	float getAverageAiTime() const; // Obtener tiempo promedio
-	void resetAiStats();			// Reiniciar estadísticas
+	float getAverageAiTime() const; // Get average AI thinking time
+	void resetAiStats();			// Reset statistics
 
 	void setSuggestion(const Move &move)
 	{
@@ -116,14 +116,16 @@ public:
 		showSuggestion = move.isValid();
 	}
 
-	// NUEVO: Limpiar sugerencia
+	// Clear active suggestion
 	void clearSuggestion()
 	{
 		currentSuggestion = Move(-1, -1);
 		showSuggestion = false;
 	}
 
-	// NUEVO: Métodos para manejar errores de movimiento
+	bool hasSuggestion() const { return showSuggestion; }
+
+	// Invalid move error handling
 	void showInvalidMoveError(const Move& move);
 	void clearInvalidMoveError();
 	void setWinningLine(const std::vector<Move>& line) { winningLine = line; }
@@ -172,7 +174,7 @@ private:
 	void drawText(const std::string &text, int x, int y, int size = 24,
 				  sf::Color color = sf::Color::White);
 	void drawGameInfo(const GameState &state, int aiTimeMs);
-	void drawInvalidMoveIndicator(); // NUEVO: Para mostrar error en el tablero
+	void drawInvalidMoveIndicator(); // Show error indicator on board
 
 	// Utility functions
 	sf::Vector2i boardPositionToPixel(int boardX, int boardY) const;
@@ -190,15 +192,15 @@ private:
 
 	// Member variables for hover position
 
-	    // NEW: Variables for AI time statistics
-	std::vector<int> aiTimes; // Almacenar todos los tiempos de IA
-	int totalAiTime;		  // Suma total de tiempos
-	int aiMoveCount;		  // Número de movimientos de IA realizados
+	    // AI time statistics
+	std::vector<int> aiTimes; // All AI thinking times
+	int totalAiTime;		  // Total accumulated time
+	int aiMoveCount;		  // Number of AI moves made
 
 	Move currentSuggestion;
     bool showSuggestion;
 	
-	    // NEW: Variables for handling invalid move errors
+	    // Invalid move error state
 	std::string errorMessage;
 	sf::Clock errorTimer;
 	bool showError;
@@ -207,11 +209,14 @@ private:
 	// Posiciones exactas de botones de Game Over (calculadas en renderGameOver)
 	int gameOverButtonsY;
 	bool gameOverButtonsPositionValid;
-	bool isColorblindMode;	// Flag para el modo colorblind
+	bool isColorblindMode;	// Colorblind mode flag
+	
+	// Winner tracking (set by showGameResult, used by renderGameOver)
+	int storedWinner = 0;
 	
 	// Animation skip control
-	bool showGameOverAnimation;  // Si mostrar la animación de victoria/derrota
-	int nextButtonX, nextButtonY, nextButtonWidth, nextButtonHeight;  // Posición del botón NEXT
+	bool showGameOverAnimation;  // Whether to show win/defeat animation
+	int nextButtonX, nextButtonY, nextButtonWidth, nextButtonHeight;  // NEXT button position
 	
 	// Options state
 	bool debugEnabled;

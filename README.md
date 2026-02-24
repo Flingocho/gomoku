@@ -30,6 +30,8 @@ A comprehensive Gomoku (Five-in-a-Row) game featuring a powerful AI engine, patt
 *   **Rust Toolchain:** `cargo` (for the Rust module).
 *   **System Libraries:** Basic system libraries (usually present on most Linux distros).
 
+*   **SFML (bundled):** SFML runtime libraries are fetched and stored locally in `external/sfml` by the project's setup script. You generally do not need to install SFML system-wide — the build and `make run` will use the bundled libraries. If you run the executable directly, you may need to set `LD_LIBRARY_PATH` to `./external/sfml/lib` (see Run section).
+
 ## Installation
 
 1.  **Clone the repository:**
@@ -54,7 +56,12 @@ A comprehensive Gomoku (Five-in-a-Row) game featuring a powerful AI engine, patt
 
     Or manually:
     ```bash
+    # Absolute paths (recommended for scripts)
     export LD_LIBRARY_PATH=$(pwd)/external/sfml/lib:$(pwd)/gomoku_ai_rust/target/release:$LD_LIBRARY_PATH
+    ./gomoku
+
+    # Or, if you're already in the repo root, a shorter relative form also works:
+    export LD_LIBRARY_PATH=./external/sfml/lib:$LD_LIBRARY_PATH
     ./gomoku
     ```
 

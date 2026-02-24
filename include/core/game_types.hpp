@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdint>
 
-// Forward declaration para evitar dependencias circulares
+// Forward declaration to avoid circular dependencies
 class ZobristHasher;
 
 struct Move {

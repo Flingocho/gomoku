@@ -5,7 +5,7 @@
 #include <string>
 
 namespace GuiHelpers {
-    // Constantes de layout
+    // Layout constants
     constexpr int WINDOW_WIDTH = 1000;
     constexpr int WINDOW_HEIGHT = 800;
     constexpr int BOARD_SIZE_PX = 760;
@@ -14,7 +14,7 @@ namespace GuiHelpers {
     constexpr int CELL_SIZE = 40;
     constexpr int PIECE_RADIUS = 15;
     
-    // Conversión de coordenadas
+    // Coordinate conversion
     sf::Vector2i boardPositionToPixel(int boardX, int boardY);
     bool isPointInBoard(int pixelX, int pixelY, int& outBoardX, int& outBoardY);
     

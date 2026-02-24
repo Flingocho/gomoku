@@ -5,9 +5,13 @@
 #include "../include/ai/suggestion_engine.hpp"
 #include <iostream>
 #include <chrono>
+#include <stdexcept>
+#include <new>
 
 int main()
 {
+	try
+	{
 	std::cout << "=== GOMOKU AI WITH ZOBRIST HASHING ===" << std::endl;
 	std::cout << "Initializing..." << std::endl;
 
@@ -134,10 +138,12 @@ int main()
 			// Modo VS_HUMAN_SUGGESTED: Ambos jugadores son humanos con sugerencias
 			if (game.getGameMode() == GameMode::VS_HUMAN_SUGGESTED)
 			{
-				// Generar sugerencia para el jugador actual usando la IA
-				Move suggestion = SuggestionEngine::getSuggestion(state, 6);
-				if (suggestion.isValid()) {
-					renderer.setSuggestion(suggestion);
+				// Generar sugerencia solo cuando no hay una activa (evitar recalcular cada frame)
+				if (!renderer.hasSuggestion()) {
+					Move suggestion = SuggestionEngine::getSuggestion(state, 6);
+					if (suggestion.isValid()) {
+						renderer.setSuggestion(suggestion);
+					}
 				}
 				
 				if (renderer.hasUserMove())
@@ -213,13 +219,13 @@ int main()
 
 		case GuiRenderer::GAME_OVER:
 		{
-			renderer.processEvents();
 			renderer.render(game.getState());
 
 			int selectedOption = renderer.getSelectedMenuOption();
 			if (selectedOption == 0)
 			{
 				game.newGame();
+				game.clearAICache();
 				renderer.clearSuggestion();
 				renderer.clearInvalidMoveError();
 				renderer.resetAiStats();
@@ -248,4 +254,30 @@ int main()
 
 	std::cout << "Thanks for playing!" << std::endl;
 	return 0;
+
+	} catch (const std::bad_alloc& e) {
+		std::cerr << "Error: Out of memory - " << e.what() << std::endl;
+		if (g_debugAnalyzer) {
+			delete g_debugAnalyzer;
+			g_debugAnalyzer = nullptr;
+		}
+		GameState::cleanupHasher();
+		return 1;
+	} catch (const std::exception& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		if (g_debugAnalyzer) {
+			delete g_debugAnalyzer;
+			g_debugAnalyzer = nullptr;
+		}
+		GameState::cleanupHasher();
+		return 1;
+	} catch (...) {
+		std::cerr << "Error: Unknown exception occurred" << std::endl;
+		if (g_debugAnalyzer) {
+			delete g_debugAnalyzer;
+			g_debugAnalyzer = nullptr;
+		}
+		GameState::cleanupHasher();
+		return 1;
+	}
 }

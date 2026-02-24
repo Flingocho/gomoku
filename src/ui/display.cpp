@@ -4,7 +4,7 @@
 #include <cctype>
 #include <fstream>
 
-// Códigos de color ANSI
+// ANSI color codes
 #define RESET   "\033[0m"
 #define RED     "\033[31m"
 #define BLUE    "\033[34m"
@@ -23,7 +23,7 @@ void Display::clearScreen() {
 char Display::getPieceChar(int piece) {
     switch (piece) {
         case GameState::EMPTY: return '.';
-        case GameState::PLAYER1: return 'O';  // Humano
+        case GameState::PLAYER1: return 'O';  // Human
         case GameState::PLAYER2: return 'X';  // AI
         default: return '?';
     }
@@ -31,8 +31,8 @@ char Display::getPieceChar(int piece) {
 
 std::string Display::getPieceColor(int piece) {
     switch (piece) {
-        case GameState::PLAYER1: return BLUE;   // Humano en azul
-        case GameState::PLAYER2: return RED;    // AI en rojo
+        case GameState::PLAYER1: return BLUE;   // Human in blue
+        case GameState::PLAYER2: return RED;    // AI in red
         default: return RESET;
     }
 }
@@ -40,15 +40,15 @@ std::string Display::getPieceColor(int piece) {
 void Display::printBoard(const GameState& state) {
     std::cout << "\n  ";
     
-    // Imprimir coordenadas superiores (A-S)
+    // Print top coordinates (A-S)
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         std::cout << " " << char('A' + j);
     }
     std::cout << "\n";
     
-    // Imprimir filas
+    // Print rows
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        // Número de fila (1-19)
+        // Row number (1-19)
         std::cout << std::setw(2) << (i + 1) << " ";
         
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -59,7 +59,7 @@ void Display::printBoard(const GameState& state) {
         std::cout << std::setw(2) << (i + 1) << "\n";
     }
     
-    // Coordenadas inferiores
+    // Bottom coordinates
     std::cout << "  ";
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         std::cout << " " << char('A' + j);
@@ -72,7 +72,7 @@ void Display::printGameInfo(const GameState& state, int aiTimeMs) {
     std::cout << "Captures: " << BLUE << "You: " << state.captures[0] << RESET;
     std::cout << "  " << RED << "AI: " << state.captures[1] << RESET;
     
-    // Mostrar si alguien está cerca de ganar por capturas
+    // Show if someone is close to winning by captures
     if (state.captures[0] >= 8) {
         std::cout << " " << BLUE << "(2 more to win!)" << RESET;
     }
@@ -94,7 +94,7 @@ std::pair<int, int> Display::getUserMove() {
     std::cin >> input;
     
     if (input == "quit" || input == "q") {
-        return {-1, -1};  // Señal de quit
+        return {-1, -1};  // Quit signal
     }
     
     return parseCoordinate(input);
@@ -103,12 +103,12 @@ std::pair<int, int> Display::getUserMove() {
 std::pair<int, int> Display::parseCoordinate(const std::string& input) {
     if (input.length() < 2) return {-2, -2};  // Error
     
-    // Convertir letra a columna (A=0, B=1, etc.)
+    // Convert letter to column (A=0, B=1, etc.)
     char colChar = std::toupper(input[0]);
     if (colChar < 'A' || colChar > 'S') return {-2, -2};
     int col = colChar - 'A';
     
-    // Convertir número a fila
+    // Convert number to row
     std::string rowStr = input.substr(1);
     try {
         int row = std::stoi(rowStr) - 1;  // 1-based to 0-based
@@ -147,15 +147,15 @@ void Display::printWinner(int player) {
 void Display::printBoardtoFile(const GameState& state, std::ofstream& file) {
     file << "\n  ";
     
-    // Imprimir coordenadas superiores (A-S)
+    // Print top coordinates (A-S)
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         file << " " << char('A' + j);
     }
     file << "\n";
     
-    // Imprimir filas
+    // Print rows
     for (int i = 0; i < GameState::BOARD_SIZE; i++) {
-        // Número de fila (1-19)
+        // Row number (1-19)
         file << std::setw(2) << (i + 1) << " ";
         
         for (int j = 0; j < GameState::BOARD_SIZE; j++) {
@@ -166,7 +166,7 @@ void Display::printBoardtoFile(const GameState& state, std::ofstream& file) {
         file << std::setw(2) << (i + 1) << "\n";
     }
     
-    // Coordenadas inferiores
+    // Bottom coordinates
     file << "  ";
     for (int j = 0; j < GameState::BOARD_SIZE; j++) {
         file << " " << char('A' + j);

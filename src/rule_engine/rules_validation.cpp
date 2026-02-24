@@ -1,7 +1,7 @@
 // ============================================
 // RULES_VALIDATION.CPP
-// Validación de movimientos: double free-three
-// Detección de patrones válidos de free-three
+// Move validation: double free-three
+// Valid free-three pattern detection
 // ============================================
 
 #include "../../include/rules/rule_engine.hpp"
@@ -10,7 +10,7 @@ using namespace Directions;
 
 bool RuleEngine::createsDoubleFreeThree(const GameState &state, const Move &move, int player)
 {
-	// Crear copia temporal para testear
+	// Create temporary copy for testing
 	GameState tempState = state;
 	tempState.board[move.x][move.y] = player;
 
@@ -22,7 +22,7 @@ std::vector<Move> RuleEngine::findFreeThrees(const GameState &state, const Move 
 {
 	std::vector<Move> freeThrees;
 
-	// Verificar las 4 direcciones principales
+	// Check the 4 main directions
 	for (int d = 0; d < MAIN_COUNT; d++)
 	{
 		if (isFreeThree(state, move, MAIN[d][0], MAIN[d][1], player))
@@ -37,16 +37,16 @@ std::vector<Move> RuleEngine::findFreeThrees(const GameState &state, const Move 
 bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 							 int dx, int dy, int player)
 {
-	// Un free-three es cualquier patrón de 3 fichas en una ventana de 5 posiciones
-	// donde ambos extremos están libres y se puede formar una amenaza de 4
-	// Ahora incluye patrones con gaps como -XX-X- o -X-XX-
+	// A free-three is any pattern of 3 pieces in a window of 5 positions
+	// where both ends are free and a threat of 4 can be formed
+	// Includes patterns with gaps such as -XX-X- or -X-XX-
 	
-	// Buscar todas las ventanas de 5 posiciones que contengan el movimiento
+	// Search all windows of 5 positions containing the move
 	for (int offset = -4; offset <= 0; offset++)
 	{
 		Move windowStart(move.x + offset * dx, move.y + offset * dy);
 		
-		// Verificar que la ventana de 5 está dentro del tablero
+		// Verify the window of 5 is within the board
 		bool validWindow = true;
 		for (int i = 0; i < 5; i++)
 		{
@@ -60,7 +60,7 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 		
 		if (!validWindow) continue;
 		
-		// Verificar que el movimiento está dentro de esta ventana
+		// Verify the move is within this window
 		bool moveInWindow = false;
 		for (int i = 0; i < 5; i++)
 		{
@@ -74,7 +74,7 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 		
 		if (!moveInWindow) continue;
 		
-		// Crear array de estados de la ventana
+		// Create array of window states
 		int windowState[5];
 		for (int i = 0; i < 5; i++)
 		{
@@ -90,7 +90,7 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 			}
 		}
 		
-		// Contar fichas del jugador y del oponente
+		// Count player and opponent pieces
 		int playerPieces = 0;
 		int opponentPieces = 0;
 		int emptySpaces = 0;
@@ -105,10 +105,10 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 				emptySpaces++;
 		}
 		
-		// Para ser free-three: exactamente 3 fichas del jugador, 0 del oponente, 2 vacías
+		// Free-three requires: exactly 3 player pieces, 0 opponent pieces, 2 empty spaces
 		if (playerPieces == 3 && opponentPieces == 0 && emptySpaces == 2)
 		{
-			// Verificar que los extremos están libres
+			// Verify both ends are free
 			Move leftExtreme(windowStart.x - dx, windowStart.y - dy);
 			Move rightExtreme(windowStart.x + 5 * dx, windowStart.y + 5 * dy);
 			
@@ -117,11 +117,11 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 			bool rightFree = state.isValid(rightExtreme.x, rightExtreme.y) && 
 							 state.isEmpty(rightExtreme.x, rightExtreme.y);
 			
-			// Ambos extremos deben estar libres para ser "free"
+			// Both ends must be free to qualify as "free"
 			if (leftFree && rightFree)
 			{
-				// Verificar que es un patrón válido de free-three
-				// Debe ser posible formar un cuatro consecutivo llenando los espacios
+				// Verify it's a valid free-three pattern
+				// Must be possible to form four consecutive by filling the spaces
 				if (isValidFreeThreePattern(windowState, player))
 				{
 					return true;
@@ -135,15 +135,15 @@ bool RuleEngine::isFreeThree(const GameState &state, const Move &move,
 
 bool RuleEngine::isValidFreeThreePattern(const int windowState[5], int player)
 {
-    // Definir todos los patrones válidos de free-three con 3 fichas y 2 espacios vacíos
-    // Donde X = ficha del jugador, - = espacio vacío
+    // Define all valid free-three patterns with 3 pieces and 2 empty spaces
+    // Where X = player piece, - = empty space
     
-    // Patrones válidos de free-three:
+    // Valid free-three patterns:
     // XXX-- , XX-X- , XX--X , X-XX- , X-X-X , X--XX , -XXX- , -XX-X , -X-XX , --XXX
     
-    int empty = 0; // Representamos espacio vacío como 0
+    int empty = 0; // Represent empty space as 0
     
-    // Crear array de patrones válidos
+    // Create array of valid patterns
     int validPatterns[][5] = {
         {player, player, player, empty, empty},  // XXX--
         {player, player, empty, player, empty},  // XX-X-
@@ -159,7 +159,7 @@ bool RuleEngine::isValidFreeThreePattern(const int windowState[5], int player)
     
     int numPatterns = sizeof(validPatterns) / sizeof(validPatterns[0]);
     
-    // Verificar si el windowState coincide con algún patrón válido
+    // Check if windowState matches any valid pattern
     for (int p = 0; p < numPatterns; p++)
     {
         bool matches = true;
@@ -174,8 +174,8 @@ bool RuleEngine::isValidFreeThreePattern(const int windowState[5], int player)
         
         if (matches)
         {
-            // Verificar que este patrón puede formar una amenaza real
-            // (puede completarse a 4 en línea de manera útil)
+            // Verify this pattern can form a real threat
+            // (can be completed to 4 in a row)
             return canFormThreat(validPatterns[p], player);
         }
     }
@@ -185,9 +185,9 @@ bool RuleEngine::isValidFreeThreePattern(const int windowState[5], int player)
 
 bool RuleEngine::canFormThreat(const int pattern[5], int player)
 {
-    // Un patrón puede formar amenaza si:
-    // 1. Tiene exactamente 3 fichas del jugador y 2 espacios vacíos
-    // 2. Al menos una de las posiciones vacías puede completar una secuencia de 4
+    // A pattern can form a threat if:
+    // 1. It has exactly 3 player pieces and 2 empty spaces
+    // 2. At least one empty position can complete a sequence of 4
     
     int playerCount = 0;
     int emptyCount = 0;
@@ -198,23 +198,23 @@ bool RuleEngine::canFormThreat(const int pattern[5], int player)
         else if (pattern[i] == 0) emptyCount++;
     }
     
-    // Debe tener exactamente 3 fichas y 2 espacios
+    // Must have exactly 3 pieces and 2 spaces
     if (playerCount != 3 || emptyCount != 2) return false;
     
-    // Verificar si podemos formar amenazas de 4
-    // Simular llenar cada espacio vacío y ver si forma 4 consecutivos
+    // Check if we can form threats of 4
+    // Simulate filling each empty space and check for 4 consecutive
     for (int i = 0; i < 5; i++)
     {
-        if (pattern[i] == 0) // Espacio vacío
+        if (pattern[i] == 0) // Empty space
         {
-            // Simular colocar ficha aquí
+            // Simulate placing a piece here
             int tempPattern[5];
             for (int j = 0; j < 5; j++)
             {
                 tempPattern[j] = (j == i) ? player : pattern[j];
             }
             
-            // Verificar si forma 4 consecutivos
+            // Check if it forms 4 consecutive
             if (hasFourConsecutive(tempPattern, player))
             {
                 return true;
@@ -227,8 +227,8 @@ bool RuleEngine::canFormThreat(const int pattern[5], int player)
 
 bool RuleEngine::hasFourConsecutive(const int pattern[5], int player)
 {
-    // Buscar 4 fichas consecutivas del jugador en el patrón
-    for (int i = 0; i <= 1; i++) // Solo puede empezar en posición 0 o 1 para tener 4 consecutivos
+    // Search for 4 consecutive player pieces in the pattern
+    for (int i = 0; i <= 1; i++) // Can only start at position 0 or 1 to have 4 consecutive
     {
         bool consecutive = true;
         for (int j = 0; j < 4; j++)

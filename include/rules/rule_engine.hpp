@@ -11,8 +11,8 @@ public:
 	struct MoveResult
 	{
 		bool success;
-		std::vector<Move> myCapturedPieces;		  // Piezas que yo capturo
-		std::vector<Move> opponentCapturedPieces; // Piezas que el oponente captura por mi movimiento
+		std::vector<Move> myCapturedPieces;		  // Pieces captured by the moving player
+		std::vector<Move> opponentCapturedPieces; // Opponent pieces captured as a result of my move
 		bool createsWin;
 
 		MoveResult(bool s = false) : success(s), createsWin(false) {}
@@ -60,7 +60,7 @@ private:
 
 	static bool opponentCanCaptureNextTurn(const GameState &state, int opponent);
 
-	// En rule_engine.hpp, en la sección private:
+
 	static bool checkLineWinInDirection(const GameState &state,
 										const Move &start,
 										int dx, int dy,
