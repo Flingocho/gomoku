@@ -1,249 +1,378 @@
-// AI search engine - Similar to ai.hpp/cpp and transposition_search.hpp/cpp
+// ============================================
+// AI Engine — Exact match of search_minimax.cpp
+//   + transposition_search.hpp (search wrapper)
+// Minimax with alpha-beta, LMR, killer moves,
+//   history heuristic, iterative deepening
+// ============================================
 
+use crate::evaluator::{Evaluator, WIN};
 use crate::game_types::*;
-use crate::evaluator::Evaluator;
-use crate::transposition_table::{TranspositionTable, CacheEntryType};
 use crate::move_ordering::MoveOrdering;
+use crate::rule_engine::RuleEngine;
+use crate::transposition_table::*;
 
 pub struct AI {
-    pub nodes_evaluated: u64,
-    pub cache_hits: u64,
-    transposition_table: TranspositionTable,
+    tt: TranspositionTable,
+    history_table: [[i32; BOARD_SIZE]; BOARD_SIZE],
+    killer_moves: [[Move; 2]; MAX_SEARCH_DEPTH],
     previous_best_move: Move,
+    pub nodes_evaluated: i32,
+    pub cache_hits: i32,
 }
 
 impl AI {
     pub fn new() -> Self {
         AI {
+            tt: TranspositionTable::new(),
+            history_table: [[0i32; BOARD_SIZE]; BOARD_SIZE],
+            killer_moves: [[Move::invalid(); 2]; MAX_SEARCH_DEPTH],
+            previous_best_move: Move::invalid(),
             nodes_evaluated: 0,
             cache_hits: 0,
-            transposition_table: TranspositionTable::new(64), // 64 MB
-            previous_best_move: Move::invalid(),
         }
     }
 
-    pub fn get_best_move(&mut self, state: &GameState, max_depth: i32) -> Move {
-        self.find_best_move_iterative(state, max_depth)
-    }
+    // ============================================
+    // ITERATIVE DEEPENING — findBestMoveIterative
+    // ============================================
 
-    fn find_best_move_iterative(&mut self, state: &GameState, max_depth: i32) -> Move {
-        self.nodes_evaluated = 0;
-        self.cache_hits = 0;
-        self.transposition_table.increment_generation();
+    pub fn find_best_move_iterative(&mut self, state: &GameState, max_depth: i32) -> SearchResult {
+        let mut result = SearchResult::new();
 
-        // Pre-check for immediate win
-        let all_candidates = MoveOrdering::generate_candidates_adaptive_radius(state);
-        for mv in &all_candidates {
-            let mut test_state = state.clone();
-            if test_state.make_move(*mv) {
-                if test_state.is_game_over() {
-                    println!("Immediate win detected at ({}, {})", mv.x, mv.y);
-                    return *mv;
-                }
+        // Pre-check: immediate victory
+        let candidates = MoveOrdering::generate_ordered_moves(
+            state,
+            &Move::invalid(),
+            &self.history_table,
+        );
+
+        for mv in &candidates {
+            let mut new_state = state.clone();
+            let move_result = RuleEngine::apply_move(&mut new_state, mv);
+            if move_result.success && move_result.creates_win {
+                result.best_move = *mv;
+                result.score = WIN;
+                result.depth_searched = 1;
+                return result;
             }
         }
-
-        // CRITICAL: Check if opponent can win on their next move and block it!
-        let opponent = state.get_opponent(state.current_player);
-        for mv in &all_candidates {
-            let mut test_state = state.clone();
-            // Simulate opponent playing this move
-            test_state.current_player = opponent;
-            if test_state.make_move(*mv) {
-                if test_state.is_game_over() {
-                    println!("Blocking opponent win at ({}, {})", mv.x, mv.y);
-                    return *mv;
-                }
-            }
-        }
-
-        let mut best_move = Move::invalid();
 
         // Iterative deepening
-        for depth in 1..=max_depth {
-            if best_move.is_valid() {
-                self.previous_best_move = best_move;
-            }
+        let mut best_move = Move::invalid();
 
-            let mut move_at_depth = Move::invalid();
+        for depth in 1..=max_depth {
+            self.nodes_evaluated = 0;
+            self.cache_hits = 0;
+            self.tt.increment_generation();
+
+            let mut current_best = Move::invalid();
+            let maximizing = state.current_player == PLAYER2;
+
             let score = self.minimax(
-                &mut state.clone(),
+                state,
                 depth,
-                i32::MIN,
-                i32::MAX,
-                state.current_player == PLAYER2,
+                i32::MIN + 1,
+                i32::MAX - 1,
+                maximizing,
                 depth,
-                Some(&mut move_at_depth)
+                &mut current_best,
             );
 
-            best_move = move_at_depth;
+            if current_best.is_valid() {
+                best_move = current_best;
+                self.previous_best_move = current_best;
+            }
 
-            println!("Depth {}: score {} - {} nodes", depth, score, self.nodes_evaluated);
+            result.best_move = best_move;
+            result.score = score;
+            result.depth_searched = depth;
+            result.nodes_evaluated = self.nodes_evaluated;
+            result.cache_hits = self.cache_hits;
 
-            // Early exit for mate
+            // Early exit if winning/losing position found
             if score.abs() > 300000 {
-                println!("Mate detected at depth {}", depth);
                 break;
             }
+
+            // Age history table between iterations
+            for i in 0..BOARD_SIZE {
+                for j in 0..BOARD_SIZE {
+                    self.history_table[i][j] >>= 1;
+                }
+            }
         }
 
-        if best_move.is_valid() {
-            best_move
-        } else if !all_candidates.is_empty() {
-            all_candidates[0]
-        } else {
-            Move::invalid()
-        }
+        result
     }
 
-    fn minimax(&mut self, state: &mut GameState, depth: i32, mut alpha: i32, mut beta: i32, maximizing: bool, original_max_depth: i32, best_move: Option<&mut Move>) -> i32 {
+    // ============================================
+    // MINIMAX — with alpha-beta, LMR, killer moves
+    // ============================================
+
+    fn minimax(
+        &mut self,
+        state: &GameState,
+        depth: i32,
+        mut alpha: i32,
+        mut beta: i32,
+        maximizing: bool,
+        original_max_depth: i32,
+        best_move_out: &mut Move,
+    ) -> i32 {
         self.nodes_evaluated += 1;
 
-        // Transposition table lookup
-        let zobrist_key = state.get_zobrist_hash();
-        if let Some(entry) = self.transposition_table.lookup(zobrist_key) {
-            self.cache_hits += 1;
-            if entry.depth >= depth {
-                match entry.entry_type {
-                    CacheEntryType::Exact => {
-                        if depth == original_max_depth {
-                            if let Some(bm) = best_move {
-                                *bm = entry.best_move;
-                            }
-                        }
-                        return entry.score;
-                    }
-                    CacheEntryType::LowerBound => {
-                        if entry.score >= beta {
-                            return beta;
-                        }
-                    }
-                    CacheEntryType::UpperBound => {
-                        if entry.score <= alpha {
-                            return alpha;
-                        }
-                    }
-                }
-            }
-            if entry.best_move.is_valid() {
-                self.previous_best_move = entry.best_move;
-            }
+        // Base case: terminal evaluation
+        if depth <= 0 {
+            let current_depth = original_max_depth - depth;
+            return Evaluator::evaluate(state, original_max_depth, current_depth);
         }
 
-        // Base cases
-        if depth == 0 || state.is_game_over() {
-            let score = Evaluator::evaluate(state, original_max_depth, original_max_depth - depth);
-            self.transposition_table.store(zobrist_key, score, depth, Move::invalid(), CacheEntryType::Exact);
-            return score;
+        // Transposition table lookup
+        let tt_key = state.zobrist_hash;
+        if let Some((cached_score, cached_move)) = self.tt.lookup(tt_key, depth, alpha, beta) {
+            self.cache_hits += 1;
+            *best_move_out = cached_move;
+            return cached_score;
         }
+
+        // Get cached best move for move ordering
+        let tt_best_move = self.tt.get_best_move(tt_key).unwrap_or(Move::invalid());
 
         // Generate and order moves
-        let moves = self.generate_ordered_moves(state);
-        if moves.is_empty() {
-            let score = Evaluator::evaluate(state, original_max_depth, original_max_depth - depth);
-            self.transposition_table.store(zobrist_key, score, depth, Move::invalid(), CacheEntryType::Exact);
-            return score;
+        let prev_best = if tt_best_move.is_valid() {
+            tt_best_move
+        } else {
+            self.previous_best_move
+        };
+
+        let mut moves =
+            MoveOrdering::generate_ordered_moves(state, &prev_best, &self.history_table);
+
+        // Promote killer moves
+        let depth_idx = depth as usize;
+        if depth_idx < MAX_SEARCH_DEPTH {
+            for k in (0..2).rev() {
+                let killer = self.killer_moves[depth_idx][k];
+                if killer.is_valid() {
+                    if let Some(pos) = moves.iter().position(|m| *m == killer) {
+                        let km = moves.remove(pos);
+                        moves.insert(0.min(moves.len()), km);
+                    }
+                }
+            }
         }
 
-        let mut current_best_move = Move::invalid();
-        let original_alpha = alpha;
+        if moves.is_empty() {
+            let current_depth = original_max_depth - depth;
+            return Evaluator::evaluate(state, original_max_depth, current_depth);
+        }
+
+        let mut best_score;
+        let mut local_best_move = Move::invalid();
+        let mut move_index = 0;
 
         if maximizing {
-            let mut max_eval = i32::MIN;
+            best_score = i32::MIN + 1;
 
             for mv in &moves {
-                if !state.make_move(*mv) {
+                let mut new_state = state.clone();
+                let move_result = RuleEngine::apply_move(&mut new_state, mv);
+
+                if !move_result.success {
                     continue;
                 }
 
-                let eval = self.minimax(state, depth - 1, alpha, beta, false, original_max_depth, None);
-                state.unmake_move(*mv);
+                if move_result.creates_win {
+                    let current_depth = original_max_depth - depth;
+                    let win_score = WIN - (original_max_depth - current_depth);
+                    *best_move_out = *mv;
 
-                if eval > max_eval {
-                    max_eval = eval;
-                    current_best_move = *mv;
+                    // Store in TT
+                    self.tt.store(
+                        tt_key,
+                        win_score,
+                        depth,
+                        *mv,
+                        CacheEntryType::Exact,
+                    );
+
+                    return win_score;
                 }
 
-                alpha = alpha.max(eval);
-                if beta <= alpha {
-                    break; // Beta cutoff
+                let mut score;
+                let mut dummy_move = Move::invalid();
+
+                // Late Move Reduction (LMR)
+                let use_lmr = move_index >= 2 && depth >= 3;
+
+                if use_lmr {
+                    // Reduced-depth search first
+                    score = self.minimax(
+                        &new_state,
+                        depth - 2,
+                        alpha,
+                        alpha + 1,
+                        false,
+                        original_max_depth,
+                        &mut dummy_move,
+                    );
+
+                    // Re-search at full depth if score is promising
+                    if score > alpha {
+                        score = self.minimax(
+                            &new_state,
+                            depth - 1,
+                            alpha,
+                            beta,
+                            false,
+                            original_max_depth,
+                            &mut dummy_move,
+                        );
+                    }
+                } else {
+                    score = self.minimax(
+                        &new_state,
+                        depth - 1,
+                        alpha,
+                        beta,
+                        false,
+                        original_max_depth,
+                        &mut dummy_move,
+                    );
                 }
-            }
 
-            let entry_type = if max_eval <= original_alpha {
-                CacheEntryType::UpperBound
-            } else if max_eval >= beta {
-                CacheEntryType::LowerBound
-            } else {
-                CacheEntryType::Exact
-            };
-
-            if !current_best_move.is_valid() && !moves.is_empty() {
-                current_best_move = moves[0];
-            }
-
-            self.transposition_table.store(zobrist_key, max_eval, depth, current_best_move, entry_type);
-
-            if depth == original_max_depth {
-                if let Some(bm) = best_move {
-                    *bm = current_best_move;
+                if score > best_score {
+                    best_score = score;
+                    local_best_move = *mv;
                 }
-            }
 
-            max_eval
+                if best_score > alpha {
+                    alpha = best_score;
+                }
+
+                if alpha >= beta {
+                    // Beta cutoff — update killer moves and history
+                    if depth_idx < MAX_SEARCH_DEPTH {
+                        if self.killer_moves[depth_idx][0] != *mv {
+                            self.killer_moves[depth_idx][1] = self.killer_moves[depth_idx][0];
+                            self.killer_moves[depth_idx][0] = *mv;
+                        }
+                    }
+                    self.history_table[mv.x as usize][mv.y as usize] += depth * depth;
+                    break;
+                }
+
+                move_index += 1;
+            }
         } else {
-            let mut min_eval = i32::MAX;
+            // Minimizing
+            best_score = i32::MAX - 1;
 
             for mv in &moves {
-                if !state.make_move(*mv) {
+                let mut new_state = state.clone();
+                let move_result = RuleEngine::apply_move(&mut new_state, mv);
+
+                if !move_result.success {
                     continue;
                 }
 
-                let eval = self.minimax(state, depth - 1, alpha, beta, true, original_max_depth, None);
-                state.unmake_move(*mv);
+                if move_result.creates_win {
+                    let current_depth = original_max_depth - depth;
+                    let win_score = -WIN + (original_max_depth - current_depth);
+                    *best_move_out = *mv;
 
-                if eval < min_eval {
-                    min_eval = eval;
-                    current_best_move = *mv;
+                    self.tt.store(
+                        tt_key,
+                        win_score,
+                        depth,
+                        *mv,
+                        CacheEntryType::Exact,
+                    );
+
+                    return win_score;
                 }
 
-                beta = beta.min(eval);
-                if beta <= alpha {
-                    break; // Alpha cutoff
+                let mut score;
+                let mut dummy_move = Move::invalid();
+
+                // Late Move Reduction (LMR)
+                let use_lmr = move_index >= 2 && depth >= 3;
+
+                if use_lmr {
+                    score = self.minimax(
+                        &new_state,
+                        depth - 2,
+                        beta - 1,
+                        beta,
+                        true,
+                        original_max_depth,
+                        &mut dummy_move,
+                    );
+
+                    if score < beta {
+                        score = self.minimax(
+                            &new_state,
+                            depth - 1,
+                            alpha,
+                            beta,
+                            true,
+                            original_max_depth,
+                            &mut dummy_move,
+                        );
+                    }
+                } else {
+                    score = self.minimax(
+                        &new_state,
+                        depth - 1,
+                        alpha,
+                        beta,
+                        true,
+                        original_max_depth,
+                        &mut dummy_move,
+                    );
                 }
-            }
 
-            let entry_type = if min_eval <= original_alpha {
-                CacheEntryType::UpperBound
-            } else if min_eval >= beta {
-                CacheEntryType::LowerBound
-            } else {
-                CacheEntryType::Exact
-            };
-
-            if !current_best_move.is_valid() && !moves.is_empty() {
-                current_best_move = moves[0];
-            }
-
-            self.transposition_table.store(zobrist_key, min_eval, depth, current_best_move, entry_type);
-
-            if depth == original_max_depth {
-                if let Some(bm) = best_move {
-                    *bm = current_best_move;
+                if score < best_score {
+                    best_score = score;
+                    local_best_move = *mv;
                 }
-            }
 
-            min_eval
+                if best_score < beta {
+                    beta = best_score;
+                }
+
+                if alpha >= beta {
+                    // Alpha cutoff — update killer moves and history
+                    if depth_idx < MAX_SEARCH_DEPTH {
+                        if self.killer_moves[depth_idx][0] != *mv {
+                            self.killer_moves[depth_idx][1] = self.killer_moves[depth_idx][0];
+                            self.killer_moves[depth_idx][0] = *mv;
+                        }
+                    }
+                    self.history_table[mv.x as usize][mv.y as usize] += depth * depth;
+                    break;
+                }
+
+                move_index += 1;
+            }
         }
-    }
 
-    fn generate_ordered_moves(&mut self, state: &GameState) -> Vec<Move> {
-        let mut candidates = MoveOrdering::generate_candidates_adaptive_radius(state);
-        MoveOrdering::order_moves_with_previous_best(&mut candidates, state, self.previous_best_move);
-        candidates
-    }
+        // Store in transposition table
+        let entry_type = if best_score <= alpha {
+            CacheEntryType::UpperBound
+        } else if best_score >= beta {
+            CacheEntryType::LowerBound
+        } else {
+            CacheEntryType::Exact
+        };
 
-    pub fn get_stats(&self) -> (u64, u64) {
-        (self.nodes_evaluated, self.cache_hits)
+        if local_best_move.is_valid() {
+            *best_move_out = local_best_move;
+        }
+
+        self.tt
+            .store(tt_key, best_score, depth, local_best_move, entry_type);
+
+        best_score
     }
 }

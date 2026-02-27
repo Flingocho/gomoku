@@ -112,50 +112,110 @@ void GuiRenderer::renderOptions() {
     titleText.setCharacterSize(32);
     titleText.setFillColor(sf::Color::White);
     sf::FloatRect titleBounds = titleText.getLocalBounds();
-    titleText.setOrigin(titleBounds.width / 2.0f, 0);
-    titleText.setPosition(WINDOW_WIDTH / 2.0f, 80);
+    titleText.setOrigin(titleBounds.left + titleBounds.width / 2.0f, titleBounds.top);
+    titleText.setPosition(WINDOW_WIDTH / 2.0f, 60);
     window.draw(titleText);
     
     int buttonWidth = 300;
     int buttonHeight = 40;
     int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
-    int startY = 150;
-    int spacing = 50;
+    int smallBtnW = 60;
+    int smallBtnH = 35;
+    
+    // Layout Y positions - calculated with proper spacing
+    int musicHeaderY   = 120;
+    int musicToggleY   = 148;
+    int musicVolLabelY = 198;
+    int musicVolBtnY   = 220;
+    
+    int soundHeaderY   = 270;
+    int soundToggleY   = 298;
+    int soundVolLabelY = 348;
+    int soundVolBtnY   = 370;
+    
+    int debugHeaderY   = 420;
+    int debugToggleY   = 448;
+    
+    int backBtnY       = 520;
     
     // === MUSIC SECTION ===
-    drawText("=== MUSIC ===", WINDOW_WIDTH/2 - 50, startY - 25, 16, sf::Color::Yellow);
+    sf::Text musicHeader;
+    if (font.getInfo().family != "") musicHeader.setFont(font);
+    musicHeader.setString("MUSIC");
+    musicHeader.setCharacterSize(16);
+    musicHeader.setFillColor(sf::Color::Yellow);
+    sf::FloatRect mhBounds = musicHeader.getLocalBounds();
+    musicHeader.setOrigin(mhBounds.left + mhBounds.width / 2.0f, mhBounds.top);
+    musicHeader.setPosition(WINDOW_WIDTH / 2.0f, musicHeaderY);
+    window.draw(musicHeader);
     
     // Music toggle
     std::string musicText = musicEnabled ? "Music: ON" : "Music: OFF";
-    drawButton(musicText, buttonX, startY, buttonWidth, buttonHeight, hoveredMenuOption == 0);
+    drawButton(musicText, buttonX, musicToggleY, buttonWidth, buttonHeight, hoveredMenuOption == 0);
     
-    // Music volume
-    std::string musicVolText = "Music Vol: " + std::to_string((int)musicVolume) + "%";
-    drawText(musicVolText, WINDOW_WIDTH/2 - 55, startY + spacing, 14, sf::Color::White);
-    drawButton("-", buttonX, startY + spacing + 25, 60, 35, hoveredMenuOption == 1);
-    drawButton("+", buttonX + buttonWidth - 60, startY + spacing + 25, 60, 35, hoveredMenuOption == 2);
+    // Music volume label (centered)
+    std::string musicVolText = "Volume: " + std::to_string((int)musicVolume) + "%";
+    sf::Text mvText;
+    if (font.getInfo().family != "") mvText.setFont(font);
+    mvText.setString(musicVolText);
+    mvText.setCharacterSize(14);
+    mvText.setFillColor(sf::Color::White);
+    sf::FloatRect mvBounds = mvText.getLocalBounds();
+    mvText.setOrigin(mvBounds.left + mvBounds.width / 2.0f, mvBounds.top);
+    mvText.setPosition(WINDOW_WIDTH / 2.0f, musicVolLabelY);
+    window.draw(mvText);
+    
+    // Music volume buttons
+    drawButton("-", buttonX, musicVolBtnY, smallBtnW, smallBtnH, hoveredMenuOption == 1);
+    drawButton("+", buttonX + buttonWidth - smallBtnW, musicVolBtnY, smallBtnW, smallBtnH, hoveredMenuOption == 2);
     
     // === SOUND FX SECTION ===
-    drawText("=== SOUND FX ===", WINDOW_WIDTH/2 - 60, startY + spacing * 2 + 35, 16, sf::Color::Yellow);
+    sf::Text soundHeader;
+    if (font.getInfo().family != "") soundHeader.setFont(font);
+    soundHeader.setString("SOUND FX");
+    soundHeader.setCharacterSize(16);
+    soundHeader.setFillColor(sf::Color::Yellow);
+    sf::FloatRect shBounds = soundHeader.getLocalBounds();
+    soundHeader.setOrigin(shBounds.left + shBounds.width / 2.0f, shBounds.top);
+    soundHeader.setPosition(WINDOW_WIDTH / 2.0f, soundHeaderY);
+    window.draw(soundHeader);
     
     // Sound FX toggle
     std::string soundText = soundEnabled ? "Sound FX: ON" : "Sound FX: OFF";
-    drawButton(soundText, buttonX, startY + spacing * 3, buttonWidth, buttonHeight, hoveredMenuOption == 3);
+    drawButton(soundText, buttonX, soundToggleY, buttonWidth, buttonHeight, hoveredMenuOption == 3);
     
-    // FX volume
-    std::string fxVolText = "FX Vol: " + std::to_string((int)soundVolume) + "%";
-    drawText(fxVolText, WINDOW_WIDTH/2 - 40, startY + spacing * 4, 14, sf::Color::White);
-    drawButton("-", buttonX, startY + spacing * 4 + 25, 60, 35, hoveredMenuOption == 4);
-    drawButton("+", buttonX + buttonWidth - 60, startY + spacing * 4 + 25, 60, 35, hoveredMenuOption == 5);
+    // FX volume label (centered)
+    std::string fxVolText = "Volume: " + std::to_string((int)soundVolume) + "%";
+    sf::Text fvText;
+    if (font.getInfo().family != "") fvText.setFont(font);
+    fvText.setString(fxVolText);
+    fvText.setCharacterSize(14);
+    fvText.setFillColor(sf::Color::White);
+    sf::FloatRect fvBounds = fvText.getLocalBounds();
+    fvText.setOrigin(fvBounds.left + fvBounds.width / 2.0f, fvBounds.top);
+    fvText.setPosition(WINDOW_WIDTH / 2.0f, soundVolLabelY);
+    window.draw(fvText);
+    
+    // FX volume buttons
+    drawButton("-", buttonX, soundVolBtnY, smallBtnW, smallBtnH, hoveredMenuOption == 4);
+    drawButton("+", buttonX + buttonWidth - smallBtnW, soundVolBtnY, smallBtnW, smallBtnH, hoveredMenuOption == 5);
     
     // === DEBUG SECTION ===
-    drawText("=== DEBUG ===", WINDOW_WIDTH/2 - 50, startY + spacing * 5 + 35, 16, sf::Color::Yellow);
+    sf::Text debugHeader;
+    if (font.getInfo().family != "") debugHeader.setFont(font);
+    debugHeader.setString("DEBUG");
+    debugHeader.setCharacterSize(16);
+    debugHeader.setFillColor(sf::Color::Yellow);
+    sf::FloatRect dhBounds = debugHeader.getLocalBounds();
+    debugHeader.setOrigin(dhBounds.left + dhBounds.width / 2.0f, dhBounds.top);
+    debugHeader.setPosition(WINDOW_WIDTH / 2.0f, debugHeaderY);
+    window.draw(debugHeader);
     
     std::string debugText = debugEnabled ? "Debug Mode: ON" : "Debug Mode: OFF";
-    drawButton(debugText, buttonX, startY + spacing * 6 + 10, buttonWidth, buttonHeight, hoveredMenuOption == 6);
+    drawButton(debugText, buttonX, debugToggleY, buttonWidth, buttonHeight, hoveredMenuOption == 6);
     
     // Back button
-    drawButton("Back to Menu", buttonX, startY + spacing * 7 + 30, buttonWidth, buttonHeight, hoveredMenuOption == 7);
+    drawButton("Back to Menu", buttonX, backBtnY, buttonWidth, buttonHeight, hoveredMenuOption == 7);
     
     // Help text
     drawText("ESC = Back", WINDOW_WIDTH - 100, WINDOW_HEIGHT - 30, 14, sf::Color(100, 100, 100));
@@ -233,20 +293,28 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     int buttonWidth = 300;
     int buttonHeight = 40;
     int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
-    int startY = 150;
-    int spacing = 50;
+    int smallBtnW = 60;
+    int smallBtnH = 35;
+    
+    // Y positions must match renderOptions layout
+    int musicToggleY   = 148;
+    int musicVolBtnY   = 220;
+    int soundToggleY   = 298;
+    int soundVolBtnY   = 370;
+    int debugToggleY   = 448;
+    int backBtnY       = 520;
     
     // Music toggle
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= startY && y <= startY + buttonHeight) {
+        y >= musicToggleY && y <= musicToggleY + buttonHeight) {
         audioManager.playSound("click_menu");
         toggleMusic();
         return;
     }
     
     // Music volume down
-    if (x >= buttonX && x <= buttonX + 60 && 
-        y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+    if (x >= buttonX && x <= buttonX + smallBtnW && 
+        y >= musicVolBtnY && y <= musicVolBtnY + smallBtnH) {
         audioManager.playSound("click_menu");
         musicVolume = std::max(0.0f, musicVolume - 10.0f);
         audioManager.setMusicVolume(musicEnabled ? musicVolume : 0);
@@ -254,8 +322,8 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     }
     
     // Music volume up
-    if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
-        y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+    if (x >= buttonX + buttonWidth - smallBtnW && x <= buttonX + buttonWidth && 
+        y >= musicVolBtnY && y <= musicVolBtnY + smallBtnH) {
         audioManager.playSound("click_menu");
         musicVolume = std::min(100.0f, musicVolume + 10.0f);
         audioManager.setMusicVolume(musicEnabled ? musicVolume : 0);
@@ -264,15 +332,15 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     
     // Sound FX toggle
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= startY + spacing * 3 && y <= startY + spacing * 3 + buttonHeight) {
+        y >= soundToggleY && y <= soundToggleY + buttonHeight) {
         audioManager.playSound("click_menu");
         toggleSound();
         return;
     }
     
     // FX volume down
-    if (x >= buttonX && x <= buttonX + 60 && 
-        y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+    if (x >= buttonX && x <= buttonX + smallBtnW && 
+        y >= soundVolBtnY && y <= soundVolBtnY + smallBtnH) {
         audioManager.playSound("click_menu");
         soundVolume = std::max(0.0f, soundVolume - 10.0f);
         audioManager.setSoundVolume(soundEnabled ? soundVolume : 0);
@@ -280,8 +348,8 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     }
     
     // FX volume up
-    if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
-        y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+    if (x >= buttonX + buttonWidth - smallBtnW && x <= buttonX + buttonWidth && 
+        y >= soundVolBtnY && y <= soundVolBtnY + smallBtnH) {
         audioManager.playSound("click_menu");
         soundVolume = std::min(100.0f, soundVolume + 10.0f);
         audioManager.setSoundVolume(soundEnabled ? soundVolume : 0);
@@ -290,7 +358,7 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     
     // Debug toggle
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= startY + spacing * 6 + 10 && y <= startY + spacing * 6 + 10 + buttonHeight) {
+        y >= debugToggleY && y <= debugToggleY + buttonHeight) {
         audioManager.playSound("click_menu");
         toggleDebug();
         return;
@@ -298,7 +366,7 @@ void GuiRenderer::handleOptionsClick(int x, int y) {
     
     // Back button
     if (x >= buttonX && x <= buttonX + buttonWidth && 
-        y >= startY + spacing * 7 + 30 && y <= startY + spacing * 7 + 30 + buttonHeight) {
+        y >= backBtnY && y <= backBtnY + buttonHeight) {
         audioManager.playSound("click_menu");
         setState(MENU);
         selectedMenuOption = -1;

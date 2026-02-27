@@ -25,6 +25,19 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 						", Cache hits: " + std::to_string(cacheHits));
 	}
 
+	// CRITICAL: Detect 5-in-a-row BEFORE transposition lookup.
+	// checkWin() ignores breakable 5-in-a-row ("not a win yet"),
+	// making them invisible to the search and cached with wrong scores.
+	// hasFiveInARow() catches them so the AI actually blocks.
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER2)) {
+		int mateDistance = originalMaxDepth - depth;
+		return Evaluator::WIN - mateDistance;
+	}
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER1)) {
+		int mateDistance = originalMaxDepth - depth;
+		return -Evaluator::WIN + mateDistance;
+	}
+
 	// Check transposition table first
 	uint64_t zobristKey = state.getZobristHash();
 	CacheEntry entry;
@@ -79,12 +92,36 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 		return score;
 	}
 
+	// Promote killer moves toward the front (after previous best move)
+	// Killer moves are moves that caused cutoffs at this depth in sibling nodes
+	if (depth < MAX_SEARCH_DEPTH && moves.size() > 2)
+	{
+		for (int k = 0; k < 2; k++)
+		{
+			if (!killerMoves[depth][k].isValid())
+				continue;
+			auto it = std::find_if(moves.begin() + 1, moves.end(),
+				[&](const Move &m) {
+					return m.x == killerMoves[depth][k].x &&
+						   m.y == killerMoves[depth][k].y;
+				});
+			if (it != moves.end())
+			{
+				// Move killer to position 1 (or 2 for second killer)
+				size_t targetPos = std::min((size_t)(1 + k), moves.size() - 1);
+				if (it != moves.begin() + (int)targetPos)
+					std::iter_swap(moves.begin() + targetPos, it);
+			}
+		}
+	}
+
 	Move currentBestMove;
 	int originalAlpha = alpha;
 
 	if (maximizing)
 	{
 		int maxEval = std::numeric_limits<int>::min();
+		int moveIndex = 0;
 
 		for (const Move &move : moves)
 		{
@@ -101,8 +138,20 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 				g_evalDebug.currentMove = move;
 			}
 
-			// Recursive evaluation
-			int eval = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth, nullptr);
+			// Late Move Reduction: search late moves at reduced depth first
+			int eval;
+			bool needsFullSearch = true;
+			if (moveIndex >= 2 && depth >= 3 && depth != originalMaxDepth)
+			{
+				// Reduced depth search (save 1 ply)
+				eval = minimax(newState, depth - 2, alpha, beta, false, originalMaxDepth, nullptr);
+				// Only re-search at full depth if it improves alpha
+				needsFullSearch = (eval > alpha);
+			}
+			if (needsFullSearch)
+			{
+				eval = minimax(newState, depth - 1, alpha, beta, false, originalMaxDepth, nullptr);
+			}
 
 			// Capture debug data after evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth && g_evalDebug.active)
@@ -139,8 +188,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			// Alpha-beta pruning
 			if (beta <= alpha)
 			{
+				// History heuristic: reward move that caused cutoff
+				if (currentBestMove.isValid())
+				{
+					historyTable[currentBestMove.x][currentBestMove.y] += depth * depth;
+					// Killer move: store non-capture cutoff move at this depth
+					if (depth < MAX_SEARCH_DEPTH)
+					{
+						if (!(killerMoves[depth][0].x == currentBestMove.x &&
+							  killerMoves[depth][0].y == currentBestMove.y))
+						{
+							killerMoves[depth][1] = killerMoves[depth][0];
+							killerMoves[depth][0] = currentBestMove;
+						}
+					}
+				}
 				break; // Beta cutoff
 			}
+			moveIndex++;
 		}
 
 		// Determine cache entry type
@@ -170,6 +235,7 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 	else
 	{
 		int minEval = std::numeric_limits<int>::max();
+		int moveIndex = 0;
 
 		for (const Move &move : moves)
 		{
@@ -186,8 +252,18 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 				g_evalDebug.currentMove = move;
 			}
 
-			// Recursive evaluation
-			int eval = minimax(newState, depth - 1, alpha, beta, true, originalMaxDepth, nullptr);
+			// Late Move Reduction: search late moves at reduced depth first
+			int eval;
+			bool needsFullSearch = true;
+			if (moveIndex >= 2 && depth >= 3 && depth != originalMaxDepth)
+			{
+				eval = minimax(newState, depth - 2, alpha, beta, true, originalMaxDepth, nullptr);
+				needsFullSearch = (eval < beta);
+			}
+			if (needsFullSearch)
+			{
+				eval = minimax(newState, depth - 1, alpha, beta, true, originalMaxDepth, nullptr);
+			}
 
 			// Capture debug data after evaluation
 			if (g_debugAnalyzer && depth == originalMaxDepth && g_evalDebug.active)
@@ -224,8 +300,24 @@ int TranspositionSearch::minimax(GameState &state, int depth, int alpha, int bet
 			// Alpha-beta pruning
 			if (beta <= alpha)
 			{
+				// History heuristic: reward move that caused cutoff
+				if (currentBestMove.isValid())
+				{
+					historyTable[currentBestMove.x][currentBestMove.y] += depth * depth;
+					// Killer move: store non-capture cutoff move at this depth
+					if (depth < MAX_SEARCH_DEPTH)
+					{
+						if (!(killerMoves[depth][0].x == currentBestMove.x &&
+							  killerMoves[depth][0].y == currentBestMove.y))
+						{
+							killerMoves[depth][1] = killerMoves[depth][0];
+							killerMoves[depth][0] = currentBestMove;
+						}
+					}
+				}
 				break; // Alpha cutoff
 			}
+			moveIndex++;
 		}
 
 		// Determine cache entry type
@@ -312,6 +404,12 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     for (int depth = 1; depth <= maxDepth; depth++)
     {
         auto iterationStart = std::chrono::high_resolution_clock::now();
+
+        // Age history table: halve values between iterations so that
+        // recent cutoff information dominates over stale data
+        for (int i = 0; i < GameState::BOARD_SIZE; i++)
+            for (int j = 0; j < GameState::BOARD_SIZE; j++)
+                historyTable[i][j] >>= 1;
 
         if (bestResult.bestMove.isValid()) {
             previousBestMove = bestResult.bestMove;

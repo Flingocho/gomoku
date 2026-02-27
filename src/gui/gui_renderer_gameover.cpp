@@ -354,49 +354,57 @@ void GuiRenderer::handleMouseMove(int x, int y) {
         int buttonWidth = 300;
         int buttonHeight = 40;
         int buttonX = WINDOW_WIDTH/2 - buttonWidth/2;
-        int startY = 150;
-        int spacing = 50;
+        int smallBtnW = 60;
+        int smallBtnH = 35;
+        
+        // Y positions must match renderOptions layout
+        int musicToggleY   = 148;
+        int musicVolBtnY   = 220;
+        int soundToggleY   = 298;
+        int soundVolBtnY   = 370;
+        int debugToggleY   = 448;
+        int backBtnY       = 520;
         
         hoveredMenuOption = -1;
         
         // Music toggle
         if (x >= buttonX && x <= buttonX + buttonWidth && 
-            y >= startY && y <= startY + buttonHeight) {
+            y >= musicToggleY && y <= musicToggleY + buttonHeight) {
             hoveredMenuOption = 0;
         }
         // Music volume down
-        else if (x >= buttonX && x <= buttonX + 60 && 
-                 y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+        else if (x >= buttonX && x <= buttonX + smallBtnW && 
+                 y >= musicVolBtnY && y <= musicVolBtnY + smallBtnH) {
             hoveredMenuOption = 1;
         }
         // Music volume up
-        else if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
-                 y >= startY + spacing + 25 && y <= startY + spacing + 60) {
+        else if (x >= buttonX + buttonWidth - smallBtnW && x <= buttonX + buttonWidth && 
+                 y >= musicVolBtnY && y <= musicVolBtnY + smallBtnH) {
             hoveredMenuOption = 2;
         }
         // Sound FX toggle
         else if (x >= buttonX && x <= buttonX + buttonWidth && 
-                 y >= startY + spacing * 3 && y <= startY + spacing * 3 + buttonHeight) {
+                 y >= soundToggleY && y <= soundToggleY + buttonHeight) {
             hoveredMenuOption = 3;
         }
         // FX volume down
-        else if (x >= buttonX && x <= buttonX + 60 && 
-                 y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+        else if (x >= buttonX && x <= buttonX + smallBtnW && 
+                 y >= soundVolBtnY && y <= soundVolBtnY + smallBtnH) {
             hoveredMenuOption = 4;
         }
         // FX volume up
-        else if (x >= buttonX + buttonWidth - 60 && x <= buttonX + buttonWidth && 
-                 y >= startY + spacing * 4 + 25 && y <= startY + spacing * 4 + 60) {
+        else if (x >= buttonX + buttonWidth - smallBtnW && x <= buttonX + buttonWidth && 
+                 y >= soundVolBtnY && y <= soundVolBtnY + smallBtnH) {
             hoveredMenuOption = 5;
         }
         // Debug toggle
         else if (x >= buttonX && x <= buttonX + buttonWidth && 
-                 y >= startY + spacing * 6 + 10 && y <= startY + spacing * 6 + 10 + buttonHeight) {
+                 y >= debugToggleY && y <= debugToggleY + buttonHeight) {
             hoveredMenuOption = 6;
         }
         // Back button
         else if (x >= buttonX && x <= buttonX + buttonWidth && 
-                 y >= startY + spacing * 7 + 30 && y <= startY + spacing * 7 + 30 + buttonHeight) {
+                 y >= backBtnY && y <= backBtnY + buttonHeight) {
             hoveredMenuOption = 7;
         }
     }
@@ -473,7 +481,6 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button1Y && y <= button1Y + buttonHeight) {
         audioManager.playSound("click_menu");
-        showGameOverAnimation = true;  // Reset for next game
         selectedMenuOption = 0;
         return;
     }
@@ -482,7 +489,6 @@ void GuiRenderer::handleGameOverClick(int x, int y) {
     if (x >= buttonX && x <= buttonX + buttonWidth && 
         y >= button2Y && y <= button2Y + buttonHeight) {
         audioManager.playSound("click_menu");
-        showGameOverAnimation = true;  // Reset for next game
         clearSuggestion();
         clearInvalidMoveError();
         setWinningLine(std::vector<Move>());

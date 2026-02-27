@@ -1,8 +1,14 @@
-// Evaluator - Similar to evaluator.hpp/cpp
+// ============================================
+// Evaluator — Exact match of evaluator_patterns.cpp,
+//   evaluator_position.cpp, evaluator_threats.cpp
+// ============================================
 
 use crate::game_types::*;
+use crate::rule_engine::RuleEngine;
 
-// Evaluator score constants matching C++
+// ============================================
+// Score constants — exact match of evaluator.hpp
+// ============================================
 pub const WIN: i32 = 600000;
 pub const FOUR_OPEN: i32 = 50000;
 pub const FOUR_HALF: i32 = 25000;
@@ -10,54 +16,54 @@ pub const THREE_OPEN: i32 = 10000;
 pub const THREE_HALF: i32 = 1500;
 pub const TWO_OPEN: i32 = 100;
 
-// These are kept for potential future use
-#[allow(dead_code)]
 pub const CAPTURE_OPPORTUNITY: i32 = 5000;
-#[allow(dead_code)]
 pub const CAPTURE_THREAT: i32 = 6000;
+pub const CAPTURE_WIN: i32 = 500000;
+pub const CAPTURE_PREVENT_LOSS: i32 = 400000;
 
-// Pattern information for evaluation
-#[derive(Clone, Copy, Debug)]
-pub struct PatternInfo {
-    pub consecutive_count: i32,
-    pub total_pieces: i32,
-    pub free_ends: i32,
-    pub has_gaps: bool,
-    pub total_span: i32,
-    pub gap_count: i32,
+// ============================================
+// Types
+// ============================================
+struct PatternInfo {
+    consecutive_count: i32,
+    total_pieces: i32,
+    free_ends: i32,
+    has_gaps: bool,
+    _total_span: i32,
+    _gap_count: i32,
+    max_reachable: i32,
 }
 
-// Capture opportunity for evaluation (unused for now, but keeping for future enhancements)
-#[derive(Clone)]
+pub struct PatternCounts {
+    pub four_open: i32,
+    pub four_half: i32,
+    pub three_open: i32,
+    pub three_half: i32,
+    pub two_open: i32,
+}
+
 #[allow(dead_code)]
-pub struct CaptureOpportunity {
-    pub position: Move,
-    pub captured: Vec<Move>,
+struct CaptureOpportunity {
+    position: Move,
+    captured: Vec<Move>,
 }
 
 pub struct Evaluator;
 
 impl Evaluator {
+    // ============================================
+    // MAIN EVALUATE — evaluator_position.cpp
+    // ============================================
+
+    /// Evaluate with mate distance scoring
     pub fn evaluate(state: &GameState, max_depth: i32, current_depth: i32) -> i32 {
         let mate_distance = max_depth - current_depth;
 
-        // Check win conditions with mate distance
-        if state.is_game_over() {
-            // Determine winner
-            if state.captures[PLAYER2 as usize - 1] >= 10 {
-                return WIN - mate_distance;
-            } else if state.captures[PLAYER1 as usize - 1] >= 10 {
-                return -WIN + mate_distance;
-            }
-            
-            // Check for 5-in-a-row (need to check who won based on last move)
-            // Since game is over, the player who just moved must have won
-            let last_player = 3 - state.current_player;
-            if last_player == PLAYER2 {
-                return WIN - mate_distance;
-            } else {
-                return -WIN + mate_distance;
-            }
+        if RuleEngine::check_win(state, PLAYER2) {
+            return WIN - mate_distance;
+        }
+        if RuleEngine::check_win(state, PLAYER1) {
+            return -WIN + mate_distance;
         }
 
         let ai_score = Self::evaluate_for_player(state, PLAYER2);
@@ -66,114 +72,270 @@ impl Evaluator {
         ai_score - human_score
     }
 
+    /// Evaluate without mate distance (for static evaluation/FFI)
+    pub fn evaluate_simple(state: &GameState) -> i32 {
+        if RuleEngine::check_win(state, PLAYER2) {
+            return WIN;
+        }
+        if RuleEngine::check_win(state, PLAYER1) {
+            return -WIN;
+        }
+
+        let ai_score = Self::evaluate_for_player(state, PLAYER2);
+        let human_score = Self::evaluate_for_player(state, PLAYER1);
+        ai_score - human_score
+    }
+
     pub fn evaluate_for_player(state: &GameState, player: i32) -> i32 {
         let mut score = 0;
 
-        // Immediate threats
-        score += Self::evaluate_immediate_threats(state, player);
+        // 1. Count patterns via single-pass
+        let counts = Self::count_all_patterns(state, player);
 
-        // Position analysis (patterns)
+        // 2. Evaluate threats and combinations using counts
+        score += Self::evaluate_threats_and_combinations(state, player, &counts);
+
+        // 3. Unified evaluation: patterns + captures
         score += Self::analyze_position(state, player);
 
         score
     }
 
-    pub fn evaluate_immediate_threats(state: &GameState, player: i32) -> i32 {
+    // ============================================
+    // PATTERN ANALYSIS — evaluator_patterns.cpp
+    // ============================================
+
+    fn is_line_start(state: &GameState, x: i32, y: i32, dx: i32, dy: i32, player: i32) -> bool {
+        let prev_x = x - dx;
+        let prev_y = y - dy;
+        if !state.is_valid(prev_x, prev_y) {
+            return true;
+        }
+        state.get_piece(prev_x, prev_y) != player
+    }
+
+    fn analyze_line(
+        state: &GameState, start_x: i32, start_y: i32, dx: i32, dy: i32, player: i32,
+    ) -> PatternInfo {
         let opponent = state.get_opponent(player);
-        let mut threat_score = 0;
+        let mut consecutive_from_start = 0;
+        let mut total_pieces = 0;
+        let mut gap_count = 0;
+        let mut total_span = 0;
+        let mut in_gap = false;
+        let mut pattern_broken = false;
 
-        let my_has_win_threats = Self::has_winning_threats(state, player);
-        let opp_has_win_threats = Self::has_winning_threats(state, opponent);
+        // Scan up to 6 positions forward
+        for i in 0..6 {
+            let cx = start_x + i * dx;
+            let cy = start_y + i * dy;
 
-        if my_has_win_threats {
-            threat_score += 90000;
+            if !state.is_valid(cx, cy) || state.get_piece(cx, cy) == opponent {
+                total_span = i;
+                pattern_broken = true;
+                break;
+            }
+
+            if state.get_piece(cx, cy) == player {
+                if !in_gap && total_pieces == consecutive_from_start {
+                    consecutive_from_start += 1;
+                }
+                total_pieces += 1;
+                in_gap = false;
+            } else {
+                // Empty cell
+                in_gap = true;
+                gap_count += 1;
+            }
+            total_span = i + 1;
         }
-        if opp_has_win_threats {
-            threat_score -= 105000;
+        if !pattern_broken {
+            total_span = 6;
         }
 
-        // Count 4-patterns
-        let my_four_open = Self::count_pattern_type(state, player, 4, 2);
-        let opp_four_open = Self::count_pattern_type(state, opponent, 4, 2);
-        let my_four_half = Self::count_pattern_type(state, player, 4, 1);
-        let opp_four_half = Self::count_pattern_type(state, opponent, 4, 1);
+        // Count free ends
+        let mut free_ends = 0;
 
-        if opp_four_open > 0 {
-            threat_score -= 80000;
-        }
-        if opp_four_half > 0 {
-            threat_score -= 60000;
-        }
-        if my_four_open > 0 {
-            threat_score += 70000;
-        }
-        if my_four_half > 0 {
-            threat_score += 40000;
+        // Check backward end
+        let before_x = start_x - dx;
+        let before_y = start_y - dy;
+        if state.is_valid(before_x, before_y) && state.get_piece(before_x, before_y) == EMPTY {
+            free_ends += 1;
         }
 
-        threat_score
+        // Check forward end
+        let end_x = start_x + total_span * dx;
+        let end_y = start_y + total_span * dy;
+        if state.is_valid(end_x, end_y) && state.get_piece(end_x, end_y) == EMPTY {
+            free_ends += 1;
+        }
+
+        // Compute maxReachable — count non-opponent cells in both directions
+        let mut max_reachable = total_pieces;
+
+        // Extend backward
+        let mut bx = start_x - dx;
+        let mut by = start_y - dy;
+        while state.is_valid(bx, by) && state.get_piece(bx, by) != opponent {
+            max_reachable += 1;
+            bx -= dx;
+            by -= dy;
+        }
+
+        // Extend forward from the end of scanned region
+        let mut fx = start_x + total_span * dx;
+        let mut fy = start_y + total_span * dy;
+        while state.is_valid(fx, fy) && state.get_piece(fx, fy) != opponent {
+            max_reachable += 1;
+            fx += dx;
+            fy += dy;
+        }
+
+        PatternInfo {
+            consecutive_count: consecutive_from_start,
+            total_pieces,
+            free_ends,
+            has_gaps: gap_count > 0,
+            _total_span: total_span,
+            _gap_count: gap_count,
+            max_reachable,
+        }
     }
 
-    pub fn has_winning_threats(state: &GameState, player: i32) -> bool {
-        let four_open = Self::count_pattern_type(state, player, 4, 2);
-        if four_open > 0 {
-            return true;
+    fn pattern_to_score(pattern: &PatternInfo) -> i32 {
+        let c = pattern.consecutive_count;
+        let tp = pattern.total_pieces;
+        let fe = pattern.free_ends;
+        let has_gaps = pattern.has_gaps;
+
+        // Dead shape check: maxReachable < 5 and not already 5 in a row
+        if pattern.max_reachable < 5 && c < 5 {
+            return 0;
         }
 
-        let four_half = Self::count_pattern_type(state, player, 4, 1);
-        if four_half > 0 {
-            return true;
+        // Five in a row
+        if c >= 5 {
+            return WIN;
         }
 
-        let three_open = Self::count_pattern_type(state, player, 3, 2);
-        if three_open >= 2 {
-            return true;
+        // Four patterns
+        if tp >= 4 {
+            if c == 4 || (tp == 4 && has_gaps) {
+                if fe == 2 {
+                    return FOUR_OPEN;
+                } else if fe == 1 {
+                    return FOUR_HALF;
+                }
+            }
         }
 
-        false
+        // Three patterns
+        if tp == 3 {
+            if c == 3 || has_gaps {
+                if fe == 2 {
+                    return THREE_OPEN;
+                } else if fe == 1 {
+                    return THREE_HALF;
+                }
+            }
+        }
+
+        // Two patterns
+        if tp == 2 && fe == 2 {
+            return TWO_OPEN;
+        }
+
+        0
     }
 
-    pub fn count_pattern_type(state: &GameState, player: i32, consecutive_count: i32, free_ends: i32) -> i32 {
-        let mut count = 0;
-        let mut evaluated = vec![vec![vec![false; 4]; BOARD_SIZE]; BOARD_SIZE];
+    // ============================================
+    // PATTERN COUNTING — evaluator_threats.cpp
+    // ============================================
 
-        for i in 0..BOARD_SIZE {
-            for j in 0..BOARD_SIZE {
-                if state.board[i][j] != player {
+    pub fn count_all_patterns(state: &GameState, player: i32) -> PatternCounts {
+        let mut counts = PatternCounts {
+            four_open: 0,
+            four_half: 0,
+            three_open: 0,
+            three_half: 0,
+            two_open: 0,
+        };
+
+        for i in 0..BOARD_SIZE as i32 {
+            for j in 0..BOARD_SIZE as i32 {
+                if state.get_piece(i, j) != player {
                     continue;
                 }
 
-                for d in 0..4 {
-                    if evaluated[i][j][d] {
+                for &(dx, dy) in MAIN_DIRECTIONS.iter() {
+                    if !Self::is_line_start(state, i, j, dx, dy, player) {
                         continue;
                     }
 
-                    let (dx, dy) = MAIN_DIRECTIONS[d];
-                    
-                    if Self::is_line_start(state, i as i32, j as i32, dx, dy, player) {
-                        let pattern = Self::analyze_line(state, i as i32, j as i32, dx, dy, player);
+                    let pattern = Self::analyze_line(state, i, j, dx, dy, player);
+                    let c = pattern.consecutive_count;
+                    let tp = pattern.total_pieces;
+                    let fe = pattern.free_ends;
+                    let has_gaps = pattern.has_gaps;
 
-                        let matches = if consecutive_count == 4 {
-                            (pattern.consecutive_count == 4 && pattern.free_ends == free_ends) ||
-                            (pattern.total_pieces == 4 && pattern.has_gaps && pattern.free_ends == free_ends)
-                        } else {
-                            pattern.consecutive_count == consecutive_count && pattern.free_ends == free_ends
-                        };
+                    // Skip dead shapes
+                    if pattern.max_reachable < 5 && c < 5 {
+                        continue;
+                    }
 
-                        if matches {
-                            count += 1;
-                        }
-
-                        // Mark evaluated
-                        let mut mark_x = i as i32;
-                        let mut mark_y = j as i32;
-                        for _ in 0..pattern.consecutive_count {
-                            if mark_x >= 0 && mark_x < BOARD_SIZE as i32 && mark_y >= 0 && mark_y < BOARD_SIZE as i32 {
-                                evaluated[mark_x as usize][mark_y as usize][d] = true;
+                    // Four patterns
+                    if tp >= 4 {
+                        if c == 4 || (tp == 4 && has_gaps) {
+                            if fe == 2 {
+                                counts.four_open += 1;
+                            } else if fe == 1 {
+                                counts.four_half += 1;
                             }
-                            mark_x += dx;
-                            mark_y += dy;
                         }
+                    }
+
+                    // Three patterns
+                    if tp == 3 && (c == 3 || has_gaps) {
+                        if fe == 2 {
+                            counts.three_open += 1;
+                        } else if fe == 1 {
+                            counts.three_half += 1;
+                        }
+                    }
+
+                    // Two patterns
+                    if tp == 2 && fe == 2 {
+                        counts.two_open += 1;
+                    }
+                }
+            }
+        }
+
+        counts
+    }
+
+    /// countPatternType — used by evaluateImmediateThreats and hasWinningThreats
+    fn count_pattern_type(
+        state: &GameState, player: i32, consecutive_count: i32, free_ends: i32,
+    ) -> i32 {
+        let mut count = 0;
+
+        for i in 0..BOARD_SIZE as i32 {
+            for j in 0..BOARD_SIZE as i32 {
+                if state.get_piece(i, j) != player {
+                    continue;
+                }
+
+                for &(dx, dy) in MAIN_DIRECTIONS.iter() {
+                    if !Self::is_line_start(state, i, j, dx, dy, player) {
+                        continue;
+                    }
+
+                    let pattern = Self::analyze_line(state, i, j, dx, dy, player);
+                    if pattern.consecutive_count == consecutive_count
+                        && pattern.free_ends == free_ends
+                    {
+                        count += 1;
                     }
                 }
             }
@@ -182,191 +344,174 @@ impl Evaluator {
         count
     }
 
-    pub fn is_line_start(state: &GameState, x: i32, y: i32, dx: i32, dy: i32, player: i32) -> bool {
-        let prev_x = x - dx;
-        let prev_y = y - dy;
-        !state.is_valid(prev_x, prev_y) || state.get_piece(prev_x, prev_y) != player
+    // ============================================
+    // THREAT/COMBINATION EVALUATION — evaluator_threats.cpp
+    // ============================================
+
+    fn evaluate_threats_and_combinations(
+        state: &GameState, player: i32, counts: &PatternCounts,
+    ) -> i32 {
+        let mut score = 0;
+
+        if counts.four_open > 0 {
+            score += 90000;
+        }
+        if counts.four_half > 0 {
+            score += 40000;
+        }
+        if counts.three_open >= 2 {
+            score += 50000;
+        }
+
+        // Combinations
+        if counts.four_half >= 1 && counts.three_open >= 1 {
+            score += 80000;
+        }
+        if counts.four_half >= 2 {
+            score += 70000;
+        }
+
+        let my_captures = state.captures[(player - 1) as usize];
+        if my_captures >= 8 && counts.three_open >= 1 {
+            score += 60000;
+        }
+
+        score
     }
 
-    pub fn analyze_line(state: &GameState, x: i32, y: i32, dx: i32, dy: i32, player: i32) -> PatternInfo {
-        let max_scan = 6;
-        let mut sequence = vec![0; max_scan];
-        let mut actual_positions = 0;
+    pub fn evaluate_immediate_threats(state: &GameState, player: i32) -> i32 {
+        let mut score = 0;
 
-        // Fill sequence array
-        for i in 0..max_scan {
-            let check_x = x + (i as i32) * dx;
-            let check_y = y + (i as i32) * dy;
+        let four_open = Self::count_pattern_type(state, player, 4, 2);
+        let four_half = Self::count_pattern_type(state, player, 4, 1);
+        let three_open = Self::count_pattern_type(state, player, 3, 2);
 
-            if !state.is_valid(check_x, check_y) {
-                break;
-            }
-
-            sequence[i] = state.get_piece(check_x, check_y);
-            actual_positions = i + 1;
+        if four_open > 0 {
+            score += 90000;
+        }
+        if four_half > 0 {
+            score += 40000;
+        }
+        if three_open >= 2 {
+            score += 50000;
         }
 
-        // Count consecutive from start
-        let mut consecutive_from_start = 0;
-        while consecutive_from_start < actual_positions && sequence[consecutive_from_start] == player {
-            consecutive_from_start += 1;
-        }
-
-        let mut info = PatternInfo {
-            consecutive_count: consecutive_from_start as i32,
-            total_pieces: 0,
-            free_ends: 0,
-            has_gaps: false,
-            total_span: 0,
-            gap_count: 0,
-        };
-
-        // Quick win check
-        if info.consecutive_count >= 5 {
-            info.total_pieces = info.consecutive_count;
-            info.total_span = info.consecutive_count;
-            info.free_ends = 2;
-            return info;
-        }
-
-        // Analyze patterns with gaps
-        let mut total_pieces = 0;
-        let mut gap_count = 0;
-        let mut last_piece_pos = -1;
-
-        for i in 0..actual_positions.min(6) {
-            if sequence[i] == player {
-                total_pieces += 1;
-                last_piece_pos = i as i32;
-            } else if sequence[i] != EMPTY {
-                break; // Opponent piece
-            } else if total_pieces > 0 {
-                gap_count += 1;
-            }
-        }
-
-        let total_span = last_piece_pos + 1;
-        let has_gaps = gap_count > 0 && total_pieces > info.consecutive_count;
-
-        // Calculate free ends
-        let mut free_ends = 0;
-        let back_x = x - dx;
-        let back_y = y - dy;
-        if state.is_valid(back_x, back_y) && state.is_empty(back_x, back_y) {
-            free_ends += 1;
-        }
-
-        let front_x = x + total_span * dx;
-        let front_y = y + total_span * dy;
-        if state.is_valid(front_x, front_y) && state.is_empty(front_x, front_y) {
-            free_ends += 1;
-        }
-
-        info.total_pieces = total_pieces;
-        info.total_span = total_span;
-        info.has_gaps = has_gaps;
-        info.gap_count = gap_count;
-        info.free_ends = free_ends;
-
-        info
+        score
     }
 
-    pub fn pattern_to_score(pattern: &PatternInfo) -> i32 {
-        // Victory patterns
-        if pattern.consecutive_count >= 5 {
-            return WIN;
+    pub fn has_winning_threats(state: &GameState, player: i32) -> bool {
+        let four_open = Self::count_pattern_type(state, player, 4, 2);
+        if four_open > 0 {
+            return true;
         }
-
-        if pattern.total_pieces >= 5 && pattern.has_gaps && pattern.free_ends >= 1 {
-            return WIN;
+        let four_half = Self::count_pattern_type(state, player, 4, 1);
+        if four_half > 0 {
+            return true;
         }
-
-        // 4-piece patterns
-        if pattern.total_pieces == 4 {
-            if pattern.consecutive_count == 4 {
-                if pattern.free_ends == 2 {
-                    return FOUR_OPEN;
-                }
-                if pattern.free_ends == 1 {
-                    return FOUR_HALF;
-                }
-            } else if pattern.has_gaps {
-                if pattern.free_ends == 2 {
-                    return FOUR_OPEN;
-                }
-                if pattern.free_ends == 1 {
-                    return FOUR_HALF;
-                }
-            }
+        let three_open = Self::count_pattern_type(state, player, 3, 2);
+        if three_open >= 2 {
+            return true;
         }
-
-        // 3-piece patterns
-        if pattern.total_pieces == 3 {
-            if pattern.consecutive_count == 3 {
-                if pattern.free_ends == 2 {
-                    return THREE_OPEN;
-                }
-                if pattern.free_ends == 1 {
-                    return THREE_HALF;
-                }
-            } else if pattern.has_gaps {
-                if pattern.free_ends == 2 {
-                    return THREE_OPEN;
-                }
-                if pattern.free_ends == 1 {
-                    return THREE_HALF;
-                }
-            }
-        }
-
-        // 2-piece patterns
-        if pattern.total_pieces == 2 && pattern.free_ends == 2 {
-            return TWO_OPEN;
-        }
-
-        0
+        false
     }
 
-    pub fn analyze_position(state: &GameState, player: i32) -> i32 {
+    #[allow(dead_code)]
+    fn evaluate_combinations(state: &GameState, player: i32) -> i32 {
+        let counts = Self::count_all_patterns(state, player);
+        let mut score = 0;
+
+        // Fork detection
+        if counts.four_half >= 1 && counts.three_open >= 1 {
+            score += 80000;
+        }
+        if counts.four_half >= 2 {
+            score += 70000;
+        }
+        if counts.three_open >= 2 {
+            score += 50000;
+        }
+
+        let my_captures = state.captures[(player - 1) as usize];
+        if my_captures >= 8 && counts.three_open >= 1 {
+            score += 60000;
+        }
+
+        score
+    }
+
+    // ============================================
+    // POSITION ANALYSIS — evaluator_position.cpp analyzePosition
+    // ============================================
+
+    fn analyze_position(state: &GameState, player: i32) -> i32 {
         let mut total_score = 0;
-        let mut evaluated = vec![vec![vec![false; 4]; BOARD_SIZE]; BOARD_SIZE];
+        let opponent = state.get_opponent(player);
 
-        // Pattern evaluation
-        for i in 0..BOARD_SIZE {
-            for j in 0..BOARD_SIZE {
-                if state.board[i][j] == player {
-                    for d in 0..4 {
-                        if evaluated[i][j][d] {
-                            continue;
+        // Track evaluated positions to avoid double counting
+        let mut evaluated = [[[false; 4]; BOARD_SIZE]; BOARD_SIZE];
+
+        // PART 1: PATTERN EVALUATION
+        for i in 0..BOARD_SIZE as i32 {
+            for j in 0..BOARD_SIZE as i32 {
+                if state.get_piece(i, j) != player {
+                    continue;
+                }
+
+                for (dir_idx, &(dx, dy)) in MAIN_DIRECTIONS.iter().enumerate() {
+                    if evaluated[i as usize][j as usize][dir_idx] {
+                        continue;
+                    }
+
+                    if !Self::is_line_start(state, i, j, dx, dy, player) {
+                        continue;
+                    }
+
+                    let pattern = Self::analyze_line(state, i, j, dx, dy, player);
+                    let score = Self::pattern_to_score(&pattern);
+                    total_score += score;
+
+                    // Mark all positions in this line as evaluated in this direction
+                    let mut mx = i;
+                    let mut my = j;
+                    for _ in 0..pattern.consecutive_count {
+                        if state.is_valid(mx, my) {
+                            evaluated[mx as usize][my as usize][dir_idx] = true;
                         }
-
-                        let (dx, dy) = MAIN_DIRECTIONS[d];
-
-                        if Self::is_line_start(state, i as i32, j as i32, dx, dy, player) {
-                            let pattern = Self::analyze_line(state, i as i32, j as i32, dx, dy, player);
-                            total_score += Self::pattern_to_score(&pattern);
-
-                            // Mark as evaluated
-                            let mut mark_x = i as i32;
-                            let mut mark_y = j as i32;
-                            for _ in 0..pattern.consecutive_count {
-                                if mark_x >= 0 && mark_x < BOARD_SIZE as i32 && mark_y >= 0 && mark_y < BOARD_SIZE as i32 {
-                                    evaluated[mark_x as usize][mark_y as usize][d] = true;
-                                }
-                                mark_x += dx;
-                                mark_y += dy;
-                            }
-                        }
+                        mx += dx;
+                        my += dy;
                     }
                 }
             }
         }
 
-        // Capture evaluation (simplified for now)
-        let my_captures = state.captures[player as usize - 1];
-        let opponent = state.get_opponent(player);
-        let opp_captures = state.captures[opponent as usize - 1];
+        // PART 2: CAPTURE EVALUATION
+        let mut capture_opportunities = 0;
+        let mut capture_threats = 0;
 
+        // Offensive: our capture opportunities
+        let my_opps = Self::find_all_capture_opportunities(state, player);
+        for opp in &my_opps {
+            capture_opportunities += Self::evaluate_capture_context(
+                state,
+                player,
+                &opp.captured,
+                state.captures[(player - 1) as usize] + (opp.captured.len() / 2) as i32,
+            );
+        }
+
+        // Defensive: opponent's capture opportunities (threats to us)
+        let opp_threats = Self::find_all_capture_opportunities(state, opponent);
+        for threat in &opp_threats {
+            capture_threats += Self::evaluate_capture_context(
+                state,
+                opponent,
+                &threat.captured,
+                state.captures[(opponent - 1) as usize] + (threat.captured.len() / 2) as i32,
+            );
+        }
+
+        // PART 3: EXISTING CAPTURES SCORING
+        let my_captures = state.captures[(player - 1) as usize];
         if my_captures >= 9 {
             total_score += 300000;
         } else if my_captures >= 8 {
@@ -379,6 +524,7 @@ impl Evaluator {
             total_score += my_captures * 500;
         }
 
+        let opp_captures = state.captures[(opponent - 1) as usize];
         if opp_captures >= 9 {
             total_score -= 400000;
         } else if opp_captures >= 8 {
@@ -391,6 +537,153 @@ impl Evaluator {
             total_score -= opp_captures * 800;
         }
 
+        total_score += capture_opportunities;
+        total_score -= capture_threats;
+
         total_score
+    }
+
+    // ============================================
+    // CAPTURE OPPORTUNITIES — evaluator_threats.cpp
+    // ============================================
+
+    fn find_all_capture_opportunities(state: &GameState, player: i32) -> Vec<CaptureOpportunity> {
+        let mut opportunities = Vec::new();
+        let opponent = state.get_opponent(player);
+
+        for i in 0..BOARD_SIZE as i32 {
+            for j in 0..BOARD_SIZE as i32 {
+                if state.get_piece(i, j) != opponent {
+                    continue;
+                }
+
+                for &(dx, dy) in ALL_DIRECTIONS.iter() {
+                    let nx = i + dx;
+                    let ny = j + dy;
+
+                    // Need pair of opponent pieces
+                    if !state.is_valid(nx, ny) || state.get_piece(nx, ny) != opponent {
+                        continue;
+                    }
+
+                    // Check front flank: player at (i - dx, j - dy) and empty at (nx + dx, ny + dy)
+                    let front_x = i - dx;
+                    let front_y = j - dy;
+                    let back_x = nx + dx;
+                    let back_y = ny + dy;
+
+                    if state.is_valid(front_x, front_y)
+                        && state.get_piece(front_x, front_y) == player
+                        && state.is_valid(back_x, back_y)
+                        && state.is_empty(back_x, back_y)
+                    {
+                        let mut captured = Vec::new();
+                        captured.push(Move::new(i, j));
+                        captured.push(Move::new(nx, ny));
+                        opportunities.push(CaptureOpportunity {
+                            position: Move::new(back_x, back_y),
+                            captured,
+                        });
+                    }
+
+                    // Check back flank: empty at (i - dx, j - dy) and player at (nx + dx, ny + dy)
+                    if state.is_valid(front_x, front_y)
+                        && state.is_empty(front_x, front_y)
+                        && state.is_valid(back_x, back_y)
+                        && state.get_piece(back_x, back_y) == player
+                    {
+                        let mut captured = Vec::new();
+                        captured.push(Move::new(i, j));
+                        captured.push(Move::new(nx, ny));
+                        opportunities.push(CaptureOpportunity {
+                            position: Move::new(front_x, front_y),
+                            captured,
+                        });
+                    }
+                }
+            }
+        }
+
+        opportunities
+    }
+
+    fn evaluate_capture_context(
+        state: &GameState, player: i32, captured_pieces: &[Move], new_capture_count: i32,
+    ) -> i32 {
+        let mut value;
+        let opponent = state.get_opponent(player);
+
+        // 1. Proximity to capture victory
+        if new_capture_count >= 10 {
+            return CAPTURE_WIN;
+        } else if new_capture_count == 9 {
+            value = 100000;
+        } else if new_capture_count >= 8 {
+            value = 50000;
+        } else if new_capture_count >= 6 {
+            value = 15000;
+        } else {
+            value = new_capture_count * 2000;
+        }
+
+        // 2. Pattern disruption — check opponent patterns through captured positions
+        for captured in captured_pieces {
+            for &(dx, dy) in MAIN_DIRECTIONS.iter() {
+                let pattern_size =
+                    Self::count_pattern_through_position(state, captured, dx, dy, opponent);
+                if pattern_size >= 4 {
+                    value += 30000;
+                } else if pattern_size == 3 {
+                    value += 12000;
+                } else if pattern_size == 2 {
+                    value += 3000;
+                }
+            }
+        }
+
+        // 3. Offensive value — adjacency to own pieces
+        for captured in captured_pieces {
+            for &(dx, dy) in ALL_DIRECTIONS.iter() {
+                let adj_x = captured.x + dx;
+                let adj_y = captured.y + dy;
+                if state.is_valid(adj_x, adj_y) && state.get_piece(adj_x, adj_y) == player {
+                    value += 1500;
+                }
+            }
+        }
+
+        // 4. Danger: opponent close to capture win
+        let opp_captures = state.captures[(opponent - 1) as usize];
+        if opp_captures >= 8 {
+            value += 25000;
+        }
+
+        value
+    }
+
+    fn count_pattern_through_position(
+        state: &GameState, pos: &Move, dx: i32, dy: i32, player: i32,
+    ) -> i32 {
+        let mut count = 0;
+
+        // Count backward
+        let mut x = pos.x - dx;
+        let mut y = pos.y - dy;
+        while state.is_valid(x, y) && state.get_piece(x, y) == player {
+            count += 1;
+            x -= dx;
+            y -= dy;
+        }
+
+        // Count forward
+        x = pos.x + dx;
+        y = pos.y + dy;
+        while state.is_valid(x, y) && state.get_piece(x, y) == player {
+            count += 1;
+            x += dx;
+            y += dy;
+        }
+
+        count
     }
 }

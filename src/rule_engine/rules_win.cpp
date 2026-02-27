@@ -64,6 +64,26 @@ bool RuleEngine::checkWin(const GameState &state, int player)
     return false;
 }
 
+bool RuleEngine::hasFiveInARow(const GameState &state, int player)
+{
+	// Pure line-of-5 check — ignores capture break rule.
+	// This is critical for the AI search: checkWin() returns false
+	// for breakable 5-in-a-row, making them invisible to the search.
+	for (int i = 0; i < GameState::BOARD_SIZE; i++) {
+		for (int j = 0; j < GameState::BOARD_SIZE; j++) {
+			if (state.board[i][j] != player)
+				continue;
+			for (int d = 0; d < MAIN_COUNT; d++) {
+				int dx = MAIN[d][0];
+				int dy = MAIN[d][1];
+				if (checkLineWinInDirection(state, Move(i, j), dx, dy, player))
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
 bool RuleEngine::checkLineWin(const GameState &state, const Move &move, int player)
 {
 	// Check the 4 main directions (no duplicates)

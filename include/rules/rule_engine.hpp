@@ -32,6 +32,11 @@ public:
 
 	static bool checkWin(const GameState &state, int player);
 
+	// Fast check: does the player have 5+ in a row on the board?
+	// Unlike checkWin, this ignores the "capture can break the line" rule.
+	// Used by the AI search to ensure 5-in-a-row is never invisible.
+	static bool hasFiveInARow(const GameState &state, int player);
+
 	static std::vector<Move> findCaptures(const GameState &state, const Move &move, int player);
 
 	static bool createsDoubleFreeThree(const GameState &state, const Move &move, int player);

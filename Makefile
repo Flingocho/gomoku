@@ -4,6 +4,7 @@ RUST_LIB_DIR := gomoku_ai_rust/target/release
 INCLUDES := -I$(SFML_HOME)/include -Igomoku_ai_rust/src
 LIBS := -L$(SFML_HOME)/lib -L$(RUST_LIB_DIR) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lgomoku_ai_rust -ldl -lpthread -lopenal -lvorbisenc -lvorbisfile -lvorbis -logg -lFLAC -lsndio
 CXXFLAGS := -Wall -Wextra -Werror -g3 -O3 -std=c++17 $(INCLUDES)
+DEPFLAGS = -MMD -MP
 
 # Source files organized by folder
 SRCS = src/main.cpp \
@@ -46,15 +47,17 @@ setup:
 	@echo "Checking dependencies..."
 	@bash scripts/setup.sh
 
-rust_lib:
+$(RUST_LIB_DIR)/libgomoku_ai_rust.a: $(wildcard gomoku_ai_rust/src/*.rs) gomoku_ai_rust/Cargo.toml
 	cd gomoku_ai_rust && cargo build --release
 
-$(NAME): $(OBJS)
+rust_lib: $(RUST_LIB_DIR)/libgomoku_ai_rust.a
+
+$(NAME): $(OBJS) $(RUST_LIB_DIR)/libgomoku_ai_rust.a
 	$(CXX) $(OBJS) -o $(NAME) $(LIBS)
 
 $(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
@@ -73,3 +76,7 @@ run: $(NAME)
 	LD_LIBRARY_PATH=$(SFML_HOME)/lib:$(RUST_LIB_DIR):$$LD_LIBRARY_PATH ./$(NAME)
 
 .PHONY: all clean fclean re setup run
+
+# Auto-generated header dependencies
+DEPS = $(OBJS:.o=.d)
+-include $(DEPS)

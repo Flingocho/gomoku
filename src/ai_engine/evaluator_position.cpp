@@ -27,16 +27,16 @@ int Evaluator::evaluate(const GameState &state, int maxDepth, int currentDepth)
 	int mateDistance = maxDepth - currentDepth;
 
 	// Check immediate win conditions WITH mate distance
-	if (RuleEngine::checkWin(state, GameState::PLAYER2))
+	// Use hasFiveInARow first: checkWin ignores breakable 5-in-a-row,
+	// but the AI must still treat them as wins to block properly.
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER2) ||
+	    RuleEngine::checkWin(state, GameState::PLAYER2))
 	{
-		// Closer victory = higher score
-		// WIN - mateDistance makes mate-in-1 worth more than mate-in-5
 		return WIN - mateDistance;
 	}
-	if (RuleEngine::checkWin(state, GameState::PLAYER1))
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER1) ||
+	    RuleEngine::checkWin(state, GameState::PLAYER1))
 	{
-		// Further defeat = less bad
-		// -WIN + mateDistance makes losing in 5 less bad than losing in 1
 		return -WIN + mateDistance;
 	}
 
@@ -52,9 +52,12 @@ int Evaluator::evaluate(const GameState &state, int maxDepth, int currentDepth)
 int Evaluator::evaluate(const GameState &state)
 {
 	// Check immediate win conditions
-	if (RuleEngine::checkWin(state, GameState::PLAYER2))
+	// hasFiveInARow catches breakable 5-in-a-row that checkWin ignores
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER2) ||
+	    RuleEngine::checkWin(state, GameState::PLAYER2))
 		return WIN;
-	if (RuleEngine::checkWin(state, GameState::PLAYER1))
+	if (RuleEngine::hasFiveInARow(state, GameState::PLAYER1) ||
+	    RuleEngine::checkWin(state, GameState::PLAYER1))
 		return -WIN;
 
 	// Evaluate AI with debug capture if active
@@ -89,8 +92,9 @@ int Evaluator::evaluateForPlayer(const GameState &state, int player)
 	// Capture debug info if active for this player
 	bool captureForThisPlayer = g_evalDebug.active && player == g_evalDebug.currentPlayer;
 
-	// Immediate threats evaluation
-	score += evaluateImmediateThreats(state, player);
+	// Single-pass threat + combination evaluation (replaces 5 separate board scans)
+	PatternCounts counts = countAllPatterns(state, player);
+	score += evaluateThreatsAndCombinations(state, player, counts);
 
 	// Unified evaluation: patterns + captures in single pass
 	score += analyzePosition(state, player);

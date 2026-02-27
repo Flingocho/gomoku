@@ -176,7 +176,6 @@ void GuiRenderer::processEvents() {
                         clearSuggestion();
                         clearInvalidMoveError();
                         setWinningLine(std::vector<Move>());
-                        showGameOverAnimation = true;  // Reset for the next game
                         selectedMenuOption = -1;
                         setState(MENU);
                         std::cout << "✓ Returned to menu - all state cleaned" << std::endl;

@@ -38,7 +38,7 @@ bool Evaluator::isLineStart(const GameState &state, int x, int y, int dx, int dy
 Evaluator::PatternInfo Evaluator::analyzeLine(const GameState &state, int x, int y,
 											  int dx, int dy, int player)
 {
-	PatternInfo info = {0, 0, 0, false, 0, 0};
+	PatternInfo info = {0, 0, 0, false, 0, 0, 0};
 
 	// STEP 1: Extended analysis - scan up to 6 positions to detect gaps
 	const int MAX_SCAN = 6;
@@ -134,6 +134,33 @@ Evaluator::PatternInfo Evaluator::analyzeLine(const GameState &state, int x, int
 	info.hasGaps = hasGaps;
 	info.gapCount = gapCount;
 
+	// STEP 9: Compute maxReachable — total usable cells (own + empty)
+	// in this direction. If < 5, pattern can never become 5-in-a-row.
+	{
+		int reachable = totalSpan; // Already includes pieces + gaps in span
+
+		// Extend backward (before start position)
+		int bx = x - dx, by = y - dy;
+		while (state.isValid(bx, by) && state.getPiece(bx, by) != state.getOpponent(player))
+		{
+			reachable++;
+			bx -= dx;
+			by -= dy;
+		}
+
+		// Extend forward (after span end)
+		int fx = x + totalSpan * dx;
+		int fy = y + totalSpan * dy;
+		while (state.isValid(fx, fy) && state.getPiece(fx, fy) != state.getOpponent(player))
+		{
+			reachable++;
+			fx += dx;
+			fy += dy;
+		}
+
+		info.maxReachable = reachable;
+	}
+
 	return info;
 }
 
@@ -151,6 +178,11 @@ int Evaluator::patternToScore(const PatternInfo &pattern)
 	int totalPieces = pattern.totalPieces;
 	int freeEnds = pattern.freeEnds;
 	bool hasGaps = pattern.hasGaps;
+
+	// SPACE VALIDATION: If not enough room to ever make 5-in-a-row,
+	// this pattern is strategically worthless (dead shape).
+	if (pattern.maxReachable < 5 && consecutiveCount < 5)
+		return 0;
 
 	// STEP 1: Victory patterns (5+ pieces consecutive or with valid gaps)
 	if (consecutiveCount >= 5)

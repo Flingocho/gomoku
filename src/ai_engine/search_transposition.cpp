@@ -7,11 +7,16 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <cstring>
+#include <cstring>
 
 TranspositionSearch::TranspositionSearch(size_t tableSizeMB)
 	: currentGeneration(1), nodesEvaluated(0), cacheHits(0)
 {
 	initializeTranspositionTable(tableSizeMB);
+	std::memset(historyTable, 0, sizeof(historyTable));
+	for (int i = 0; i < MAX_SEARCH_DEPTH; i++)
+		killerMoves[i][0] = killerMoves[i][1] = Move();
 }
 
 void TranspositionSearch::initializeTranspositionTable(size_t sizeInMB)
@@ -139,6 +144,9 @@ void TranspositionSearch::clearCache()
 {
 	std::fill(transpositionTable.begin(), transpositionTable.end(), CacheEntry());
 	currentGeneration = 1; // Reset generation
+	std::memset(historyTable, 0, sizeof(historyTable));
+	for (int i = 0; i < MAX_SEARCH_DEPTH; i++)
+		killerMoves[i][0] = killerMoves[i][1] = Move();
 	std::cout << "TranspositionTable: Cache cleared (" << transpositionTable.size() << " entries)" << std::endl;
 }
 

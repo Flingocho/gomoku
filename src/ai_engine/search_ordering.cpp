@@ -61,29 +61,23 @@ void TranspositionSearch::orderMoves(std::vector<Move> &moves, const GameState &
 		return; // Skip sorting entirely
 	}
 
-	// For medium-sized move lists, use partial sorting
-	if (moves.size() <= 4)
-	{
-		// Insertion sort is faster for small arrays
-		for (size_t i = 1; i < moves.size(); ++i)
-		{
-			Move key = moves[i];
-			int keyScore = quickEvaluateMove(state, key);
+	// Pre-compute scores once to avoid redundant calls during sort comparisons
+	std::vector<int> scores(moves.size());
+	for (size_t i = 0; i < moves.size(); i++)
+		scores[i] = quickEvaluateMove(state, moves[i]);
 
-			size_t j = i;
-			while (j > 0 && quickEvaluateMove(state, moves[j - 1]) < keyScore)
-			{
-				moves[j] = moves[j - 1];
-				--j;
-			}
-			moves[j] = key;
-		}
-		return;
-	}
+	// Build index array, sort by score, then reorder moves
+	std::vector<size_t> indices(moves.size());
+	for (size_t i = 0; i < indices.size(); i++)
+		indices[i] = i;
 
-	// For large arrays, use standard std::sort
-	std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b)
-			  { return quickEvaluateMove(state, a) > quickEvaluateMove(state, b); });
+	std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b)
+			  { return scores[a] > scores[b]; });
+
+	std::vector<Move> sorted(moves.size());
+	for (size_t i = 0; i < indices.size(); i++)
+		sorted[i] = moves[indices[i]];
+	moves = std::move(sorted);
 }
 
 // ============================================
@@ -194,6 +188,12 @@ int TranspositionSearch::quickEvaluateMove(const GameState& state, const Move& m
             }
         }
     }
+    
+    // ============================================
+    // 6. HISTORY HEURISTIC (O(1) - trivial lookup)
+    // ============================================
+    // Moves that caused cutoffs in previous searches get a bonus
+    score += historyTable[move.x][move.y];
     
     return score;
 }

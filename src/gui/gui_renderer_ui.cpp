@@ -98,7 +98,7 @@ void GuiRenderer::drawButton(const std::string& text, int x, int y, int width, i
     buttonText.setFillColor(textColor);
     
     sf::FloatRect textBounds = buttonText.getLocalBounds();
-    buttonText.setOrigin(textBounds.width / 2.0f, textBounds.height / 2.0f);
+    buttonText.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
     buttonText.setPosition(x + width / 2.0f, y + height / 2.0f);
     window.draw(buttonText);
 }

@@ -145,7 +145,7 @@ public:
 	float getSoundVolume() const { return soundVolume; }
 	bool isSoundEnabled() const { return soundEnabled; }
 	bool isMusicEnabled() const { return musicEnabled; }
-	void toggleSound() { soundEnabled = !soundEnabled; }
+	void toggleSound() { soundEnabled = !soundEnabled; audioManager.setSoundVolume(soundEnabled ? soundVolume : 0); }
 	void toggleMusic() { musicEnabled = !musicEnabled; audioManager.setMusicVolume(musicEnabled ? musicVolume : 0); }
 	bool isDebugEnabled() const { return debugEnabled; }
 	void toggleDebug() { debugEnabled = !debugEnabled; }

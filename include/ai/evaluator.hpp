@@ -29,11 +29,30 @@ public:
 
 	static int evaluateImmediateThreats(const GameState &state, int player);
 
+	// Detect advantageous pattern combinations (forks)
+	static int evaluateCombinations(const GameState &state, int player);
+
 	// Detect mate-in-1 threats using pattern analysis
 	static bool hasWinningThreats(const GameState &state, int player);
 
 	// Count specific pattern types (public for debug access)
 	static int countPatternType(const GameState &state, int player, int consecutiveCount, int freeEnds);
+
+	// Aggregated pattern counts from a single board scan (avoids multiple full scans)
+	struct PatternCounts
+	{
+		int fourOpen;   // 4 consecutive, 2 free ends
+		int fourHalf;   // 4 consecutive, 1 free end
+		int threeOpen;  // 3 consecutive, 2 free ends
+		int threeHalf;  // 3 consecutive, 1 free end
+		int twoOpen;    // 2 consecutive, 2 free ends
+	};
+
+	// Single-pass scan that returns all pattern counts at once
+	static PatternCounts countAllPatterns(const GameState &state, int player);
+
+	// Threat + combination evaluation using pre-computed pattern counts
+	static int evaluateThreatsAndCombinations(const GameState &state, int player, const PatternCounts &counts);
 
 private:
 	struct PatternInfo
@@ -44,6 +63,7 @@ private:
 		bool hasGaps;		  // Whether pattern has small gaps
 		int totalSpan;		  // Total span of pattern
 		int gapCount;		  // Number of gaps in pattern
+		int maxReachable;     // Total reachable cells in this direction (must be >= 5 for viable pattern)
 	};
 
 	static int analyzePosition(const GameState &state, int player);

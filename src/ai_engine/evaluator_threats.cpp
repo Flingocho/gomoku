@@ -11,17 +11,120 @@
 using namespace Directions;
 
 // ===============================================
-// IMMEDIATE THREATS EVALUATION
+// SINGLE-PASS PATTERN COUNTING
+// ===============================================
+
+/**
+ * Scan the entire board ONCE and return all pattern counts.
+ * Replaces 5 separate countPatternType calls with a single O(19*19*4) pass.
+ */
+Evaluator::PatternCounts Evaluator::countAllPatterns(const GameState &state, int player)
+{
+	PatternCounts counts = {0, 0, 0, 0, 0};
+
+	for (int i = 0; i < GameState::BOARD_SIZE; i++)
+	{
+		for (int j = 0; j < GameState::BOARD_SIZE; j++)
+		{
+			if (state.board[i][j] != player)
+				continue;
+
+			for (int d = 0; d < MAIN_COUNT; d++)
+			{
+				int dx = MAIN[d][0];
+				int dy = MAIN[d][1];
+
+				if (!isLineStart(state, i, j, dx, dy, player))
+					continue;
+
+				PatternInfo pattern = analyzeLine(state, i, j, dx, dy, player);
+
+				// Skip dead shapes
+				if (pattern.maxReachable < 5 && pattern.consecutiveCount < 5)
+					continue;
+
+				int c = pattern.consecutiveCount;
+				int tp = pattern.totalPieces;
+				int fe = pattern.freeEnds;
+				bool gaps = pattern.hasGaps;
+
+				// Classify pattern (mirrors patternToScore logic)
+				if (tp >= 4)
+				{
+					if (c == 4 || (tp == 4 && gaps))
+					{
+						if (fe == 2) counts.fourOpen++;
+						else if (fe == 1) counts.fourHalf++;
+					}
+				}
+				if (tp == 3)
+				{
+					if (c == 3 || gaps)
+					{
+						if (fe == 2) counts.threeOpen++;
+						else if (fe == 1) counts.threeHalf++;
+					}
+				}
+				if (tp == 2 && fe == 2)
+				{
+					counts.twoOpen++;
+				}
+			}
+		}
+	}
+
+	return counts;
+}
+
+// ===============================================
+// COMBINED THREAT + COMBINATION EVALUATION
+// ===============================================
+
+/**
+ * Evaluate both immediate threats and pattern combinations
+ * using pre-computed pattern counts (single scan).
+ * Replaces evaluateImmediateThreats + evaluateCombinations.
+ */
+int Evaluator::evaluateThreatsAndCombinations(const GameState &state, int player,
+											  const PatternCounts &counts)
+{
+	int score = 0;
+
+	// --- Immediate threats (from evaluateImmediateThreats) ---
+
+	if (counts.fourOpen > 0)
+		score += 90000;
+
+	if (counts.fourHalf > 0)
+		score += 40000;
+
+	if (counts.threeOpen >= 2)
+		score += 50000;
+
+	// --- Combinations / forks (from evaluateCombinations) ---
+
+	// FOUR_HALF + THREE_OPEN fork
+	if (counts.fourHalf >= 1 && counts.threeOpen >= 1)
+		score += 80000;
+
+	// Double FOUR_HALF
+	if (counts.fourHalf >= 2)
+		score += 70000;
+
+	// Capture synergy
+	int myCaptures = state.captures[player - 1];
+	if (myCaptures >= 8 && counts.threeOpen >= 1)
+		score += 60000;
+
+	return score;
+}
+
+// ===============================================
+// LEGACY IMMEDIATE THREATS (kept for hasWinningThreats)
 // ===============================================
 
 /**
  * Evaluate immediate threats for a player
- * 
- * IMPORTANT: Only evaluates threats for THIS player, not the opponent.
- * The opponent's threats are naturally accounted for when evaluateForPlayer
- * is called for the opponent, and the final score = aiScore - humanScore
- * handles the cross-comparison. Evaluating both sides here would cause
- * double-counting that inflates scores past the mate-detection threshold.
  */
 int Evaluator::evaluateImmediateThreats(const GameState &state, int player)
 {
@@ -31,23 +134,12 @@ int Evaluator::evaluateImmediateThreats(const GameState &state, int player)
 	int fourHalf = countPatternType(state, player, 4, 1);
 	int threeOpen = countPatternType(state, player, 3, 2);
 
-	// FOUR_OPEN: Unstoppable - opponent cannot block both ends
 	if (fourOpen > 0)
-	{
 		threatScore += 90000;
-	}
-
-	// FOUR_HALF: Strong forced threat - opponent must block
 	if (fourHalf > 0)
-	{
 		threatScore += 40000;
-	}
-
-	// Multiple THREE_OPEN: Creates unblockable dual threat
 	if (threeOpen >= 2)
-	{
 		threatScore += 50000;
-	}
 
 	return threatScore;
 }
@@ -173,6 +265,61 @@ int Evaluator::countPatternThroughPosition(const GameState &state,
 	}
 
 	return count;
+}
+
+// ===============================================
+// COMBINATION DETECTION (FORKS)
+// ===============================================
+
+/**
+ * Detect advantageous pattern combinations for a player.
+ * Forks are positions where two or more threats exist simultaneously,
+ * making them impossible to defend against in a single move.
+ *
+ * Detected combinations:
+ *   - FOUR_HALF + THREE_OPEN  (fork: forced response + secondary threat)
+ *   - Multiple FOUR_HALF       (double forced threats)
+ *   - THREE_OPEN + near capture win (alignment + capture synergy)
+ */
+int Evaluator::evaluateCombinations(const GameState &state, int player)
+{
+	int comboScore = 0;
+
+	// Gather pattern counts (these use cached countPatternType scans)
+	int fourHalf = countPatternType(state, player, 4, 1);
+	int threeOpen = countPatternType(state, player, 3, 2);
+
+	// fourOpen alone is already near-unstoppable; no combination bonus needed.
+	// Focus on combinations that create dual-purpose threats.
+
+	// 1. FOUR_HALF + THREE_OPEN fork:
+	//    Opponent must block the four, leaving the three free to extend.
+	if (fourHalf >= 1 && threeOpen >= 1)
+	{
+		comboScore += 80000;
+	}
+
+	// 2. Double FOUR_HALF:
+	//    Opponent can only block one four at a time → guaranteed win next move.
+	if (fourHalf >= 2)
+	{
+		comboScore += 70000;
+	}
+
+	// 3. Capture synergy:
+	//    Player is close to 10 captures (≥8) AND has an open three.
+	//    Forces opponent to decide between blocking alignment and preventing capture.
+	int myCaptures = state.captures[player - 1];
+	if (myCaptures >= 8 && threeOpen >= 1)
+	{
+		comboScore += 60000;
+	}
+
+	// 4. THREE_OPEN + FOUR_HALF already covered above.
+	//    Additional: multiple THREE_OPEN creates dual threats too,
+	//    but that's already scored in evaluateImmediateThreats.
+
+	return comboScore;
 }
 
 // ===============================================

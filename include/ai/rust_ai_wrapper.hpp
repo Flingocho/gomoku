@@ -9,8 +9,16 @@ extern "C" {
         int x, y;
     };
 
-    RustMove rust_ai_get_best_move(const int* board, int current_player, int turn_count, int max_depth);
-    int rust_ai_evaluate_position(const int* board, int current_player, int turn_count);
+    RustMove rust_ai_get_best_move(
+        const int* board, int current_player, int turn_count,
+        int captures_p1, int captures_p2,
+        int last_move_x, int last_move_y,
+        int max_depth
+    );
+    int rust_ai_evaluate_position(
+        const int* board, int current_player, int turn_count,
+        int captures_p1, int captures_p2
+    );
 }
 
 class RustAIWrapper {
@@ -28,6 +36,10 @@ public:
             flat_board,
             state.currentPlayer,
             state.turnCount,
+            state.captures[0],
+            state.captures[1],
+            state.lastHumanMove.x,
+            state.lastHumanMove.y,
             maxDepth
         );
 
@@ -43,7 +55,13 @@ public:
             }
         }
 
-        return rust_ai_evaluate_position(flat_board, state.currentPlayer, state.turnCount);
+        return rust_ai_evaluate_position(
+            flat_board,
+            state.currentPlayer,
+            state.turnCount,
+            state.captures[0],
+            state.captures[1]
+        );
     }
 };
 

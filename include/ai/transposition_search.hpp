@@ -27,6 +27,15 @@ private:
 	int cacheHits;
 	Move previousBestMove;
 
+	// History heuristic: tracks moves that caused cutoffs across the search tree
+	// Higher values = move was historically good, used for move ordering
+	int historyTable[GameState::BOARD_SIZE][GameState::BOARD_SIZE];
+
+	// Killer moves: non-capture moves that caused beta cutoffs at each depth
+	// Two slots per depth for better coverage
+	static constexpr int MAX_SEARCH_DEPTH = 20;
+	Move killerMoves[MAX_SEARCH_DEPTH][2];
+
 	int minimax(GameState &state, int depth, int alpha, int beta, bool maximizing,
 				int originalMaxDepth, Move *bestMove = nullptr);
 
