@@ -339,8 +339,8 @@ void GuiRenderer::drawGameInfo(const GameState& state, int aiTimeMs) {
     drawText("- ESC to return to menu", panelX + 15, yOffset, 12, sf::Color::White);
     yOffset += lineHeight - 5;
     
-    // 8. State hash (for debug)
-    if (state.getZobristHash() != 0) {
+    // 8. State hash (only shown when debug mode is enabled)
+    if (debugEnabled && state.getZobristHash() != 0) {
         yOffset += 10;
         drawText("DEBUG:", panelX + 10, yOffset, 14, sf::Color(100, 100, 100));
         yOffset += lineHeight;

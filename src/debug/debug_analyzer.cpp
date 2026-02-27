@@ -301,7 +301,8 @@ void DebugAnalyzer::printCurrentAnalysis() const {
     analysisLog << std::string(80, '=') << "\n\n";
     
     logToFile(analysisLog.str());
-    std::cout << "AI Analysis logged to file. Chosen move: " << formatMove(lastSnapshot.chosenMove) << std::endl;
+    // Print full analysis to console so the user can see it in real-time
+    std::cout << analysisLog.str();
 }
 
 void GameSnapshot::saveToFile(const std::string& filename) const {

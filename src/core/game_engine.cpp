@@ -34,12 +34,16 @@ bool GameEngine::makeHumanMove(const Move& move) {
         }
         
         if (isCapturingMove) {
-            std::cout << "CAPTURE MADE: Player " << state.currentPlayer 
-                      << " broke the 5-in-a-row at (" << move.x << "," << move.y << ")" << std::endl;
+            if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+                std::cout << "CAPTURE MADE: Player " << state.currentPlayer 
+                          << " broke the 5-in-a-row at (" << move.x << "," << move.y << ")" << std::endl;
+            }
         } else {
-            std::cout << "CAPTURE IGNORED: Player " << state.currentPlayer 
-                      << " chose not to break the 5-in-a-row. Player " 
-                      << state.pendingWinPlayer << " wins!" << std::endl;
+            if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+                std::cout << "CAPTURE IGNORED: Player " << state.currentPlayer 
+                          << " chose not to break the 5-in-a-row. Player " 
+                          << state.pendingWinPlayer << " wins!" << std::endl;
+            }
             ignoredCapture = true;
         }
     }
@@ -70,7 +74,7 @@ Move GameEngine::makeAIMove() {
                                   state.forcedCapturePlayer == state.currentPlayer;
     
     // CHECK FOR CAPTURE OPPORTUNITY: AI CAN capture to break a 5-in-a-row (optional)
-    if (hadCaptureOpportunity) {
+    if (hadCaptureOpportunity && g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
         std::cout << "AI CAPTURE OPPORTUNITY: Can capture at " << state.forcedCaptureMoves.size() 
                   << " positions to prevent opponent win" << std::endl;
     }
@@ -93,7 +97,7 @@ Move GameEngine::makeAIMove() {
             }
         }
         
-        if (hadCaptureOpportunity) {
+        if (hadCaptureOpportunity && g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
             if (isCapture) {
                 std::cout << "AI chose to CAPTURE at (" << bestMove.x << "," << bestMove.y 
                           << ") - preventing opponent win" << std::endl;

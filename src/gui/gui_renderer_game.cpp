@@ -69,6 +69,4 @@ void GuiRenderer::handleGameClick(int x, int y) {
     auto [boardX, boardY] = pixelToBoardPosition(x, y);
     pendingMove = Move(boardX, boardY);
     moveReady = true;
-    
-    std::cout << "Move captured: " << char('A' + boardY) << (boardX + 1) << std::endl;
 }

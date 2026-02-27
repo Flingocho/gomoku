@@ -355,7 +355,9 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     cacheHits = 0;
     currentGeneration++;
 
-    std::cout << "Iterative search up to depth " << maxDepth << std::endl;
+    if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+        std::cout << "Iterative search up to depth " << maxDepth << std::endl;
+    }
 
     // ============================================
     // Pre-check for immediate victory
@@ -383,9 +385,11 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
             winResult.cacheHits = 0;
             winResult.cacheHitRate = 0.0f;
             
-            std::cout << "IMMEDIATE VICTORY detected at " 
-                      << char('A' + move.y) << (move.x + 1) 
-                      << " in " << elapsedTime << "ms!" << std::endl;
+            if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+                std::cout << "IMMEDIATE VICTORY detected at " 
+                          << char('A' + move.y) << (move.x + 1) 
+                          << " in " << elapsedTime << "ms!" << std::endl;
+            }
             
             if (g_debugAnalyzer) {
                 DEBUG_CHOSEN_MOVE(move, winResult.score);
@@ -396,7 +400,9 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         }
     }
     
-    std::cout << "No immediate victory, starting iterative search..." << std::endl;
+    if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+        std::cout << "No immediate victory, starting iterative search..." << std::endl;
+    }
     
     // ============================================
     // Iterative deepening search
@@ -434,19 +440,23 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
         bestResult.cacheHitRate = nodesEvaluated > 0 ?
             (float)cacheHits / nodesEvaluated : 0.0f;
 
-        std::cout << "Depth " << depth
-                  << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
-                  << " (score: " << score << ")"
-                  << " - " << iterationTime.count() << "ms"
-                  << " (" << nodesEvaluated << " nodes, "
-                  << std::fixed << std::setprecision(1) 
-                  << (bestResult.cacheHitRate * 100) << "% cache hit)"
-                  << std::endl;
+        if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+            std::cout << "Depth " << depth
+                      << ": " << char('A' + bestMove.y) << (bestMove.x + 1)
+                      << " (score: " << score << ")"
+                      << " - " << iterationTime.count() << "ms"
+                      << " (" << nodesEvaluated << " nodes, "
+                      << std::fixed << std::setprecision(1) 
+                      << (bestResult.cacheHitRate * 100) << "% cache hit)"
+                      << std::endl;
+        }
 
         // Early exit on decisive score
         if (std::abs(score) > 300000) {
-            std::cout << "Mate detected at depth " << depth
-                      << ", completing search" << std::endl;
+            if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+                std::cout << "Mate detected at depth " << depth
+                          << ", completing search" << std::endl;
+            }
             break;
         }
     }
@@ -455,7 +465,9 @@ TranspositionSearch::SearchResult TranspositionSearch::findBestMoveIterative(
     int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         totalTime).count();
 
-    std::cout << "Search completed in " << elapsedTime << "ms total" << std::endl;
+    if (g_debugAnalyzer && g_debugAnalyzer->isEnabled()) {
+        std::cout << "Search completed in " << elapsedTime << "ms total" << std::endl;
+    }
 
     if (g_debugAnalyzer) {
         DEBUG_CHOSEN_MOVE(bestResult.bestMove, bestResult.score);

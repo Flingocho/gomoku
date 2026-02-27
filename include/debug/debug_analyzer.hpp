@@ -37,6 +37,8 @@ public:
     
     // System control
     void setDebugLevel(DebugLevel level) { currentLevel = level; }
+    DebugLevel getDebugLevel() const { return currentLevel; }
+    bool isEnabled() const { return currentLevel != DEBUG_OFF; }
     void enableFileLogging(const std::string& filename = "gomoku_debug.log");
     void disableFileLogging();
     
